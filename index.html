@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Window Shopping</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300;400;500&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: #E8E1D4;
+    font-family: var(--ws-ui);
+    color: var(--ws-ink);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  :root {
+    --ws-display: 'Newsreader', 'Fraunces', Georgia, serif;
+    --ws-ui: 'Inter', system-ui, sans-serif;
+    --ws-mono: 'JetBrains Mono', ui-monospace, monospace;
+    --ws-paper: #F5F1EA;
+    --ws-surface: #EDE6D8;
+    --ws-ink: #1A1613;
+    --ws-muted: #8B7F6E;
+    --ws-hairline: rgba(26,22,19,0.12);
+    --ws-accent: #8A6B4F;
+    --ws-accent-bg: rgba(138,107,79,0.08);
+  }
+  body[data-theme="bold"] {
+    --ws-display: 'Instrument Serif', Georgia, serif;
+    --ws-ui: 'Space Grotesk', system-ui, sans-serif;
+    --ws-paper: #EDE7DC;
+    --ws-surface: #E2DAC9;
+    --ws-ink: #111010;
+    --ws-muted: #7A7269;
+    --ws-hairline: rgba(17,16,16,0.15);
+    --ws-accent: #9E3524;
+    --ws-accent-bg: rgba(158,53,36,0.08);
+  }
+  body[data-theme="sage"] {
+    --ws-paper: #EEEDE4;
+    --ws-surface: #E0DFD1;
+    --ws-ink: #1B1F18;
+    --ws-muted: #6B7266;
+    --ws-hairline: rgba(27,31,24,0.12);
+    --ws-accent: #4C5E3E;
+    --ws-accent-bg: rgba(76,94,62,0.08);
+  }
+  body[data-dark="1"] {
+    --ws-paper: #1A1613;
+    --ws-surface: #24201C;
+    --ws-ink: #F0EAE0;
+    --ws-muted: #8B7F6E;
+    --ws-hairline: rgba(240,234,224,0.14);
+    --ws-accent: #D9A878;
+    --ws-accent-bg: rgba(217,168,120,0.08);
+  }
+  button { color: inherit; }
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+  .stage {
+    min-height: 100vh;
+    padding: 60px 40px 120px;
+    background: radial-gradient(ellipse at top, #EFE8DA, transparent 70%), #DDD4C2;
+  }
+  .stage-header {
+    max-width: 1840px; margin: 0 auto 48px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+  }
+  .stage-grid { max-width: 1840px; margin: 0 auto; }
+  .frame-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    letter-spacing: 2px; text-transform: uppercase; color: rgba(26,22,19,0.5);
+    margin-bottom: 14px; display: flex; gap: 12px; align-items: center;
+  }
+  .frame-label .num { color: rgba(26,22,19,0.35); }
+  .mobile-row { display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap; }
+  .tweaks-panel {
+    position: fixed; bottom: 20px; right: 20px; width: 280px;
+    background: rgba(245,241,234,0.96); backdrop-filter: blur(12px);
+    border: 1px solid rgba(26,22,19,0.1); padding: 16px; z-index: 100;
+    font-family: 'Inter', sans-serif;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    max-height: calc(100vh - 40px); overflow: auto;
+  }
+  .tweaks-panel h3 { margin: 0 0 4px; font-size: 14px; font-family: 'Newsreader', serif; font-weight: 400; }
+  .tweaks-panel .row { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(26,22,19,0.08); }
+  .tweaks-panel label {
+    font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase;
+    color: #8B7F6E; display: block; margin-bottom: 6px;
+  }
+  .tweaks-panel .opts { display: flex; gap: 4px; flex-wrap: wrap; }
+  .tweaks-panel .opt {
+    flex: 1; min-width: 50px; padding: 6px 8px;
+    border: 1px solid rgba(26,22,19,0.1); background: transparent; cursor: pointer;
+    font-family: 'Inter', sans-serif; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .tweaks-panel .opt.active { background: #1A1613; color: #F5F1EA; border-color: #1A1613; }
+</style>
+</head>
+<body data-theme="safe" data-dark="0">
+<div id="root"></div>
+
+<script>
+  window.TWEAK_DEFAULTS = {
+    "theme": "bold",
+    "font": "instrument",
+    "dark": false,
+    "showEmpty": false
+  };
+</script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="primitives.jsx"></script>
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="browser-window.jsx"></script>
+<script type="text/babel" src="mobile.jsx"></script>
+<script type="text/babel" src="web.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+function App() {
+  const [tweaks, setTweaks] = React.useState(window.TWEAK_DEFAULTS);
+  const [tweaksOpen, setTweaksOpen] = React.useState(false);
+  const [mobileRoute, setMobileRoute] = React.useState({ screen: 'home' });
+
+  React.useEffect(() => {
+    document.body.setAttribute('data-theme', tweaks.theme);
+    document.body.setAttribute('data-dark', tweaks.dark ? '1' : '0');
+    if (tweaks.font === 'editorial') {
+      document.documentElement.style.setProperty('--ws-display', "'Newsreader', Georgia, serif");
+      document.documentElement.style.setProperty('--ws-ui', "'Inter', system-ui, sans-serif");
+    } else if (tweaks.font === 'fraunces') {
+      document.documentElement.style.setProperty('--ws-display', "'Fraunces', Georgia, serif");
+      document.documentElement.style.setProperty('--ws-ui', "'Inter', system-ui, sans-serif");
+    } else if (tweaks.font === 'instrument') {
+      document.documentElement.style.setProperty('--ws-display', "'Instrument Serif', Georgia, serif");
+      document.documentElement.style.setProperty('--ws-ui', "'Space Grotesk', system-ui, sans-serif");
+    }
+  }, [tweaks]);
+
+  const update = (key, value) => {
+    setTweaks(t => ({ ...t, [key]: value }));
+  };
+
+  const mobileContent = (screen) => {
+    if (tweaks.showEmpty && screen === 'home') {
+      return <window.MobileHome showEmpty onAdd={() => {}} onOpenCloset={() => {}} />;
+    }
+    if (screen === 'home') return <window.MobileHome
+      onOpenCloset={(id) => setMobileRoute({ screen: 'closet', id })}
+      onAdd={() => {}} />;
+    if (screen === 'closet') return <window.MobileCloset
+      closetId={mobileRoute.id || 'main'}
+      onBack={() => setMobileRoute({ screen: 'home' })}
+      onOpenItem={(id) => setMobileRoute({ screen: 'item', id })} />;
+    if (screen === 'item') return <window.MobileItem
+      itemId={mobileRoute.id || 'i1'}
+      onBack={() => setMobileRoute({ screen: 'closet', id: 'main' })} />;
+  };
+
+  return (
+    <div className="stage">
+      <div className="stage-header">
+        <div>
+          <div style={{
+            fontFamily: 'JetBrains Mono, monospace', fontSize: 10,
+            letterSpacing: 2, color: 'rgba(26,22,19,0.5)', marginBottom: 10,
+          }}>WINDOW SHOPPING · HI-FI PROTOTYPE · {tweaks.theme.toUpperCase()} VARIANT</div>
+          <div style={{
+            fontFamily: 'var(--ws-display)', fontSize: 52, fontWeight: 300,
+            color: '#1A1613', letterSpacing: -1.5, lineHeight: 1,
+          }}>A closet, for the <em style={{ fontStyle: 'italic', color: '#8A6B4F' }}>internet age</em>.</div>
+          <div style={{
+            fontFamily: 'Inter, sans-serif', fontSize: 13, color: 'rgba(26,22,19,0.6)',
+            marginTop: 10, maxWidth: 680, lineHeight: 1.5,
+          }}>Paste a link to anything you've saved on the web. Sort it into closets, sections, and seasons. Tag the details that matter. Everything is interactive — click closets, tap items, walk the flow.</div>
+        </div>
+        <div style={{
+          fontFamily: 'JetBrains Mono, monospace', fontSize: 10,
+          color: 'rgba(26,22,19,0.5)', letterSpacing: 1.5, textAlign: 'right',
+        }}>
+          APR 2026 · v1<br/>
+          <button
+            onClick={() => setTweaksOpen(o => !o)}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+              fontFamily: 'JetBrains Mono, monospace', fontSize: 10,
+              letterSpacing: 1.5, color: 'rgba(26,22,19,0.5)',
+            }}
+          >
+            toggle <span style={{ color: '#1A1613', textDecoration: 'underline' }}>Tweaks</span> →
+          </button>
+        </div>
+      </div>
+
+      <div className="stage-grid">
+        <div data-screen-label="01 Mobile — Hero screens">
+          <div className="frame-label"><span className="num">01</span> MOBILE · iPHONE · HERO FLOW</div>
+          <div className="mobile-row">
+            <div>
+              <window.IOSDevice dark={!!tweaks.dark}>{mobileContent('home')}</window.IOSDevice>
+              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: 1, color: 'rgba(26,22,19,0.5)', marginTop: 16, textAlign: 'center' }}>HOME · ALL CLOSETS</div>
+            </div>
+            <div>
+              <window.IOSDevice dark={!!tweaks.dark}>{mobileContent('closet')}</window.IOSDevice>
+              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: 1, color: 'rgba(26,22,19,0.5)', marginTop: 16, textAlign: 'center' }}>CLOSET · MAIN WARDROBE</div>
+            </div>
+            <div>
+              <window.IOSDevice dark={!!tweaks.dark}>{mobileContent('item')}</window.IOSDevice>
+              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: 1, color: 'rgba(26,22,19,0.5)', marginTop: 16, textAlign: 'center' }}>ITEM · DETAIL & TAGS</div>
+            </div>
+            <div>
+              <window.IOSDevice dark={!!tweaks.dark}>
+                <window.MobileAdd onClose={() => {}} onCommit={() => {}} />
+              </window.IOSDevice>
+              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: 1, color: 'rgba(26,22,19,0.5)', marginTop: 16, textAlign: 'center' }}>ADD · PASTE → PARSE</div>
+            </div>
+          </div>
+
+          <div style={{
+            marginTop: 28, display: 'flex', gap: 24, flexWrap: 'wrap',
+            fontFamily: 'Inter, sans-serif', fontSize: 12, color: 'rgba(26,22,19,0.6)',
+            padding: '14px 20px', border: '1px dashed rgba(26,22,19,0.15)',
+          }}>
+            <span><strong style={{ color: '#1A1613' }}>Try it:</strong></span>
+            <span>1. Tap a closet from Home →</span>
+            <span>2. Tap any item in a section →</span>
+            <span>3. Explore tags & season on detail →</span>
+            <span>4. Tap "Paste from clipboard" on Add frame</span>
+          </div>
+
+          <div style={{ marginTop: 60 }} data-screen-label="02 Web — Dashboard">
+            <div className="frame-label"><span className="num">02</span> WEB · DASHBOARD · DESKTOP 1440</div>
+            <window.ChromeWindow
+              width="100%" height={980}
+              tabs={[
+                { title: 'Window Shopping — Wardrobe' },
+                { title: 'Toteme · Oversized Cardigan' },
+                { title: 'Net-a-Porter' },
+              ]}
+              activeIndex={0}
+              url="windowshopping.app/m/wardrobe">
+              <window.WebDashboard showEmpty={tweaks.showEmpty} />
+            </window.ChromeWindow>
+          </div>
+        </div>
+      </div>
+
+      {tweaksOpen && (
+        <div className="tweaks-panel">
+          <h3>Tweaks</h3>
+          <div style={{ fontSize: 10, color: '#8B7F6E', letterSpacing: 0.5 }}>Customize to taste — changes persist.</div>
+          <div className="row">
+            <label>Color theme</label>
+            <div className="opts">
+              {[{k:'safe',n:'Clay'},{k:'bold',n:'Brick'},{k:'sage',n:'Sage'}].map(o => (
+                <button key={o.k} className={`opt ${tweaks.theme === o.k ? 'active' : ''}`} onClick={() => update('theme', o.k)}>{o.n}</button>
+              ))}
+            </div>
+          </div>
+          <div className="row">
+            <label>Font pairing</label>
+            <div className="opts">
+              {[{k:'editorial',n:'Newsreader'},{k:'fraunces',n:'Fraunces'},{k:'instrument',n:'Instrument'}].map(o => (
+                <button key={o.k} className={`opt ${tweaks.font === o.k ? 'active' : ''}`} onClick={() => update('font', o.k)}>{o.n}</button>
+              ))}
+            </div>
+          </div>
+          <div className="row">
+            <label>Mode</label>
+            <div className="opts">
+              <button className={`opt ${!tweaks.dark ? 'active' : ''}`} onClick={() => update('dark', false)}>Light</button>
+              <button className={`opt ${tweaks.dark ? 'active' : ''}`} onClick={() => update('dark', true)}>Dark</button>
+            </div>
+          </div>
+          <div className="row">
+            <label>Empty states</label>
+            <div className="opts">
+              <button className={`opt ${!tweaks.showEmpty ? 'active' : ''}`} onClick={() => update('showEmpty', false)}>Populated</button>
+              <button className={`opt ${tweaks.showEmpty ? 'active' : ''}`} onClick={() => update('showEmpty', true)}>Empty</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
