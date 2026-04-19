@@ -1,0 +1,338 @@
+import { useMemo, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import Display from "../components/ui/Display";
+import Eyebrow from "../components/ui/Eyebrow";
+import Tag from "../components/ui/Tag";
+import ItemGrid from "../components/items/ItemGrid";
+import ProductTile from "../components/ui/ProductTile";
+import Modal from "../components/ui/Modal";
+import { useAppShell } from "../components/layout/AppShell";
+import { useCloset, useCreateSection, useDeleteSection, usePatchSection } from "../hooks/useClosets";
+import { useItems } from "../hooks/useItems";
+import { formatCompactCurrency, hashTone, parsePriceToNumber } from "../lib/format";
+
+export default function ClosetDetail() {
+  const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const { openItemDrawer, openClosetForm } = useAppShell();
+  const closetQuery = useCloset(id);
+  const createSectionMutation = useCreateSection();
+  const patchSectionMutation = usePatchSection();
+  const deleteSectionMutation = useDeleteSection();
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [sectionModalOpen, setSectionModalOpen] = useState(false);
+  const [sectionName, setSectionName] = useState("");
+  const closet = closetQuery.data;
+  const itemsQuery = useItems({
+    closetId: id,
+    sectionId: activeSection,
+    search: searchParams.get("search") ?? "",
+    season: searchParams.get("season"),
+    sort: (searchParams.get("sort") as "newest" | "oldest" | "updated" | null) ?? "newest"
+  });
+  const items = itemsQuery.data ?? [];
+  const activeSectionObject = closet?.sections.find((section) => section.id === activeSection) ?? null;
+  const totalValue = useMemo(
+    () => items.reduce((sum, item) => sum + parsePriceToNumber(item.price), 0),
+    [items]
+  );
+
+  if (!closet) {
+    return <div style={{ padding: 40, color: "var(--ws-muted)" }}>Loading closet...</div>;
+  }
+
+  const closetId = closet.id;
+
+  async function handleSectionSave(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (activeSectionObject) {
+      await patchSectionMutation.mutateAsync({
+        closetId,
+        sectionId: activeSectionObject.id,
+        payload: { name: sectionName }
+      });
+    } else {
+      await createSectionMutation.mutateAsync({
+        closetId,
+        payload: { name: sectionName }
+      });
+    }
+
+    setSectionModalOpen(false);
+    setSectionName("");
+  }
+
+  return (
+    <div style={{ padding: "32px 40px 60px" }}>
+      <Link
+        to="/"
+        style={{
+          display: "inline-block",
+          marginBottom: 18,
+          fontSize: 11,
+          letterSpacing: 1.5,
+          textTransform: "uppercase",
+          color: "var(--ws-muted)"
+        }}
+      >
+        ← All closets
+      </Link>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1fr) 320px",
+          gap: 40,
+          paddingBottom: 32,
+          borderBottom: "1px solid var(--ws-hairline)",
+          marginBottom: 32
+        }}
+      >
+        <div>
+          <Eyebrow>Closet</Eyebrow>
+          <Display size={68} style={{ marginTop: 12, marginBottom: 10 }}>
+            {closet.name}
+          </Display>
+          <div style={{ maxWidth: 520, fontSize: 15, lineHeight: 1.6, color: "var(--ws-muted)" }}>
+            {closet.subtitle ?? "An evolving, tag-indexed edit of the pieces you return to."}
+          </div>
+
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginTop: 24 }}>
+            {[
+              { value: closet.itemCount, label: "items" },
+              { value: closet.sections.length, label: "sections" },
+              { value: closet.tags.length, label: "tags" },
+              { value: formatCompactCurrency(totalValue), label: "value" }
+            ].map((entry) => (
+              <div key={entry.label}>
+                <div style={{ fontFamily: "var(--ws-display)", fontSize: 22, fontWeight: 300 }}>{entry.value}</div>
+                <Eyebrow>{entry.label}</Eyebrow>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginTop: 20 }}>
+            <Eyebrow style={{ marginBottom: 8 }}>Closet tags</Eyebrow>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {closet.tags.map((tag) => (
+                <Tag key={tag}>{tag}</Tag>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+            <button
+              type="button"
+              onClick={() => openClosetForm(closet)}
+              style={{
+                padding: "10px 14px",
+                border: "1px solid var(--ws-hairline)",
+                background: "transparent",
+                cursor: "pointer",
+                fontSize: 11,
+                letterSpacing: 1.5,
+                textTransform: "uppercase"
+              }}
+            >
+              Edit closet
+            </button>
+            {activeSectionObject ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSectionName(activeSectionObject.name);
+                    setSectionModalOpen(true);
+                  }}
+                  style={{
+                    padding: "10px 14px",
+                    border: "1px solid var(--ws-hairline)",
+                    background: "transparent",
+                    cursor: "pointer",
+                    fontSize: 11,
+                    letterSpacing: 1.5,
+                    textTransform: "uppercase"
+                  }}
+                >
+                  Rename section
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const deleteItems = window.confirm(
+                      `Delete "${activeSectionObject.name}" and its items? Press Cancel to keep the section.`
+                    );
+
+                    if (!deleteItems) {
+                      return;
+                    }
+
+                    await deleteSectionMutation.mutateAsync({
+                      closetId: closet.id,
+                      sectionId: activeSectionObject.id,
+                      deleteItems: true
+                    });
+                    setActiveSection(null);
+                  }}
+                  style={{
+                    padding: "10px 14px",
+                    border: "1px solid var(--ws-hairline)",
+                    background: "transparent",
+                    cursor: "pointer",
+                    fontSize: 11,
+                    letterSpacing: 1.5,
+                    textTransform: "uppercase",
+                    color: "var(--ws-accent)"
+                  }}
+                >
+                  Delete section
+                </button>
+              </>
+            ) : null}
+          </div>
+        </div>
+
+        <div style={{ position: "relative", height: 280 }}>
+          {[0, 1, 2].map((index) => (
+            <div
+              key={index}
+              style={{
+                position: "absolute",
+                top: index * 30,
+                left: 40 + index * 70,
+                width: index === 0 ? 180 : index === 1 ? 100 : 110,
+                height: index === 0 ? 220 : index === 1 ? 130 : 90
+              }}
+            >
+              <ProductTile tone={hashTone(`${closet.id}-${index}`)} style={{ width: "100%", height: "100%" }} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 24,
+          marginBottom: 24,
+          borderBottom: "1px solid var(--ws-hairline)",
+          paddingBottom: 12,
+          flexWrap: "wrap"
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setActiveSection(null)}
+          style={{
+            border: "none",
+            background: "none",
+            cursor: "pointer",
+            padding: 0,
+            fontFamily: "var(--ws-display)",
+            fontSize: 18,
+            fontStyle: activeSection === null ? "italic" : "normal",
+            color: activeSection === null ? "var(--ws-ink)" : "var(--ws-muted)"
+          }}
+        >
+          All <span style={{ fontFamily: "var(--ws-mono)", fontSize: 10 }}>{closet.itemCount}</span>
+        </button>
+        {closet.sections.map((section) => (
+          <button
+            key={section.id}
+            type="button"
+            onClick={() => setActiveSection(section.id)}
+            style={{
+              border: "none",
+              background: "none",
+              cursor: "pointer",
+              padding: 0,
+              fontFamily: "var(--ws-display)",
+              fontSize: 18,
+              fontStyle: activeSection === section.id ? "italic" : "normal",
+              color: activeSection === section.id ? "var(--ws-ink)" : "var(--ws-muted)"
+            }}
+          >
+            {section.name} <span style={{ fontFamily: "var(--ws-mono)", fontSize: 10 }}>{section.itemCount}</span>
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => {
+            setSectionName("");
+            setSectionModalOpen(true);
+          }}
+          style={{
+            border: "1px dashed var(--ws-hairline)",
+            background: "transparent",
+            padding: "4px 10px",
+            cursor: "pointer",
+            fontSize: 10,
+            letterSpacing: 1,
+            textTransform: "uppercase",
+            color: "var(--ws-muted)"
+          }}
+        >
+          + Section
+        </button>
+      </div>
+
+      <ItemGrid items={items} onOpen={(item) => openItemDrawer(item.id)} />
+
+      <Modal open={sectionModalOpen} onClose={() => setSectionModalOpen(false)} width={480}>
+        <form onSubmit={handleSectionSave} style={{ padding: 28 }}>
+          <Eyebrow>{activeSectionObject ? "Rename section" : "New section"}</Eyebrow>
+          <Display size={30} style={{ marginTop: 10 }}>
+            {activeSectionObject ? activeSectionObject.name : "Create a section"}
+          </Display>
+          <input
+            required
+            value={sectionName}
+            onChange={(event) => setSectionName(event.target.value)}
+            placeholder="Knitwear"
+            style={{
+              width: "100%",
+              marginTop: 18,
+              border: "1px solid var(--ws-hairline)",
+              background: "var(--ws-surface)",
+              padding: "14px 16px"
+            }}
+          />
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
+            <button
+              type="button"
+              onClick={() => setSectionModalOpen(false)}
+              style={{
+                padding: "10px 14px",
+                border: "1px solid var(--ws-hairline)",
+                background: "transparent",
+                cursor: "pointer",
+                fontSize: 11,
+                letterSpacing: 1.5,
+                textTransform: "uppercase"
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              style={{
+                padding: "10px 14px",
+                border: "none",
+                background: "var(--ws-ink)",
+                color: "var(--ws-paper)",
+                cursor: "pointer",
+                fontSize: 11,
+                letterSpacing: 1.8,
+                textTransform: "uppercase"
+              }}
+            >
+              Save section
+            </button>
+          </div>
+        </form>
+      </Modal>
+    </div>
+  );
+}
