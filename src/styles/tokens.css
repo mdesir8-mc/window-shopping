@@ -4,6 +4,7 @@
   --ws-mono: "JetBrains Mono", ui-monospace, monospace;
   --ws-paper: #f5f1ea;
   --ws-surface: #ede6d8;
+  --ws-overlay-paper: rgba(245, 241, 234, 0.88);
   --ws-ink: #1a1613;
   --ws-muted: #8b7f6e;
   --ws-hairline: rgba(26, 22, 19, 0.12);
@@ -16,6 +17,7 @@ body[data-theme="bold"] {
   --ws-ui: "Space Grotesk", system-ui, sans-serif;
   --ws-paper: #ede7dc;
   --ws-surface: #e2dac9;
+  --ws-overlay-paper: rgba(237, 231, 220, 0.88);
   --ws-ink: #111010;
   --ws-muted: #7a7269;
   --ws-hairline: rgba(17, 16, 16, 0.15);
@@ -26,6 +28,7 @@ body[data-theme="bold"] {
 body[data-theme="sage"] {
   --ws-paper: #eeede4;
   --ws-surface: #e0dfd1;
+  --ws-overlay-paper: rgba(238, 237, 228, 0.88);
   --ws-ink: #1b1f18;
   --ws-muted: #6b7266;
   --ws-hairline: rgba(27, 31, 24, 0.12);
@@ -36,8 +39,9 @@ body[data-theme="sage"] {
 body[data-dark="1"] {
   --ws-paper: #1a1613;
   --ws-surface: #24201c;
+  --ws-overlay-paper: rgba(36, 32, 28, 0.92);
   --ws-ink: #f0eae0;
-  --ws-muted: #8b7f6e;
+  --ws-muted: #a09285;
   --ws-hairline: rgba(240, 234, 224, 0.14);
   --ws-accent: #d9a878;
   --ws-accent-bg: rgba(217, 168, 120, 0.08);

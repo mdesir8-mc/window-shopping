@@ -34,7 +34,7 @@ export default function ItemCard({
             top: 10,
             right: 10,
             padding: "3px 7px",
-            background: "rgba(245,241,234,0.85)",
+            background: "var(--ws-overlay-paper)",
             backdropFilter: "blur(4px)",
             fontFamily: "var(--ws-mono)",
             fontSize: 9,

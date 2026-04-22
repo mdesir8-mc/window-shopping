@@ -87,7 +87,7 @@ export default function TagManagerModal({
                 alignItems: "center",
                 padding: "14px 16px",
                 border: "1px solid var(--ws-hairline)",
-                background: "rgba(255,255,255,0.12)"
+                background: "var(--ws-overlay-paper)"
               }}
             >
               <div>

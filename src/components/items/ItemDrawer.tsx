@@ -77,7 +77,8 @@ export default function ItemDrawer({
                 height: 32,
                 borderRadius: 32,
                 border: "none",
-                background: "rgba(245,241,234,0.9)",
+                background: "var(--ws-overlay-paper)",
+                color: "var(--ws-ink)",
                 cursor: "pointer",
                 fontSize: 14
               }}
