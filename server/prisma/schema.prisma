@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  plan      String   @default("free")
+  createdAt DateTime @default(now())
+  closets   Closet[]
+  tags      Tag[]
+}
+
+model Closet {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  name      String
+  subtitle  String?
+  accent    String?
+  tags      String[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  sections  Section[]
+  items     Item[]
+
+  @@index([userId])
+}
+
+model Section {
+  id        String   @id @default(cuid())
+  closetId  String
+  closet    Closet   @relation(fields: [closetId], references: [id], onDelete: Cascade)
+  name      String
+  tags      String[]
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  items     Item[]
+
+  @@index([closetId])
+}
+
+model Item {
+  id            String   @id @default(cuid())
+  closetId      String
+  closet        Closet   @relation(fields: [closetId], references: [id], onDelete: Cascade)
+  sectionId     String?
+  section       Section? @relation(fields: [sectionId], references: [id])
+  brand         String
+  name          String
+  price         String?
+  originalPrice String?
+  currency      String?
+  source        String?
+  url           String?
+  season        String
+  tags          String[]
+  colors        String[]
+  description   String?
+  imageUrl      String?
+  favorited     Boolean  @default(false)
+  addedAt       DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([closetId])
+  @@index([sectionId])
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  name      String
+  color     String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, name])
+  @@index([userId])
+}
