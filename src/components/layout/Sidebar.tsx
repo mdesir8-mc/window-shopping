@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import type { Closet, Item, User } from "../../types";
 import ProductTile from "../ui/ProductTile";
@@ -19,6 +20,7 @@ export default function Sidebar({
   onOpenNewCloset,
   onToggleSettings
 }: SidebarProps) {
+  const [isAvatarHovered, setIsAvatarHovered] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -167,21 +169,24 @@ export default function Sidebar({
         <button
           type="button"
           onClick={onToggleSettings}
+          onMouseEnter={() => setIsAvatarHovered(true)}
+          onMouseLeave={() => setIsAvatarHovered(false)}
+          onFocus={() => setIsAvatarHovered(true)}
+          onBlur={() => setIsAvatarHovered(false)}
           style={{
             width: "100%",
-            marginBottom: 12,
-            padding: "10px 12px",
-            border: "1px solid var(--ws-hairline)",
-            background: "transparent",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "4px 6px",
+            border: "none",
+            background: isAvatarHovered ? "var(--ws-surface)" : "transparent",
             cursor: "pointer",
-            fontSize: 11,
-            letterSpacing: 1.5,
-            textTransform: "uppercase"
+            textAlign: "left",
+            borderRadius: 4,
+            transition: "background 120ms ease"
           }}
         >
-          Theme settings
-        </button>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 6px" }}>
           <div
             style={{
               width: 28,
@@ -203,7 +208,7 @@ export default function Sidebar({
               {user?.plan ?? "free"} plan · {items.length} items
             </div>
           </div>
-        </div>
+        </button>
       </div>
     </aside>
   );

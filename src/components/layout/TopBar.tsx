@@ -52,7 +52,7 @@ export default function TopBar({ onOpenTags, onOpenAddItem }: TopBarProps) {
           gap: 8,
           border: "1px solid var(--ws-hairline)",
           padding: "8px 12px",
-          background: "rgba(255,255,255,0.16)"
+          background: "var(--ws-surface)"
         }}
       >
         <span style={{ fontFamily: "var(--ws-mono)", fontSize: 11, color: "var(--ws-muted)" }}>⌕</span>
