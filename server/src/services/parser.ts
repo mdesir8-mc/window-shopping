@@ -25,10 +25,10 @@ const TAG_KEYWORDS: Record<string, string[]> = {
 };
 
 const SEASON_PATTERNS: Array<[string, RegExp]> = [
-  ["Winter", /\bwinter\b|\bf\/w\b|\bfw\b|cold weather/g],
-  ["Fall", /\bfall\b|\bautumn\b/g],
-  ["Summer", /\bsummer\b|\bs\/s\b|\bss\b|warm weather/g],
-  ["Spring", /\bspring\b/g]
+  ["Winter", /\bwinter\b|\bf\/w\b|\bfw\b|cold weather/],
+  ["Fall", /\bfall\b|\bautumn\b/],
+  ["Summer", /\bsummer\b|\bs\/s\b|\bss\b|warm weather/],
+  ["Spring", /\bspring\b/]
 ];
 
 function normalizeUrl(rawUrl: string) {
