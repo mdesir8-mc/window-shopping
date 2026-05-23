@@ -1,23 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import axios from "axios";
-import { parseProductPage, ParserFetchError } from "../src/services/parser";
+import {
+  parseProductPage,
+  ParserFetchError,
+  type AiEnricher,
+  type HtmlFetcher
+} from "../src/services/parser";
 
-vi.mock("axios", () => ({
-  default: {
-    get: vi.fn()
-  }
-}));
-
-const mockedAxios = vi.mocked(axios, true);
+function htmlFetcher(html: string): HtmlFetcher {
+  return async () => html;
+}
 
 describe("parseProductPage", () => {
+  const noopEnricher: AiEnricher = vi.fn().mockResolvedValue({});
+
   beforeEach(() => {
-    mockedAxios.get.mockReset();
+    vi.clearAllMocks();
   });
 
   it("extracts Open Graph and meta tag fields", async () => {
-    mockedAxios.get.mockResolvedValue({
-      data: `
+    const product = await parseProductPage("https://shop.example.com/coat", {
+      fetcher: htmlFetcher(`
         <html>
           <head>
             <meta property="og:title" content="Soft Wool Coat" />
@@ -27,10 +29,9 @@ describe("parseProductPage", () => {
             <meta property="product:price:currency" content="USD" />
           </head>
         </html>
-      `
-    } as never);
-
-    const product = await parseProductPage("https://shop.example.com/coat");
+      `),
+      aiEnricher: noopEnricher
+    });
 
     expect(product.name).toBe("Soft Wool Coat");
     expect(product.imageUrl).toBe("https://cdn.example.com/coat.jpg");
@@ -41,8 +42,8 @@ describe("parseProductPage", () => {
   });
 
   it("extracts JSON-LD product fields", async () => {
-    mockedAxios.get.mockResolvedValue({
-      data: `
+    const product = await parseProductPage("https://shop.example.com/crewneck", {
+      fetcher: htmlFetcher(`
         <html>
           <head>
             <script type="application/ld+json">
@@ -63,10 +64,9 @@ describe("parseProductPage", () => {
             </script>
           </head>
         </html>
-      `
-    } as never);
-
-    const product = await parseProductPage("https://shop.example.com/crewneck");
+      `),
+      aiEnricher: noopEnricher
+    });
 
     expect(product.brand).toBe("The Row");
     expect(product.name).toBe("Oversized Cashmere Crewneck");
@@ -77,28 +77,111 @@ describe("parseProductPage", () => {
   });
 
   it("falls back to the title tag when structured product data is missing", async () => {
-    mockedAxios.get.mockResolvedValue({
-      data: `
+    const product = await parseProductPage("https://shop.example.com/jacket", {
+      fetcher: htmlFetcher(`
         <html>
           <head>
             <title>Vintage Denim Jacket | Khaite</title>
           </head>
         </html>
-      `
-    } as never);
-
-    const product = await parseProductPage("https://shop.example.com/jacket");
+      `),
+      aiEnricher: noopEnricher
+    });
 
     expect(product.brand).toBe("Khaite");
     expect(product.name).toBe("Vintage Denim Jacket");
     expect(product.suggestedTags).toEqual(expect.arrayContaining(["denim", "vintage"]));
   });
 
-  it("throws a fetch error when the remote page cannot be reached", async () => {
-    mockedAxios.get.mockRejectedValue(new Error("socket hang up"));
+  it("calls AI enrichment when name, price, or image is missing", async () => {
+    const aiEnricher: AiEnricher = vi.fn().mockResolvedValue({
+      name: "Pleated Trouser",
+      price: "850",
+      imageUrl: "https://cdn.example.com/trouser.jpg"
+    });
 
-    await expect(parseProductPage("https://shop.example.com/fail")).rejects.toBeInstanceOf(
-      ParserFetchError
-    );
+    const product = await parseProductPage("https://shop.example.com/trouser", {
+      fetcher: htmlFetcher("<html><head></head><body></body></html>"),
+      aiEnricher
+    });
+
+    expect(aiEnricher).toHaveBeenCalledOnce();
+    expect(product.name).toBe("Pleated Trouser");
+    expect(product.price).toBe("850");
+    expect(product.imageUrl).toBe("https://cdn.example.com/trouser.jpg");
+  });
+
+  it("skips AI enrichment when name, price, and image are all present", async () => {
+    const aiEnricher: AiEnricher = vi.fn().mockResolvedValue({
+      name: "Should Not Be Used"
+    });
+
+    const product = await parseProductPage("https://shop.example.com/bag", {
+      fetcher: htmlFetcher(`
+        <html>
+          <head>
+            <meta property="og:title" content="Leather Bag" />
+            <meta property="og:image" content="https://cdn.example.com/bag.jpg" />
+            <meta property="product:price:amount" content="1200" />
+          </head>
+        </html>
+      `),
+      aiEnricher
+    });
+
+    expect(aiEnricher).not.toHaveBeenCalled();
+    expect(product.name).toBe("Leather Bag");
+  });
+
+  it("swallows AI enrichment failures and returns the cheerio result", async () => {
+    const aiEnricher: AiEnricher = vi.fn().mockRejectedValue(new Error("Anthropic unavailable"));
+
+    const product = await parseProductPage("https://shop.example.com/skirt", {
+      fetcher: htmlFetcher(`
+        <html>
+          <head>
+            <title>Bias Cut Skirt | Toteme</title>
+          </head>
+        </html>
+      `),
+      aiEnricher
+    });
+
+    expect(product.brand).toBe("Toteme");
+    expect(product.name).toBe("Bias Cut Skirt");
+    expect(product.price).toBeNull();
+  });
+
+  it("does not overwrite cheerio fields when AI fills remaining gaps", async () => {
+    const aiEnricher: AiEnricher = vi.fn().mockResolvedValue({
+      name: "Incorrect AI Name",
+      price: "740",
+      imageUrl: "https://cdn.example.com/heel.jpg"
+    });
+
+    const product = await parseProductPage("https://shop.example.com/heel", {
+      fetcher: htmlFetcher(`
+        <html>
+          <head>
+            <meta property="og:title" content="Satin Slingback" />
+          </head>
+        </html>
+      `),
+      aiEnricher
+    });
+
+    expect(product.name).toBe("Satin Slingback");
+    expect(product.price).toBe("740");
+    expect(product.imageUrl).toBe("https://cdn.example.com/heel.jpg");
+  });
+
+  it("throws a fetch error when the remote page cannot be reached", async () => {
+    const fetcher: HtmlFetcher = async () => {
+      throw new Error("socket hang up");
+    };
+
+    await expect(
+      parseProductPage("https://shop.example.com/fail", { fetcher })
+    ).rejects.toBeInstanceOf(ParserFetchError);
   });
 });

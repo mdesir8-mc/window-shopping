@@ -1,8 +1,13 @@
-import axios from "axios";
 import * as cheerio from "cheerio";
 import type { ParsedProduct } from "../types";
+import { fetchRenderedHtml } from "./browser";
 
 export class ParserFetchError extends Error {}
+export type HtmlFetcher = (url: string) => Promise<string>;
+export type AiEnricher = (
+  html: string,
+  partial: ParsedProduct
+) => Promise<Partial<ParsedProduct>>;
 
 const TAG_KEYWORDS: Record<string, string[]> = {
   wool: ["wool", "merino", "lambswool"],
@@ -220,22 +225,131 @@ function extractTitleFallback(title: string | null) {
   };
 }
 
-export async function parseProductPage(rawUrl: string): Promise<ParsedProduct> {
+async function fetchRawHtml(url: string): Promise<string> {
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": "WindowShoppingBot/1.0 (+https://window-shopping.local)"
+    },
+    redirect: "follow"
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed with status ${response.status}`);
+  }
+
+  return response.text();
+}
+
+function isComplete(result: ParsedProduct): boolean {
+  return result.name !== null && result.price !== null && result.imageUrl !== null;
+}
+
+function extractBodyText(html: string, maxLength = 15_000): string {
+  const $ = cheerio.load(html);
+  $("script, style, noscript, svg").remove();
+  const text = $("body").text().replace(/\s+/g, " ").trim();
+  const fallback = html.replace(/\s+/g, " ").trim();
+  return (text || fallback).slice(0, maxLength);
+}
+
+function parseClaudeResponse(text: string): Partial<ParsedProduct> {
+  const cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+
+  if (!cleaned) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return {};
+    }
+
+    const record = parsed as Record<string, unknown>;
+    return {
+      brand: asText(record.brand) ?? null,
+      name: asText(record.name) ?? null,
+      price: asText(record.price) ?? null,
+      originalPrice: asText(record.originalPrice) ?? null,
+      currency: asText(record.currency) ?? null,
+      imageUrl: asText(record.imageUrl) ?? null,
+      description: asText(record.description) ?? null,
+      colors: Array.isArray(record.colors)
+        ? record.colors.filter((entry): entry is string => typeof entry === "string")
+        : undefined
+    };
+  } catch {
+    return {};
+  }
+}
+
+async function claudeEnrich(html: string, _partial: ParsedProduct): Promise<Partial<ParsedProduct>> {
+  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+  if (!apiKey) {
+    return {};
+  }
+
+  try {
+    const { default: Anthropic } = await import("@anthropic-ai/sdk");
+    const client = new Anthropic({ apiKey });
+    const response = await client.messages.create({
+      model: process.env.ANTHROPIC_MODEL?.trim() || "claude-3-5-haiku-latest",
+      max_tokens: 512,
+      system:
+        "You extract product information from retail HTML. Return only a JSON object. Use null for uncertain fields and never invent missing data.",
+      messages: [
+        {
+          role: "user",
+          content:
+            "Extract product data from this product page content. " +
+            'Return JSON with keys: brand, name, price, originalPrice, currency, imageUrl, description, colors. ' +
+            `HTML content:\n${extractBodyText(html)}`
+        }
+      ]
+    });
+
+    const textBlock = response.content.find((entry) => entry.type === "text");
+    return textBlock?.type === "text" ? parseClaudeResponse(textBlock.text) : {};
+  } catch (error) {
+    console.error("Claude enrichment failed:", error);
+    return {};
+  }
+}
+
+function mergePartial(base: ParsedProduct, extra: Partial<ParsedProduct>): ParsedProduct {
+  return {
+    brand: base.brand ?? extra.brand ?? null,
+    name: base.name ?? extra.name ?? null,
+    price: base.price ?? extra.price ?? null,
+    originalPrice: base.originalPrice ?? extra.originalPrice ?? null,
+    currency: base.currency ?? extra.currency ?? null,
+    imageUrl: base.imageUrl ?? extra.imageUrl ?? null,
+    description: base.description ?? extra.description ?? null,
+    colors: base.colors.length > 0 ? base.colors : extra.colors ?? [],
+    suggestedTags: base.suggestedTags,
+    suggestedSeason: base.suggestedSeason,
+    source: base.source
+  };
+}
+
+export async function parseProductPage(
+  rawUrl: string,
+  options?: { fetcher?: HtmlFetcher; aiEnricher?: AiEnricher }
+): Promise<ParsedProduct> {
   const url = normalizeUrl(rawUrl);
   let html: string;
 
   try {
-    const response = await axios.get<string>(url.toString(), {
-      headers: {
-        "User-Agent": "WindowShoppingBot/1.0 (+https://window-shopping.local)"
-      },
-      maxRedirects: 5,
-      responseType: "text",
-      timeout: 10_000,
-      validateStatus: (status) => status >= 200 && status < 400
-    });
-
-    html = response.data;
+    const fetcher = options?.fetcher;
+    if (fetcher) {
+      html = await fetcher(url.toString());
+    } else {
+      try {
+        html = await fetchRenderedHtml(url.toString());
+      } catch {
+        html = await fetchRawHtml(url.toString());
+      }
+    }
   } catch (error) {
     throw new ParserFetchError(
       error instanceof Error ? error.message : "Unable to fetch the remote product page."
@@ -283,7 +397,7 @@ export async function parseProductPage(rawUrl: string): Promise<ParsedProduct> {
   const colors = extractColors(product.color);
   const textForInference = [brand, name, description].filter(Boolean).join(" ");
 
-  return {
+  let result: ParsedProduct = {
     brand,
     name,
     price,
@@ -296,4 +410,16 @@ export async function parseProductPage(rawUrl: string): Promise<ParsedProduct> {
     suggestedSeason: inferSeason(textForInference),
     source: url.hostname.replace(/^www\./, "")
   };
+
+  if (!isComplete(result)) {
+    const enricher = options?.aiEnricher ?? claudeEnrich;
+    try {
+      const extra = await enricher(html, result);
+      result = mergePartial(result, extra);
+    } catch {
+      // Swallow optional enrichment failures and return the parser result.
+    }
+  };
+
+  return result;
 }
