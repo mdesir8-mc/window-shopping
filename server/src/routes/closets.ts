@@ -78,6 +78,7 @@ router.post(
     const name = requireString(req.body?.name, "name");
     const subtitle = optionalString(req.body?.subtitle);
     const accent = optionalString(req.body?.accent);
+    const season = optionalString(req.body?.season);
     const tags = optionalStringArray(req.body?.tags, "tags") ?? [];
 
     const closet = await prisma.closet.create({
@@ -86,6 +87,7 @@ router.post(
         name,
         subtitle,
         accent,
+        season,
         tags
       },
       include: {
@@ -145,6 +147,7 @@ router.patch(
       ...(req.body?.name !== undefined ? { name: requireString(req.body.name, "name") } : {}),
       ...(req.body?.subtitle !== undefined ? { subtitle: optionalString(req.body.subtitle) } : {}),
       ...(req.body?.accent !== undefined ? { accent: optionalString(req.body.accent) } : {}),
+      ...(req.body?.season !== undefined ? { season: optionalString(req.body.season) } : {}),
       ...(req.body?.tags !== undefined ? { tags: optionalStringArray(req.body.tags, "tags") ?? [] } : {})
     };
 

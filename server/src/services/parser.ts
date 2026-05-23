@@ -1,5 +1,5 @@
 import * as cheerio from "cheerio";
-import type { ParsedProduct } from "../types";
+import type { ParsedProduct } from "../../../shared/types";
 import { fetchRenderedHtml } from "./browser";
 
 export class ParserFetchError extends Error {}
