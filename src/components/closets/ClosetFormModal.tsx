@@ -8,6 +8,7 @@ import Hairline from "../ui/Hairline";
 import Tag from "../ui/Tag";
 import { useCreateCloset, useDeleteCloset, usePatchCloset } from "../../hooks/useClosets";
 import { useTags } from "../../hooks/useTags";
+import { SEASONS } from "../../constants";
 
 interface ClosetFormModalProps {
   open: boolean;
@@ -36,6 +37,7 @@ export default function ClosetFormModal({ open, closet, onClose }: ClosetFormMod
   const [subtitle, setSubtitle] = useState("");
   const [accent, setAccent] = useState("#8A6B4F");
   const [tagText, setTagText] = useState("");
+  const [season, setSeason] = useState("");
   const suggestedTags = useMemo(() => tagsQuery.data ?? [], [tagsQuery.data]);
 
   useEffect(() => {
@@ -47,6 +49,7 @@ export default function ClosetFormModal({ open, closet, onClose }: ClosetFormMod
     setSubtitle(closet?.subtitle ?? "");
     setAccent(closet?.accent ?? "#8A6B4F");
     setTagText(closet?.tags.join(", ") ?? "");
+    setSeason(closet?.season ?? "");
   }, [closet, open]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -55,7 +58,8 @@ export default function ClosetFormModal({ open, closet, onClose }: ClosetFormMod
       name,
       subtitle: subtitle || null,
       accent: accent || null,
-      tags: normalizeTags(tagText)
+      tags: normalizeTags(tagText),
+      season: season || null
     };
 
     if (closet) {
@@ -163,6 +167,22 @@ export default function ClosetFormModal({ open, closet, onClose }: ClosetFormMod
               }}
             />
           </label>
+
+          <div style={{ display: "grid", gap: 8 }}>
+            <Eyebrow>Default season</Eyebrow>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {SEASONS.map((entry) => (
+                <Tag
+                  key={entry}
+                  season
+                  filled={season === entry}
+                  onClick={() => setSeason(season === entry ? "" : entry)}
+                >
+                  {entry}
+                </Tag>
+              ))}
+            </div>
+          </div>
         </div>
 
         {suggestedTags.length ? (

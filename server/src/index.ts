@@ -8,6 +8,7 @@ import userRoutes from "./routes/user";
 import closetRoutes from "./routes/closets";
 import itemRoutes from "./routes/items";
 import tagRoutes from "./routes/tags";
+import { closeBrowser, launchBrowser } from "./services/browser";
 import { errorHandler, HttpError } from "./utils/http";
 import { requireAuth } from "./middleware/auth";
 
@@ -51,9 +52,34 @@ export function createApp() {
 }
 
 if (process.env.NODE_ENV !== "test") {
-  const app = createApp();
-  const port = Number(process.env.PORT ?? 3000);
-  app.listen(port, () => {
-    console.log(`Window Shopping server listening on http://localhost:${port}`);
-  });
+  void (async () => {
+    try {
+      await launchBrowser();
+    } catch (error) {
+      console.warn("Browser warmup failed, continuing without a prelaunched browser.", error);
+    }
+
+    const app = createApp();
+    const port = Number(process.env.PORT ?? 3000);
+    const server = app.listen(port, () => {
+      console.log(`Window Shopping server listening on http://localhost:${port}`);
+    });
+
+    let shuttingDown = false;
+    const shutdown = (signal: string) => {
+      if (shuttingDown) {
+        return;
+      }
+
+      shuttingDown = true;
+      console.log(`Received ${signal}, shutting down...`);
+      server.close(async () => {
+        await closeBrowser();
+        process.exit(0);
+      });
+    };
+
+    process.on("SIGTERM", () => shutdown("SIGTERM"));
+    process.on("SIGINT", () => shutdown("SIGINT"));
+  })();
 }

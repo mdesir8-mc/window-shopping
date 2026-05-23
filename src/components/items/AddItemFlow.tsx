@@ -79,7 +79,7 @@ export default function AddItemFlow({
       const result = await parseMutation.mutateAsync(url);
       setParsed(result);
       setSelectedTags(result.suggestedTags);
-      setSeason(result.suggestedSeason ?? "");
+      setSeason(result.suggestedSeason ?? selectedCloset?.season ?? "");
       setStep("preview");
     } catch {
       setStep("paste");
@@ -305,8 +305,13 @@ export default function AddItemFlow({
                 <select
                   value={closetId}
                   onChange={(event) => {
-                    setClosetId(event.target.value);
+                    const nextClosetId = event.target.value;
+                    setClosetId(nextClosetId);
                     setSectionId("");
+                    if (!season) {
+                      const nextCloset = closets.find((closet) => closet.id === nextClosetId);
+                      setSeason(nextCloset?.season ?? "");
+                    }
                   }}
                   style={{
                     border: "1px solid var(--ws-hairline)",
@@ -404,7 +409,8 @@ export default function AddItemFlow({
                 border: "none",
                 background: "var(--ws-ink)",
                 color: "var(--ws-paper)",
-                cursor: "pointer",
+                cursor: !season || createMutation.isPending || !selectedCloset ? "not-allowed" : "pointer",
+                opacity: !season || createMutation.isPending || !selectedCloset ? 0.4 : 1,
                 textTransform: "uppercase",
                 letterSpacing: 1.8,
                 fontSize: 11

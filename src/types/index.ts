@@ -28,6 +28,7 @@ export interface Closet {
   subtitle: string | null;
   accent: string | null;
   tags: string[];
+  season: string | null;
   createdAt: string;
   updatedAt: string;
   itemCount: number;
@@ -71,19 +72,7 @@ export interface Tag {
   itemCount: number;
 }
 
-export interface ParsedProduct {
-  brand: string | null;
-  name: string | null;
-  price: string | null;
-  originalPrice: string | null;
-  currency: string | null;
-  imageUrl: string | null;
-  description: string | null;
-  colors: string[];
-  suggestedTags: string[];
-  suggestedSeason: string | null;
-  source: string;
-}
+export type { ParsedProduct } from "../../shared/types";
 
 export interface ItemFilters {
   closetId?: string;
@@ -99,6 +88,7 @@ export interface ClosetPayload {
   subtitle?: string | null;
   accent?: string | null;
   tags?: string[];
+  season?: string | null;
 }
 
 export interface SectionPayload {

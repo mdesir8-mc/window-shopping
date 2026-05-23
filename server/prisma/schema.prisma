@@ -26,6 +26,7 @@ model Closet {
   subtitle  String?
   accent    String?
   tags      String[]
+  season    String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   sections  Section[]
