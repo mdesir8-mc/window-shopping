@@ -15,7 +15,7 @@ import { requireAuth } from "./middleware/auth";
 export function createApp() {
   const app = express();
   const isProduction = process.env.NODE_ENV === "production";
-  const publicDir = path.resolve(__dirname, "../public");
+  const publicDir = path.resolve(__dirname, "../../../public");
 
   app.use(
     cors({
