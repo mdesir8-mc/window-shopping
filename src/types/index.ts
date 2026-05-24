@@ -11,6 +11,12 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface VersionInfo {
+  version: string;
+  sha: string;
+  released_at: string | null;
+}
+
 export interface Section {
   id: string;
   closetId: string;

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Display from "../components/ui/Display";
 import Eyebrow from "../components/ui/Eyebrow";
+import VersionTag from "../components/ui/VersionTag";
 import { useAuth } from "../hooks/useAuth";
 
 export default function Login() {
@@ -95,6 +96,10 @@ export default function Login() {
 
         <div style={{ marginTop: 16, fontSize: 13, color: "var(--ws-muted)" }}>
           New here? <Link to="/register" style={{ color: "var(--ws-accent)" }}>Create an account</Link>
+        </div>
+
+        <div style={{ marginTop: 28 }}>
+          <VersionTag align="center" />
         </div>
       </form>
     </div>

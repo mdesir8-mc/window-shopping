@@ -4,6 +4,7 @@ import Eyebrow from "../components/ui/Eyebrow";
 import ClosetGrid from "../components/closets/ClosetGrid";
 import ItemGrid from "../components/items/ItemGrid";
 import Hairline from "../components/ui/Hairline";
+import VersionTag from "../components/ui/VersionTag";
 import { useClosets } from "../hooks/useClosets";
 import { useItems } from "../hooks/useItems";
 import { useTags } from "../hooks/useTags";
@@ -136,6 +137,16 @@ export default function Home() {
       </div>
 
       <ItemGrid items={items.slice(0, 8)} onOpen={(item) => openItemDrawer(item.id)} />
+
+      <footer
+        style={{
+          marginTop: 48,
+          paddingTop: 18,
+          borderTop: "1px solid var(--ws-hairline)"
+        }}
+      >
+        <VersionTag align="right" />
+      </footer>
     </div>
   );
 }
