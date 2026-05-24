@@ -24,6 +24,14 @@ export function createApp() {
   );
   app.use(express.json());
 
+  app.get("/version", (_req, res) => {
+    res.json({
+      version: process.env.APP_VERSION ?? "development",
+      sha: process.env.GIT_SHA ?? "local",
+      released_at: process.env.RELEASE_DATE ?? null
+    });
+  });
+
   app.use("/api/auth", authRoutes);
   app.use("/api/user", requireAuth, userRoutes);
   app.use("/api/closets", requireAuth, closetRoutes);

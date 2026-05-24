@@ -5,3 +5,4 @@ node_modules
 .clean/
 .clean-agent/
 .clean-worktrees/
+.railway/

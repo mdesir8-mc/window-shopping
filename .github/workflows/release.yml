@@ -1,0 +1,92 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Release and deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Install server dependencies
+        run: npm ci
+        working-directory: server
+
+      - name: Test and build
+        run: npm run ci
+
+      - name: Capture existing release tag
+        id: before_release
+        run: |
+          echo "tag=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)" >> "$GITHUB_OUTPUT"
+
+      - name: Run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+
+      - name: Capture release metadata
+        id: release_info
+        run: |
+          latest_tag="$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)"
+          if [ -z "$latest_tag" ] || [ "$latest_tag" = "${{ steps.before_release.outputs.tag }}" ]; then
+            echo "released=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          version="${latest_tag#v}"
+          release_date="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          deployed_sha="$(git rev-parse HEAD)"
+
+          echo "released=true" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "sha=$deployed_sha" >> "$GITHUB_OUTPUT"
+          echo "release_date=$release_date" >> "$GITHUB_OUTPUT"
+
+      - name: Install Railway CLI
+        if: steps.release_info.outputs.released == 'true'
+        run: npm install -g @railway/cli
+
+      - name: Set Railway release variables
+        if: steps.release_info.outputs.released == 'true'
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
+          RAILWAY_ENVIRONMENT: ${{ secrets.RAILWAY_ENVIRONMENT }}
+          APP_VERSION: ${{ steps.release_info.outputs.version }}
+          GIT_SHA: ${{ steps.release_info.outputs.sha }}
+          RELEASE_DATE: ${{ steps.release_info.outputs.release_date }}
+        run: |
+          railway link --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_SERVICE_ID"
+          railway variable set APP_VERSION="$APP_VERSION" GIT_SHA="$GIT_SHA" RELEASE_DATE="$RELEASE_DATE" --skip-deploys
+
+      - name: Deploy to Railway
+        if: steps.release_info.outputs.released == 'true'
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
+          RAILWAY_ENVIRONMENT: ${{ secrets.RAILWAY_ENVIRONMENT }}
+        run: railway up --ci
