@@ -241,7 +241,7 @@ async function fetchRawHtml(url: string): Promise<string> {
 }
 
 function isComplete(result: ParsedProduct): boolean {
-  return result.name !== null && result.price !== null && result.imageUrl !== null;
+  return !!result.name && !!result.price && !!result.imageUrl;
 }
 
 function extractBodyText(html: string, maxLength = 15_000): string {
@@ -318,13 +318,13 @@ async function claudeEnrich(html: string, _partial: ParsedProduct): Promise<Part
 
 function mergePartial(base: ParsedProduct, extra: Partial<ParsedProduct>): ParsedProduct {
   return {
-    brand: base.brand ?? extra.brand ?? null,
-    name: base.name ?? extra.name ?? null,
-    price: base.price ?? extra.price ?? null,
-    originalPrice: base.originalPrice ?? extra.originalPrice ?? null,
-    currency: base.currency ?? extra.currency ?? null,
-    imageUrl: base.imageUrl ?? extra.imageUrl ?? null,
-    description: base.description ?? extra.description ?? null,
+    brand: base.brand || extra.brand || null,
+    name: base.name || extra.name || null,
+    price: base.price || extra.price || null,
+    originalPrice: base.originalPrice || extra.originalPrice || null,
+    currency: base.currency || extra.currency || null,
+    imageUrl: base.imageUrl || extra.imageUrl || null,
+    description: base.description || extra.description || null,
     colors: base.colors.length > 0 ? base.colors : extra.colors ?? [],
     suggestedTags: base.suggestedTags,
     suggestedSeason: base.suggestedSeason,
