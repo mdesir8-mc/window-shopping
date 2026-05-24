@@ -175,6 +175,30 @@ describe("parseProductPage", () => {
     expect(product.imageUrl).toBe("https://cdn.example.com/heel.jpg");
   });
 
+  it("calls AI enrichment when meta tags are present but empty", async () => {
+    const aiEnricher: AiEnricher = vi.fn().mockResolvedValue({
+      price: "320",
+      imageUrl: "https://cdn.example.com/shirt.jpg"
+    });
+
+    const product = await parseProductPage("https://shop.example.com/shirt", {
+      fetcher: htmlFetcher(`
+        <html>
+          <head>
+            <meta property="og:title" content="Linen Shirt" />
+            <meta property="og:image" content="" />
+            <meta property="product:price:amount" content="" />
+          </head>
+        </html>
+      `),
+      aiEnricher
+    });
+
+    expect(aiEnricher).toHaveBeenCalledOnce();
+    expect(product.price).toBe("320");
+    expect(product.imageUrl).toBe("https://cdn.example.com/shirt.jpg");
+  });
+
   it("throws a fetch error when the remote page cannot be reached", async () => {
     const fetcher: HtmlFetcher = async () => {
       throw new Error("socket hang up");
