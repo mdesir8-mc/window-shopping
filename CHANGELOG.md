@@ -1,3 +1,10 @@
+## [0.3.3](https://github.com/mdesir8-mc/window-shopping/compare/v0.3.2...v0.3.3) (2026-05-25)
+
+
+### Performance Improvements
+
+* push item search filtering into Prisma WHERE clause ([#16](https://github.com/mdesir8-mc/window-shopping/issues/16)) ([31bc9ec](https://github.com/mdesir8-mc/window-shopping/commit/31bc9ecab71a584f546c47e0f76e82fffaea32af))
+
 ## [0.3.2](https://github.com/mdesir8-mc/window-shopping/compare/v0.3.1...v0.3.2) (2026-05-24)
 
 
