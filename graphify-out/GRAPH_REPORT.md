@@ -1,12 +1,18 @@
-# Graph Report - /Users/michael/window-shopping  (2026-05-23)
+# Graph Report - window-shopping  (2026-05-24)
 
 ## Corpus Check
-- Corpus is ~41,207 words - fits in a single context window. You may not need a graph.
+- 97 files · ~43,562 words
+- Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1212 nodes · 2950 edges · 82 communities (54 shown, 28 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 47 edges (avg confidence: 0.88)
+- 1919 nodes · 5009 edges · 121 communities (87 shown, 34 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 123 edges (avg confidence: 0.83)
 - Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `15b071a1`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - [[_COMMUNITY_Bundled JS (React Core)|Bundled JS (React Core)]]
@@ -80,18 +86,56 @@
 - [[_COMMUNITY_Tag Type|Tag Type]]
 - [[_COMMUNITY_Closet Payload Type|Closet Payload Type]]
 - [[_COMMUNITY_Item Payload Type|Item Payload Type]]
+- [[_COMMUNITY_Community 82|Community 82]]
+- [[_COMMUNITY_Community 83|Community 83]]
+- [[_COMMUNITY_Community 84|Community 84]]
+- [[_COMMUNITY_Community 85|Community 85]]
+- [[_COMMUNITY_Community 86|Community 86]]
+- [[_COMMUNITY_Community 87|Community 87]]
+- [[_COMMUNITY_Community 88|Community 88]]
+- [[_COMMUNITY_Community 89|Community 89]]
+- [[_COMMUNITY_Community 90|Community 90]]
+- [[_COMMUNITY_Community 91|Community 91]]
+- [[_COMMUNITY_Community 92|Community 92]]
+- [[_COMMUNITY_Community 93|Community 93]]
+- [[_COMMUNITY_Community 94|Community 94]]
+- [[_COMMUNITY_Community 95|Community 95]]
+- [[_COMMUNITY_Community 97|Community 97]]
+- [[_COMMUNITY_Community 98|Community 98]]
+- [[_COMMUNITY_Community 99|Community 99]]
+- [[_COMMUNITY_Community 100|Community 100]]
+- [[_COMMUNITY_Community 101|Community 101]]
+- [[_COMMUNITY_Community 102|Community 102]]
+- [[_COMMUNITY_Community 103|Community 103]]
+- [[_COMMUNITY_Community 104|Community 104]]
+- [[_COMMUNITY_Community 105|Community 105]]
+- [[_COMMUNITY_Community 106|Community 106]]
+- [[_COMMUNITY_Community 107|Community 107]]
+- [[_COMMUNITY_Community 108|Community 108]]
+- [[_COMMUNITY_Community 109|Community 109]]
+- [[_COMMUNITY_Community 110|Community 110]]
+- [[_COMMUNITY_Community 113|Community 113]]
+- [[_COMMUNITY_Community 114|Community 114]]
+- [[_COMMUNITY_Community 115|Community 115]]
+- [[_COMMUNITY_Community 116|Community 116]]
+- [[_COMMUNITY_Community 118|Community 118]]
+- [[_COMMUNITY_Community 119|Community 119]]
+- [[_COMMUNITY_Community 122|Community 122]]
+- [[_COMMUNITY_Community 124|Community 124]]
+- [[_COMMUNITY_Community 127|Community 127]]
+- [[_COMMUNITY_Community 129|Community 129]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `O()` - 48 edges
-2. `Fg()` - 44 edges
-3. `Ml()` - 29 edges
-4. `get()` - 27 edges
-5. `e()` - 22 edges
-6. `ch()` - 21 edges
-7. `fh()` - 21 edges
-8. `setOptions()` - 21 edges
-9. `Vt()` - 21 edges
-10. `HttpError` - 21 edges
+2. `O()` - 48 edges
+3. `Fg()` - 46 edges
+4. `ng()` - 46 edges
+5. `e()` - 43 edges
+6. `m()` - 34 edges
+7. `Ml()` - 29 edges
+8. `Ml()` - 28 edges
+9. `get()` - 28 edges
+10. `get()` - 27 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Meta()` --semantically_similar_to--> `Meta (primitives.jsx)`  [INFERRED] [semantically similar]
@@ -119,159 +163,159 @@
 - **AppShell orchestrates all global modals** — layout_appshell, closets_closetformmodal, tags_tagmanagermodal, layout_appshellcontext [EXTRACTED 1.00]
 - **Closet CRUD form flow: modal + mutations + navigation** — closets_closetformmodal, types_closet, types_closetpayload [INFERRED 0.85]
 
-## Communities (82 total, 28 thin omitted)
+## Communities (121 total, 34 thin omitted)
 
 ### Community 0 - "Bundled JS (React Core)"
 Cohesion: 0.02
-Nodes (22): bd, Bm, cw, _d, [dw,fw,pw,hw], e1, ec, ee (+14 more)
+Nodes (21): bd, Bm, cw, _d, [dw,fw,pw,hw], e1, ec, ee (+13 more)
 
 ### Community 1 - "Server Auth & Routes"
-Cohesion: 0.06
-Nodes (65): requireAuth(), email, name, password, router, safeUser, accent, closetId (+57 more)
+Cohesion: 0.22
+Nodes (8): color, counts, name, request, CountedCloset, CountedSection, SerializedItemInput, serializeTag()
 
 ### Community 2 - "Bundled JS (Query/State)"
-Cohesion: 0.05
-Nodes (74): _0(), ai(), b0, bc(), Bf(), Bh(), c0(), ch() (+66 more)
+Cohesion: 0.06
+Nodes (60): b0, Bh(), c0(), cr, d0(), dc(), Du(), E0() (+52 more)
 
 ### Community 3 - "Bundled JS (Observer)"
-Cohesion: 0.05
-Nodes (74): addObserver(), bindMethods(), build(), C(), cancel(), clearGcTimeout(), clearTimeout(), Cn() (+66 more)
+Cohesion: 0.20
+Nodes (16): addObserver(), cancel(), clearGcTimeout(), clearTimeout(), destroy(), fetch(), getMutationCache(), ja() (+8 more)
 
 ### Community 4 - "Bundled JS (Utilities)"
-Cohesion: 0.06
-Nodes (56): Af(), An(), Cl(), cp(), Cu(), Dn(), eh(), En() (+48 more)
+Cohesion: 0.15
+Nodes (19): _(), aa(), Af(), Cl(), Cu(), Dn(), Fo(), G() (+11 more)
 
 ### Community 5 - "Browser Window UI"
 Cohesion: 0.10
 Nodes (42): ChromeTab, ChromeTabBar, ChromeToolbar, ChromeTrafficLights, ChromeWindow, Closet -> Section -> Item Hierarchy, CLOSETS, ITEMS (+34 more)
 
 ### Community 6 - "Bundled JS (Router)"
-Cohesion: 0.09
-Nodes (42): at, ax(), b1(), bx(), Ce(), cx(), dx(), ei() (+34 more)
+Cohesion: 0.10
+Nodes (39): am(), at, ax(), b1(), bx(), Ce(), cx(), dx() (+31 more)
 
 ### Community 7 - "Closet Management"
-Cohesion: 0.06
-Nodes (36): Browser-backed HTML rendering strategy, Claude AI enrichment fallback pattern, ClosetCard component, ClosetFormModal component, ClosetGrid component, DEFAULT_THEME constant, SEASONS constant, THEME_OPTIONS constant (+28 more)
+Cohesion: 0.07
+Nodes (29): Browser-backed HTML rendering strategy, Claude AI enrichment fallback pattern, ClosetCard component, ClosetFormModal component, ClosetGrid component, SEASONS constant, createApp function, Sidebar component (+21 more)
 
 ### Community 8 - "Product Parser Service"
-Cohesion: 0.11
-Nodes (30): closeBrowser(), ensureBrowser(), fetchRenderedHtml(), launchBrowser(), AiEnricher, asText(), claudeEnrich(), extractBodyText() (+22 more)
+Cohesion: 0.13
+Nodes (26): AiEnricher, asText(), claudeEnrich(), extractBodyText(), extractBrand(), extractColors(), extractOfferField(), extractOriginalPrice() (+18 more)
 
 ### Community 9 - "Server Dependencies"
 Cohesion: 0.06
-Nodes (33): dependencies, @anthropic-ai/sdk, bcrypt, cheerio, cors, dotenv, express, jsonwebtoken (+25 more)
+Nodes (34): dependencies, @anthropic-ai/sdk, bcrypt, cheerio, cors, dotenv, express, jsonwebtoken (+26 more)
 
 ### Community 10 - "Item Creation Flow"
-Cohesion: 0.09
-Nodes (20): ClosetFormModalProps, useCreateItem(), useParseUrl(), AddItemFlow(), Step, AppShellContext, AppShellContextValue, TopBarProps (+12 more)
+Cohesion: 0.19
+Nodes (16): useCloset(), useClosets(), useCreateSection(), useDeleteSection(), usePatchSection(), useItems(), AppShell(), AppShellContext (+8 more)
 
 ### Community 11 - "Auth API Layer"
-Cohesion: 0.14
-Nodes (20): getCurrentUser(), login(), register(), Request Auth Interceptor, Response 401 Interceptor, App Component (Router Root), AuthBootstrap Component, ProtectedRoute Component (+12 more)
+Cohesion: 0.11
+Nodes (24): getCurrentUser(), login(), register(), Request Auth Interceptor, Response 401 Interceptor, App Component (Router Root), AuthBootstrap Component, ProtectedRoute Component (+16 more)
 
 ### Community 12 - "Items API Layer"
 Cohesion: 0.14
 Nodes (23): createItem(), deleteItem(), favoriteItem(), getItem(), listItems(), moveItem(), parseUrl(), patchItem() (+15 more)
 
 ### Community 13 - "Bundled JS (HTTP Client)"
-Cohesion: 0.12
-Nodes (27): Ac(), ar(), ct(), Di(), fc(), Fi(), Fp(), Hi() (+19 more)
+Cohesion: 0.02
+Nodes (21): bw, dr, ec, fm, [fw,pw,hw,mw], ic, J, Js (+13 more)
 
 ### Community 14 - "Card & Grid Components"
 Cohesion: 0.11
-Nodes (17): ClosetCard(), ClosetCardProps, ClosetGridProps, ItemCard(), ItemGrid(), SidebarProps, formatRelativeDate(), hashTone() (+9 more)
+Nodes (21): ClosetCard(), ClosetCardProps, useCreateItem(), useParseUrl(), AddItemFlow(), Step, ItemCard(), ItemGrid() (+13 more)
 
 ### Community 15 - "Bundled JS (DOM)"
-Cohesion: 0.12
-Nodes (25): ad(), Ag(), Ap(), bg(), Bl(), bp(), cd(), dh() (+17 more)
+Cohesion: 0.07
+Nodes (44): add(), ah(), ai(), cd(), ch(), clear(), da(), Df() (+36 more)
 
 ### Community 16 - "Frontend Dependencies"
-Cohesion: 0.08
-Nodes (23): dependencies, axios, react, react-dom, react-router-dom, @tanstack/react-query, zustand, devDependencies (+15 more)
+Cohesion: 0.05
+Nodes (36): dependencies, axios, react, react-dom, react-router-dom, @tanstack/react-query, zustand, devDependencies (+28 more)
 
 ### Community 17 - "Bundled JS (Forms)"
-Cohesion: 0.17
-Nodes (22): bu(), fh(), Gl(), gt(), Hg(), hy(), In(), Jf() (+14 more)
+Cohesion: 0.06
+Nodes (64): _0(), ay(), be(), bg(), Bl(), bo(), bu(), ca() (+56 more)
 
 ### Community 18 - "Bundled JS (Navigation)"
-Cohesion: 0.10
-Nodes (22): am(), el(), getUri(), h1(), im(), ir(), Lm(), m1() (+14 more)
+Cohesion: 0.18
+Nodes (8): clear(), Dg(), fh(), ld(), Pl(), ud(), va(), wc()
 
 ### Community 19 - "Bundled JS (Store)"
-Cohesion: 0.10
-Nodes (17): bs(), clear(), Dm(), getObserversCount(), hd(), i(), isActive(), isDisabled() (+9 more)
+Cohesion: 0.20
+Nodes (12): bd(), ct(), Et(), Hf(), Hp(), kh(), Qc(), Qu() (+4 more)
 
 ### Community 20 - "TypeScript Config"
 Cohesion: 0.10
 Nodes (20): compilerOptions, allowImportingTsExtensions, allowJs, allowSyntheticDefaultImports, esModuleInterop, forceConsistentCasingInFileNames, isolatedModules, jsx (+12 more)
 
 ### Community 21 - "Closets API Layer"
-Cohesion: 0.25
-Nodes (17): apiClient, createCloset(), createSection(), deleteCloset(), deleteSection(), getCloset(), listClosets(), patchCloset() (+9 more)
+Cohesion: 0.15
+Nodes (22): apiClient, createCloset(), createSection(), deleteCloset(), deleteSection(), getCloset(), listClosets(), patchCloset() (+14 more)
 
 ### Community 22 - "Bundled JS (Base)"
-Cohesion: 0.11
-Nodes (19): _(), _1(), accessor(), dd(), delete(), ey(), he(), ky() (+11 more)
+Cohesion: 0.06
+Nodes (72): ad(), add(), Ae(), bg(), bo(), Bt(), bu(), Cg() (+64 more)
 
 ### Community 23 - "Bundled JS (Misc)"
-Cohesion: 0.21
-Nodes (17): be(), bo(), ca(), ed(), Gg(), Gp(), ka(), lo() (+9 more)
+Cohesion: 0.17
+Nodes (13): b1(), delete(), gw(), H1(), Ha(), Hg(), Jr, ky() (+5 more)
 
 ### Community 24 - "Bundled JS (Array Util)"
-Cohesion: 0.15
-Nodes (15): a0, a1(), concat(), Cy(), Lg(), mg(), mh(), normalize() (+7 more)
+Cohesion: 0.33
+Nodes (7): fd(), jy(), mi(), rl(), rm(), ty(), uu()
 
 ### Community 25 - "Bundled JS (Options)"
-Cohesion: 0.14
-Nodes (15): av(), bv(), getDefaultOptions(), gu(), i0(), isServer(), iv(), Jv() (+7 more)
+Cohesion: 0.08
+Nodes (38): fv(), kd(), av(), build(), bv(), c1(), cm(), Cn() (+30 more)
 
 ### Community 26 - "Server TypeScript Config"
 Cohesion: 0.13
 Nodes (14): compilerOptions, esModuleInterop, forceConsistentCasingInFileNames, module, moduleResolution, outDir, resolveJsonModule, rootDir (+6 more)
 
 ### Community 27 - "Closets Hooks"
-Cohesion: 0.33
-Nodes (11): useClosets(), useCreateSection(), useDeleteSection(), usePatchSection(), useItems(), AppShell(), useAppShell(), formatCompactCurrency() (+3 more)
+Cohesion: 0.40
+Nodes (5): Ac(), eg(), Jf(), uy(), wp()
 
 ### Community 28 - "Tags API Layer"
-Cohesion: 0.32
-Nodes (9): createTag(), deleteTag(), listTags(), patchTag(), useCreateTag(), useDeleteTag(), usePatchTag(), useTags() (+1 more)
+Cohesion: 0.17
+Nodes (14): createTag(), deleteTag(), listTags(), patchTag(), useSections(), useCreateTag(), useDeleteTag(), usePatchTag() (+6 more)
 
 ### Community 29 - "Bundled JS (Scheduler)"
-Cohesion: 0.15
-Nodes (13): as(), bw(), ew(), Gr, Ha(), ls(), lu(), lw() (+5 more)
+Cohesion: 0.22
+Nodes (9): Gr, Ha(), ls(), lu(), Pw(), Us(), Wg(), yw() (+1 more)
 
 ### Community 30 - "Bundled JS (Events)"
-Cohesion: 0.21
-Nodes (12): e(), Et(), _p(), Qf(), qh(), ty(), Uf(), up() (+4 more)
+Cohesion: 0.06
+Nodes (48): Ac(), ad(), Ap(), ar(), Bf(), bp(), dp(), fc() (+40 more)
 
 ### Community 31 - "Bundled JS (Cache)"
-Cohesion: 0.18
-Nodes (12): c1(), cm(), d1(), get(), getQueryData(), getQueryState(), getSetCookie(), gx() (+4 more)
+Cohesion: 0.17
+Nodes (12): bs(), Dm(), el(), jw, Lm(), Oc(), [Symbol.iterator](), toJSON() (+4 more)
 
 ### Community 32 - "Bundled JS (Task)"
-Cohesion: 0.27
-Nodes (11): canRun(), continue(), execute(), find(), is(), isFocused(), onFocus(), onOnline() (+3 more)
+Cohesion: 0.09
+Nodes (27): a0, a1(), accessor(), concat(), Cy(), defaultMutationOptions(), getMutationDefaults(), getUri() (+19 more)
 
 ### Community 33 - "Bundled JS (Iterator)"
-Cohesion: 0.18
-Nodes (11): findAll(), Fl(), from(), getAll(), getQueriesData(), isFetching(), isMutating(), isOnline() (+3 more)
+Cohesion: 0.33
+Nodes (6): dv(), g0(), j0(), l0(), lv(), Vi()
 
 ### Community 34 - "Build Tool Config"
 Cohesion: 0.18
 Nodes (10): compilerOptions, allowSyntheticDefaultImports, composite, lib, module, moduleResolution, skipLibCheck, target (+2 more)
 
 ### Community 35 - "Bundled JS (Set)"
-Cohesion: 0.33
-Nodes (10): add(), da(), Gc(), has(), Jc(), jp(), ph(), trackProp() (+2 more)
+Cohesion: 0.07
+Nodes (55): Wr(), Ag(), An(), bc(), cp(), ct(), Di(), eh() (+47 more)
 
 ### Community 36 - "Bundled JS (Selector)"
-Cohesion: 0.31
-Nodes (9): ay(), Cg(), eg(), Ic(), Qp(), rp(), su(), vp() (+1 more)
+Cohesion: 0.06
+Nodes (50): _(), accessor(), am(), b0(), bp(), C(), ce(), cm() (+42 more)
 
 ### Community 38 - "Bundled JS (Animation)"
-Cohesion: 0.25
-Nodes (8): gd(), j1(), jh(), Ra(), sw, t1(), Ta(), yd()
+Cohesion: 0.22
+Nodes (10): getObserversCount(), hd(), isActive(), isDisabled(), isFetched(), isStale(), isStatic(), qi() (+2 more)
 
 ### Community 45 - "Prototype Data"
 Cohesion: 0.33
@@ -282,8 +326,8 @@ Cohesion: 0.33
 Nodes (6): _f(), Ff(), ko(), ny(), uw(), vs()
 
 ### Community 50 - "Bundled JS (Compat)"
-Cohesion: 0.50
-Nodes (5): ah(), id(), wa(), xa(), xt()
+Cohesion: 0.08
+Nodes (44): _0(), Bh(), Bv(), c0, _d(), d0(), e0(), f0() (+36 more)
 
 ### Community 52 - "Frontend Bootstrap Test"
 Cohesion: 0.40
@@ -293,25 +337,153 @@ Nodes (3): context, localStorage, script
 Cohesion: 0.67
 Nodes (3): Gs(), i1(), r1()
 
+### Community 55 - "Bundled JS (Infinite Query)"
+Cohesion: 0.15
+Nodes (12): code:text (GET /version), code:json ({), code:json ({), code:bash (npm run release:dry-run), code:text (fix: trigger release), Commit and PR title rules, Dry runs and forced releases, Railway configuration (+4 more)
+
+### Community 56 - "Bundled JS (Misc 3)"
+Cohesion: 0.33
+Nodes (5): code:bash (# Install dependencies), Features, Getting started, Stack, window-shopping
+
+### Community 58 - "Bundled JS (Misc 4)"
+Cohesion: 0.18
+Nodes (13): Dc(), Dn(), h0(), je(), $l(), Ll(), ny(), O() (+5 more)
+
+### Community 59 - "Bundled JS (Misc 5)"
+Cohesion: 0.11
+Nodes (39): Af(), Bl(), ca(), Du(), ee(), fc(), gh(), hc() (+31 more)
+
+### Community 82 - "Community 82"
+Cohesion: 0.09
+Nodes (31): ap(), bc(), cp(), Di(), ey(), Fi(), Fo(), fp() (+23 more)
+
+### Community 83 - "Community 83"
+Cohesion: 0.07
+Nodes (50): at, ax(), bx(), cd(), cx(), d1(), dm(), dx() (+42 more)
+
+### Community 84 - "Community 84"
+Cohesion: 0.10
+Nodes (36): An(), Cl(), Cu(), ed(), En(), eu(), fa(), Fg() (+28 more)
+
+### Community 85 - "Community 85"
+Cohesion: 0.17
+Nodes (13): av(), Dv(), getCurrentResult(), getDefaultOptions(), getOptimisticResult(), getQueryCache(), isServer(), trackResult() (+5 more)
+
+### Community 86 - "Community 86"
+Cohesion: 0.67
+Nodes (3): Jd(), R1(), t1
+
+### Community 88 - "Community 88"
+Cohesion: 0.21
+Nodes (16): build(), Cn(), defaultQueryOptions(), ensureQueryData(), fetchOptimistic(), fetchQuery(), getQueryData(), getQueryDefaults() (+8 more)
+
+### Community 89 - "Community 89"
+Cohesion: 0.50
+Nodes (3): branches, plugins, tagFormat
+
+### Community 93 - "Community 93"
+Cohesion: 0.07
+Nodes (58): invalidate(), onMutationUpdate(), addObserver(), bindMethods(), C(), cancel(), canRun(), clearGcTimeout() (+50 more)
+
+### Community 95 - "Community 95"
+Cohesion: 0.17
+Nodes (12): _1(), dd(), delete(), Et(), ky(), u1(), uu(), vc() (+4 more)
+
+### Community 97 - "Community 97"
+Cohesion: 0.19
+Nodes (13): ah(), B(), bindMethods(), constructor(), defaultMutationOptions(), Eo(), hasListeners(), Lm() (+5 more)
+
+### Community 98 - "Community 98"
+Cohesion: 0.18
+Nodes (11): accent, closetId, data, findOwnedCloset(), name, request, season, sectionId (+3 more)
+
+### Community 99 - "Community 99"
+Cohesion: 0.24
+Nodes (8): closeBrowser(), ensureBrowser(), fetchRenderedHtml(), launchBrowser(), app, port, server, errorHandler()
+
+### Community 100 - "Community 100"
+Cohesion: 0.17
+Nodes (13): as(), aw(), cw(), dw, Ff(), He, iw(), ko() (+5 more)
+
+### Community 101 - "Community 101"
+Cohesion: 0.15
+Nodes (25): router, brand, closetId, ensureClosetAndSection(), findOwnedItem(), haystack, itemId, name (+17 more)
+
+### Community 103 - "Community 103"
+Cohesion: 0.32
+Nodes (7): email, name, password, router, safeUser, signAuthToken(), serializeAuthUser()
+
+### Community 104 - "Community 104"
+Cohesion: 0.31
+Nodes (7): getVersion(), useVersion(), VersionInfo, formatSha(), formatVersion(), VersionTag(), VersionTagProps
+
+### Community 105 - "Community 105"
+Cohesion: 0.22
+Nodes (10): requireAuth(), request, router, ParsedProduct, AuthenticatedRequest, AuthenticatedUser, JwtClaims, Request (+2 more)
+
+### Community 106 - "Community 106"
+Cohesion: 0.15
+Nodes (14): bs(), getObserversCount(), i(), isActive(), isDisabled(), isFetched(), isStale(), isStatic() (+6 more)
+
+### Community 107 - "Community 107"
+Cohesion: 0.25
+Nodes (8): findAll(), getAll(), getQueriesData(), isFetching(), isMutating(), isOnline(), resumePausedMutations(), Ym()
+
+### Community 108 - "Community 108"
+Cohesion: 0.18
+Nodes (11): findAll(), Fl(), from(), getAll(), getQueriesData(), isFetching(), isMutating(), isOnline() (+3 more)
+
+### Community 109 - "Community 109"
+Cohesion: 0.28
+Nodes (9): ai(), cy(), gc(), np(), Ou(), sr(), Tp(), ui() (+1 more)
+
+### Community 113 - "Community 113"
+Cohesion: 0.50
+Nodes (4): Gs(), i1(), s1(), wd()
+
+### Community 114 - "Community 114"
+Cohesion: 0.12
+Nodes (16): da(), em(), G1(), j1, lv(), m0(), Mv(), Mx() (+8 more)
+
+### Community 115 - "Community 115"
+Cohesion: 0.25
+Nodes (8): gd(), j1(), jh(), Ra(), sw, t1(), Ta(), yd()
+
+### Community 116 - "Community 116"
+Cohesion: 0.67
+Nodes (3): a0(), i0(), v0()
+
+### Community 119 - "Community 119"
+Cohesion: 0.11
+Nodes (18): canRun(), continue(), execute(), find(), is(), isFocused(), Oh(), onFocus() (+10 more)
+
+### Community 122 - "Community 122"
+Cohesion: 0.40
+Nodes (5): bf(), $f(), Qf(), Uf(), Wf()
+
+### Community 129 - "Community 129"
+Cohesion: 0.18
+Nodes (14): createResult(), gv(), la(), onSubscribe(), rt(), sd(), setEventListener(), shouldFetchOnReconnect() (+6 more)
+
 ## Knowledge Gaps
-- **224 isolated node(s):** `CHROME_C`, `composite`, `target`, `lib`, `module` (+219 more)
+- **281 isolated node(s):** `branches`, `tagFormat`, `plugins`, `CHROME_C`, `composite` (+276 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **28 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **34 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `fetch()` connect `Bundled JS (Observer)` to `Bundled JS (React Core)`, `Bundled JS (Task)`, `Bundled JS (Set)`, `Browser Window UI`, `Product Parser Service`?**
-  _High betweenness centrality (0.311) - this node is a cross-community bridge._
-- **Why does `fetchRawHtml()` connect `Product Parser Service` to `Bundled JS (Observer)`?**
-  _High betweenness centrality (0.260) - this node is a cross-community bridge._
-- **Why does `router` connect `Server Auth & Routes` to `Items API Layer`?**
-  _High betweenness centrality (0.159) - this node is a cross-community bridge._
-- **What connects `CHROME_C`, `composite`, `target` to the rest of the system?**
-  _226 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `fetch()` connect `Community 93` to `Bundled JS (React Core)`, `Browser Window UI`, `Product Parser Service`, `Bundled JS (DOM)`, `Bundled JS (Options)`?**
+  _High betweenness centrality (0.213) - this node is a cross-community bridge._
+- **Why does `fetchRawHtml()` connect `Product Parser Service` to `Community 93`?**
+  _High betweenness centrality (0.183) - this node is a cross-community bridge._
+- **Why does `m()` connect `Community 93` to `Bundled JS (React Core)`, `Bundled JS (Task)`, `Community 97`, `Community 129`, `Bundled JS (Observer)`, `Community 119`, `Community 88`, `Bundled JS (Options)`, `Bundled JS (Events)`?**
+  _High betweenness centrality (0.129) - this node is a cross-community bridge._
+- **Are the 2 inferred relationships involving `Fg()` (e.g. with `Ae()` and `Oh()`) actually correct?**
+  _`Fg()` has 2 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 21 inferred relationships involving `e()` (e.g. with `rl()` and `Ll()`) actually correct?**
+  _`e()` has 21 INFERRED edges - model-reasoned connections that need verification._
+- **What connects `branches`, `tagFormat`, `plugins` to the rest of the system?**
+  _283 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Bundled JS (React Core)` be split into smaller, more focused modules?**
-  _Cohesion score 0.02197802197802198 - nodes in this community are weakly interconnected._
-- **Should `Server Auth & Routes` be split into smaller, more focused modules?**
-  _Cohesion score 0.05949367088607595 - nodes in this community are weakly interconnected._
-- **Should `Bundled JS (Query/State)` be split into smaller, more focused modules?**
-  _Cohesion score 0.050351721584598295 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.022988505747126436 - nodes in this community are weakly interconnected._

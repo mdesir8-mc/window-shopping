@@ -1,10 +1,7 @@
 (function () {
-  const TOKEN_STORAGE_KEY = "window-shopping.jwt";
-
   async function apiFetch(path, options) {
     const requestOptions = options || {};
     const headers = new Headers(requestOptions.headers || {});
-    const token = window.localStorage.getItem(TOKEN_STORAGE_KEY);
     let body = requestOptions.body;
 
     if (body && typeof body === "object" && !(body instanceof FormData) && !(body instanceof URLSearchParams)) {
@@ -14,14 +11,11 @@
 
     headers.set("Accept", "application/json");
 
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
-    }
-
     const response = await fetch(path, {
       ...requestOptions,
       body,
-      headers
+      headers,
+      credentials: "same-origin"
     });
 
     if (response.status === 204) {
@@ -47,7 +41,6 @@
   }
 
   Object.assign(window, {
-    WS_TOKEN_STORAGE_KEY: TOKEN_STORAGE_KEY,
     apiFetch
   });
 })();

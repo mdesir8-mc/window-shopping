@@ -15,6 +15,10 @@ export async function login(payload: { email: string; password: string }) {
   return response.data;
 }
 
+export async function logout() {
+  await apiClient.post("/api/auth/logout");
+}
+
 export async function getCurrentUser() {
   const response = await apiClient.get<AuthResponse["user"] & { itemCount: number }>("/api/user");
   return response.data;

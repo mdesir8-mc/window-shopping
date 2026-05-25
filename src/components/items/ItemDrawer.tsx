@@ -282,7 +282,7 @@ export default function ItemDrawer({
             />
 
             <div style={{ display: "flex", gap: 10, marginTop: 32, flexWrap: "wrap" }}>
-              {item.url ? (
+              {item.url && /^https?:\/\//i.test(item.url) ? (
                 <a
                   href={item.url}
                   target="_blank"

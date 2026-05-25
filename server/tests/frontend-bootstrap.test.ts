@@ -22,7 +22,7 @@ function createLocalStorage(seed = {}) {
 describe("frontend bootstrap", () => {
   it("adapts normalized API payloads into the existing window globals", async () => {
     const script = fs.readFileSync(path.resolve(__dirname, "../public/data.jsx"), "utf8");
-    const localStorage = createLocalStorage({ "window-shopping.jwt": "demo-token" });
+    const localStorage = createLocalStorage();
     const context: Record<string, any> = {
       console,
       Date,

@@ -12,6 +12,10 @@ interface AuthState {
 
 export const AUTH_STORAGE_KEY = "window-shopping.auth";
 
+function persistedUser(state: unknown) {
+  return state && typeof state === "object" && "user" in state ? (state as Pick<AuthState, "user">).user : null;
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -24,8 +28,13 @@ export const useAuthStore = create<AuthState>()(
     {
       name: AUTH_STORAGE_KEY,
       storage: createJSONStorage(() => localStorage),
+      version: 1,
+      migrate: (persistedState) => ({ user: persistedUser(persistedState) }),
+      merge: (persistedState, currentState) => ({
+        ...currentState,
+        user: persistedUser(persistedState)
+      }),
       partialize: (state) => ({
-        token: state.token,
         user: state.user
       })
     }

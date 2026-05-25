@@ -7,12 +7,15 @@ import type { AuthenticatedRequest } from "../types";
 export const requireAuth: RequestHandler = async (req, _res: Response, next: NextFunction) => {
   try {
     const authorization = req.header("Authorization");
+    const bearerToken = authorization?.startsWith("Bearer ")
+      ? authorization.slice("Bearer ".length).trim()
+      : null;
+    const token = req.cookies?.auth_token ?? bearerToken;
 
-    if (!authorization?.startsWith("Bearer ")) {
-      throw new HttpError(401, "Missing or invalid Authorization header.");
+    if (!token) {
+      throw new HttpError(401, "Missing or invalid authentication.");
     }
 
-    const token = authorization.slice("Bearer ".length).trim();
     const claims = verifyAuthToken(token);
 
     if (!claims.sub || !claims.email || !claims.name) {

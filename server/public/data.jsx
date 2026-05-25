@@ -120,15 +120,10 @@ async function bootstrapData() {
     WS_BOOTSTRAP_ERROR: null
   });
 
-  const tokenStorageKey = window.WS_TOKEN_STORAGE_KEY || "window-shopping.jwt";
-  const token = window.localStorage.getItem(tokenStorageKey);
-
-  if (!token || typeof window.apiFetch !== "function") {
+  if (typeof window.apiFetch !== "function") {
     Object.assign(window, EMPTY_DATA);
     setShowEmpty(true);
-    window.WS_BOOTSTRAP_ERROR = !token
-      ? "No JWT found in localStorage['window-shopping.jwt']."
-      : "window.apiFetch is unavailable.";
+    window.WS_BOOTSTRAP_ERROR = "window.apiFetch is unavailable.";
     return EMPTY_DATA;
   }
 

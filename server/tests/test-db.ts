@@ -43,7 +43,5 @@ export async function resetDatabase() {
     return;
   }
 
-  await testPrisma.$executeRawUnsafe(
-    'TRUNCATE TABLE "Item", "Section", "Closet", "Tag", "User" RESTART IDENTITY CASCADE;'
-  );
+  await testPrisma.$executeRaw`TRUNCATE TABLE "Item", "Section", "Closet", "Tag", "User" RESTART IDENTITY CASCADE;`;
 }

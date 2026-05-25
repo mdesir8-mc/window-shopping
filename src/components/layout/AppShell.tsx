@@ -167,7 +167,7 @@ export default function AppShell() {
             <Eyebrow style={{ marginBottom: 8 }}>Account</Eyebrow>
             <button
               type="button"
-              onClick={logout}
+              onClick={() => void logout()}
               style={{
                 width: "100%",
                 padding: "10px 12px",
