@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import path from "node:path";
 import { existsSync } from "node:fs";
 import authRoutes from "./routes/auth";
@@ -19,9 +20,11 @@ export function createApp() {
 
   app.use(
     cors({
-      origin: isProduction ? process.env.FRONTEND_ORIGIN ?? false : "*"
+      origin: isProduction ? process.env.FRONTEND_ORIGIN ?? false : true,
+      credentials: true
     })
   );
+  app.use(cookieParser());
   app.use(express.json());
 
   app.get("/version", (_req, res) => {

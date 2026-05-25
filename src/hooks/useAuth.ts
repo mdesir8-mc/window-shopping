@@ -1,14 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCurrentUser, login, register } from "../api/auth";
+import { getCurrentUser, login, logout as logoutApi, register } from "../api/auth";
 import { useAuthStore } from "../store/auth";
 
 export function useCurrentUser() {
-  const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
 
   return useQuery({
     queryKey: ["current-user"],
     queryFn: getCurrentUser,
-    enabled: Boolean(token)
+    enabled: Boolean(user)
   });
 }
 
@@ -35,7 +35,8 @@ export function useAuth() {
     }
   });
 
-  const logout = () => {
+  const logout = async () => {
+    await logoutApi().catch(() => {});
     clearAuth();
     setUser(null);
     queryClient.clear();

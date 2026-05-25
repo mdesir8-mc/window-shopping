@@ -45,6 +45,15 @@ describeDb("API integration", () => {
     return response.body;
   }
 
+  function getAuthCookie(response: supertest.Response) {
+    const setCookie = response.headers["set-cookie"];
+    const cookies = Array.isArray(setCookie) ? setCookie : setCookie ? [setCookie] : [];
+    const cookie = cookies.find((value) => value.startsWith("auth_token="));
+
+    expect(cookie).toEqual(expect.stringContaining("HttpOnly"));
+    return cookie!.split(";")[0];
+  }
+
   it("registers users, logs them in, and rejects duplicate emails", async () => {
     const register = await request.post("/api/auth/register").send({
       email: "mira@example.com",
@@ -59,6 +68,7 @@ describeDb("API integration", () => {
       plan: "free"
     });
     expect(register.body.token).toEqual(expect.any(String));
+    expect(getAuthCookie(register)).toEqual(expect.stringContaining("auth_token="));
 
     const login = await request.post("/api/auth/login").send({
       email: "mira@example.com",
@@ -67,6 +77,8 @@ describeDb("API integration", () => {
 
     expect(login.status).toBe(200);
     expect(login.body.user.email).toBe("mira@example.com");
+    expect(login.body.token).toEqual(expect.any(String));
+    expect(getAuthCookie(login)).toEqual(expect.stringContaining("auth_token="));
 
     const duplicate = await request.post("/api/auth/register").send({
       email: "mira@example.com",
@@ -80,6 +92,35 @@ describeDb("API integration", () => {
   it("enforces authentication on protected routes", async () => {
     const response = await request.get("/api/user");
     expect(response.status).toBe(401);
+  });
+
+  it("authenticates protected routes with cookies and bearer tokens", async () => {
+    const register = await request.post("/api/auth/register").send({
+      email: "cookie@example.com",
+      name: "Cookie",
+      password: "password123"
+    });
+    const authCookie = getAuthCookie(register);
+
+    const cookieAuth = await request.get("/api/user").set("Cookie", authCookie);
+    expect(cookieAuth.status).toBe(200);
+    expect(cookieAuth.body.email).toBe("cookie@example.com");
+
+    const bearerAuth = await request
+      .get("/api/user")
+      .set("Authorization", `Bearer ${register.body.token}`);
+    expect(bearerAuth.status).toBe(200);
+    expect(bearerAuth.body.email).toBe("cookie@example.com");
+  });
+
+  it("clears the auth cookie on logout", async () => {
+    const response = await request.post("/api/auth/logout");
+    const setCookie = response.headers["set-cookie"];
+    const cookies = Array.isArray(setCookie) ? setCookie : setCookie ? [setCookie] : [];
+    const clearCookie = cookies.find((value) => value.startsWith("auth_token="));
+
+    expect(response.status).toBe(200);
+    expect(clearCookie).toEqual(expect.stringContaining("auth_token=;"));
   });
 
   it("isolates closets by owner", async () => {

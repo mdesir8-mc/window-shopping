@@ -10,7 +10,7 @@ import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 
 function AuthBootstrap() {
-  const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
   const { currentUser } = useAuth();
 
@@ -20,7 +20,7 @@ function AuthBootstrap() {
     }
   }, [currentUser.data, setUser]);
 
-  if (token && currentUser.isLoading) {
+  if (user && currentUser.isLoading) {
     return (
       <div
         style={{
@@ -43,10 +43,10 @@ function AuthBootstrap() {
 }
 
 function ProtectedRoute() {
-  const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
   const location = useLocation();
 
-  if (!token) {
+  if (!user) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
@@ -54,9 +54,9 @@ function ProtectedRoute() {
 }
 
 function PublicOnlyRoute() {
-  const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
 
-  if (token) {
+  if (user) {
     return <Navigate to="/" replace />;
   }
 

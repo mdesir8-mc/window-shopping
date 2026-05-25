@@ -26,5 +26,5 @@ export function signAuthToken(user: AuthenticatedUser) {
 }
 
 export function verifyAuthToken(token: string) {
-  return jwt.verify(token, getJwtSecret()) as JwtClaims;
+  return jwt.verify(token, getJwtSecret(), { algorithms: ["HS256"] }) as JwtClaims;
 }
