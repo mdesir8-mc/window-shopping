@@ -32,4 +32,4 @@ jobs:
           disallowScopes: |
             release
           subjectPattern: ^(?![A-Z]).+$
-          subjectPatternError: PR title subjects must start lowercase, for example "fix: correct auth refresh".
+          subjectPatternError: PR title subjects must start lowercase, for example "fix&colon; correct with refresh".
