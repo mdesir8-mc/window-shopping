@@ -90,7 +90,17 @@ router.get(
         ...(closetId ? { closetId } : {}),
         ...(sectionId ? { sectionId } : {}),
         ...(season ? { season } : {}),
-        ...(tags.length > 0 ? { tags: { hasSome: tags } } : {})
+        ...(tags.length > 0 ? { tags: { hasSome: tags } } : {}),
+        ...(search
+          ? {
+              OR: [
+                { brand: { contains: search, mode: "insensitive" } },
+                { name: { contains: search, mode: "insensitive" } },
+                { description: { contains: search, mode: "insensitive" } },
+                { tags: { hasSome: [search] } }
+              ]
+            }
+          : {})
       },
       include: {
         closet: {
@@ -114,22 +124,7 @@ router.get(
             : { addedAt: "desc" }
     });
 
-    const filtered = search
-      ? items.filter((item) => {
-          const haystack = [
-            item.brand,
-            item.name,
-            item.description ?? "",
-            item.tags.join(" ")
-          ]
-            .join(" ")
-            .toLowerCase();
-
-          return haystack.includes(search);
-        })
-      : items;
-
-    res.json(filtered.map(serializeItem));
+    res.json(items.map(serializeItem));
   })
 );
 
