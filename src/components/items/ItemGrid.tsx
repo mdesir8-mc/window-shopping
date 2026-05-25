@@ -3,10 +3,12 @@ import ItemCard from "./ItemCard";
 
 export default function ItemGrid({
   items,
-  onOpen
+  onOpen,
+  onEdit
 }: {
   items: Item[];
   onOpen: (item: Item) => void;
+  onEdit?: (item: Item) => void;
 }) {
   return (
     <div
@@ -17,7 +19,7 @@ export default function ItemGrid({
       }}
     >
       {items.map((item) => (
-        <ItemCard key={item.id} item={item} onClick={() => onOpen(item)} />
+        <ItemCard key={item.id} item={item} onClick={() => onOpen(item)} onEdit={onEdit ? () => onEdit(item) : undefined} />
       ))}
     </div>
   );

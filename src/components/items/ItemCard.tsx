@@ -5,18 +5,21 @@ import { formatRelativeDate, hashTone } from "../../lib/format";
 
 export default function ItemCard({
   item,
-  onClick
+  onClick,
+  onEdit
 }: {
   item: Item;
   onClick: () => void;
+  onEdit?: () => void;
 }) {
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onClick(); }}
       style={{
         background: "transparent",
-        border: "none",
         padding: 0,
         cursor: "pointer",
         textAlign: "left"
@@ -28,6 +31,28 @@ export default function ItemCard({
           imageUrl={item.imageUrl}
           style={{ width: "100%", aspectRatio: "3 / 4" }}
         />
+        {onEdit ? (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            style={{
+              position: "absolute",
+              top: 10,
+              left: 10,
+              padding: "3px 7px",
+              background: "var(--ws-overlay-paper)",
+              backdropFilter: "blur(4px)",
+              border: "none",
+              fontFamily: "var(--ws-mono)",
+              fontSize: 9,
+              color: "var(--ws-ink)",
+              cursor: "pointer",
+              letterSpacing: 0.5
+            }}
+          >
+            Edit
+          </button>
+        ) : null}
         <div
           style={{
             position: "absolute",
@@ -98,6 +123,6 @@ export default function ItemCard({
           {formatRelativeDate(item.addedAt)}
         </span>
       </div>
-    </button>
+    </div>
   );
 }

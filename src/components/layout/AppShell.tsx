@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Outlet } from "react-router-dom";
-import type { Closet } from "../../types";
+import type { Closet, Item } from "../../types";
 import { useClosets } from "../../hooks/useClosets";
 import { useItems } from "../../hooks/useItems";
 import { useAuthStore } from "../../store/auth";
@@ -10,6 +10,7 @@ import AddItemFlow from "../items/AddItemFlow";
 import ItemDrawer from "../items/ItemDrawer";
 import TagManagerModal from "../tags/TagManagerModal";
 import ClosetFormModal from "../closets/ClosetFormModal";
+import ItemFormModal from "../items/ItemFormModal";
 import { DEFAULT_THEME, THEME_OPTIONS, type ThemeName } from "../../constants";
 import { useAuth } from "../../hooks/useAuth";
 import Eyebrow from "../ui/Eyebrow";
@@ -20,6 +21,7 @@ interface AppShellContextValue {
   openItemDrawer: (itemId: string) => void;
   closeItemDrawer: () => void;
   openClosetForm: (closet?: Closet | null) => void;
+  openItemForm: (item: Item) => void;
 }
 
 const AppShellContext = createContext<AppShellContextValue | null>(null);
@@ -44,6 +46,7 @@ export default function AppShell() {
   const [isTagsOpen, setIsTagsOpen] = useState(false);
   const [itemDrawerId, setItemDrawerId] = useState<string | null>(null);
   const [closetFormTarget, setClosetFormTarget] = useState<Closet | null | undefined>(undefined);
+  const [itemFormTarget, setItemFormTarget] = useState<Item | undefined>(undefined);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [theme, setTheme] = useState<ThemeName>(DEFAULT_THEME);
   const [dark, setDark] = useState(false);
@@ -70,7 +73,8 @@ export default function AppShell() {
       openTagManager: () => setIsTagsOpen(true),
       openItemDrawer: (itemId) => setItemDrawerId(itemId),
       closeItemDrawer: () => setItemDrawerId(null),
-      openClosetForm: (closet) => setClosetFormTarget(closet)
+      openClosetForm: (closet) => setClosetFormTarget(closet),
+      openItemForm: (item) => setItemFormTarget(item)
     }),
     []
   );
@@ -186,6 +190,11 @@ export default function AppShell() {
         open={closetFormTarget !== undefined}
         closet={closetFormTarget ?? null}
         onClose={() => setClosetFormTarget(undefined)}
+      />
+      <ItemFormModal
+        open={itemFormTarget !== undefined}
+        item={itemFormTarget ?? null}
+        onClose={() => setItemFormTarget(undefined)}
       />
     </AppShellContext.Provider>
   );
