@@ -222,7 +222,7 @@ export default function ClosetFormModal({ open, closet, onClose }: ClosetFormMod
                 style={{
                   padding: "12px 16px",
                   border: "1px solid var(--ws-hairline)",
-                  background: "transparent",
+                  background: "var(--ws-hover-bg, transparent)",
                   color: "var(--ws-accent)",
                   cursor: "pointer",
                   textTransform: "uppercase",
@@ -242,7 +242,7 @@ export default function ClosetFormModal({ open, closet, onClose }: ClosetFormMod
               style={{
                 padding: "12px 16px",
                 border: "1px solid var(--ws-hairline)",
-                background: "transparent",
+                background: "var(--ws-hover-bg, transparent)",
                 cursor: "pointer",
                 textTransform: "uppercase",
                 letterSpacing: 1.5,

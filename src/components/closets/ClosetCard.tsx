@@ -17,7 +17,7 @@ export default function ClosetCard({ closet, onClick }: ClosetCardProps) {
       type="button"
       onClick={onClick}
       style={{
-        background: "transparent",
+        background: "var(--ws-hover-bg, transparent)",
         border: "none",
         padding: 0,
         cursor: "pointer",

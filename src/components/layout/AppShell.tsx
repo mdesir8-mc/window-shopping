@@ -85,7 +85,8 @@ export default function AppShell() {
         style={{
           display: "grid",
           gridTemplateColumns: "232px 1fr",
-          minHeight: "100vh",
+          height: "100vh",
+          overflow: "hidden",
           background: "var(--ws-paper)",
           color: "var(--ws-ink)"
         }}
@@ -136,7 +137,7 @@ export default function AppShell() {
                     flex: 1,
                     padding: "8px 6px",
                     border: "1px solid var(--ws-hairline)",
-                    background: theme === option.value ? "var(--ws-ink)" : "transparent",
+                    background: theme === option.value ? "var(--ws-ink)" : "var(--ws-hover-bg, transparent)",
                     color: theme === option.value ? "var(--ws-paper)" : "var(--ws-ink)",
                     cursor: "pointer",
                     fontSize: 10,
@@ -155,7 +156,7 @@ export default function AppShell() {
                 marginTop: 12,
                 padding: "10px 12px",
                 border: "1px solid var(--ws-hairline)",
-                background: "transparent",
+                background: "var(--ws-hover-bg, transparent)",
                 cursor: "pointer",
                 color: "var(--ws-ink)"
               }}
@@ -172,7 +173,7 @@ export default function AppShell() {
                 width: "100%",
                 padding: "10px 12px",
                 border: "1px solid var(--ws-hairline)",
-                background: "transparent",
+                background: "var(--ws-hover-bg, transparent)",
                 cursor: "pointer",
                 color: "var(--ws-accent)"
               }}

@@ -182,7 +182,7 @@ export default function ItemDrawer({
                 style={{
                   padding: "12px 16px",
                   border: "1px solid var(--ws-hairline)",
-                  background: "transparent",
+                  background: "var(--ws-hover-bg, transparent)",
                   cursor: "pointer",
                   fontSize: 11,
                   textTransform: "uppercase",
@@ -258,7 +258,7 @@ export default function ItemDrawer({
                 style={{
                   padding: "12px 16px",
                   border: "1px solid var(--ws-hairline)",
-                  background: "transparent",
+                  background: "var(--ws-hover-bg, transparent)",
                   cursor: "pointer",
                   fontSize: 11,
                   textTransform: "uppercase",
@@ -309,7 +309,7 @@ export default function ItemDrawer({
                 style={{
                   padding: "14px 18px",
                   border: "1px solid var(--ws-hairline)",
-                  background: "transparent",
+                  background: "var(--ws-hover-bg, transparent)",
                   cursor: "pointer"
                 }}
               >
@@ -329,7 +329,7 @@ export default function ItemDrawer({
                 style={{
                   padding: "14px 18px",
                   border: "1px solid var(--ws-hairline)",
-                  background: "transparent",
+                  background: "var(--ws-hover-bg, transparent)",
                   cursor: "pointer",
                   color: "var(--ws-accent)",
                   fontSize: 11,

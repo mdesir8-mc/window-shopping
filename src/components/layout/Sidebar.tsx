@@ -38,9 +38,8 @@ export default function Sidebar({
         display: "flex",
         flexDirection: "column",
         gap: 28,
-        minHeight: "100vh",
-        position: "sticky",
-        top: 0
+        height: "100vh",
+        overflowY: "auto"
       }}
     >
       <div>
@@ -79,7 +78,7 @@ export default function Sidebar({
               gap: 10,
               padding: "7px 10px",
               marginBottom: 2,
-              background: entry.active ? "var(--ws-surface)" : "transparent",
+              background: entry.active ? "var(--ws-surface)" : "var(--ws-hover-bg, transparent)",
               fontFamily: "var(--ws-ui)",
               fontSize: 13,
               borderRadius: 2
@@ -97,7 +96,7 @@ export default function Sidebar({
           <button
             type="button"
             onClick={onOpenNewCloset}
-            style={{ border: "none", background: "transparent", cursor: "pointer", fontSize: 16, padding: 0 }}
+            style={{ border: "none", background: "var(--ws-hover-bg, transparent)", cursor: "pointer", fontSize: 16, padding: 0 }}
           >
             +
           </button>
@@ -118,7 +117,7 @@ export default function Sidebar({
                 marginBottom: 2,
                 border: "none",
                 borderRadius: 2,
-                background: active ? "var(--ws-surface)" : "transparent",
+                background: active ? "var(--ws-surface)" : "var(--ws-hover-bg, transparent)",
                 cursor: "pointer",
                 textAlign: "left"
               }}
@@ -153,7 +152,7 @@ export default function Sidebar({
               gap: 10,
               padding: "7px 10px",
               border: "none",
-              background: activeSeason === season ? "var(--ws-surface)" : "transparent",
+              background: activeSeason === season ? "var(--ws-surface)" : "var(--ws-hover-bg, transparent)",
               cursor: "pointer",
               textAlign: "left"
             }}

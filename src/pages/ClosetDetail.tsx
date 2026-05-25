@@ -128,7 +128,7 @@ export default function ClosetDetail() {
               style={{
                 padding: "10px 14px",
                 border: "1px solid var(--ws-hairline)",
-                background: "transparent",
+                background: "var(--ws-hover-bg, transparent)",
                 cursor: "pointer",
                 fontSize: 11,
                 letterSpacing: 1.5,
@@ -178,7 +178,7 @@ export default function ClosetDetail() {
                   style={{
                     padding: "10px 14px",
                     border: "1px solid var(--ws-hairline)",
-                    background: "transparent",
+                    background: "var(--ws-hover-bg, transparent)",
                     cursor: "pointer",
                     fontSize: 11,
                     letterSpacing: 1.5,
@@ -245,7 +245,7 @@ export default function ClosetDetail() {
             onClick={() => setActiveSection(section.id)}
             style={{
               border: "none",
-              background: "none",
+              background: "var(--ws-hover-bg, transparent)",
               cursor: "pointer",
               padding: 0,
               fontFamily: "var(--ws-display)",
@@ -265,7 +265,7 @@ export default function ClosetDetail() {
           }}
           style={{
             border: "1px dashed var(--ws-hairline)",
-            background: "transparent",
+            background: "var(--ws-hover-bg, transparent)",
             padding: "4px 10px",
             cursor: "pointer",
             fontSize: 10,
@@ -306,7 +306,7 @@ export default function ClosetDetail() {
               style={{
                 padding: "10px 14px",
                 border: "1px solid var(--ws-hairline)",
-                background: "transparent",
+                background: "var(--ws-hover-bg, transparent)",
                 cursor: "pointer",
                 fontSize: 11,
                 letterSpacing: 1.5,

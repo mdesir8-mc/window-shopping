@@ -125,7 +125,7 @@ export default function TagManagerModal({
                   justifySelf: "end",
                   padding: "10px 12px",
                   border: "1px solid var(--ws-hairline)",
-                  background: "transparent",
+                  background: "var(--ws-hover-bg, transparent)",
                   cursor: "pointer",
                   fontSize: 11,
                   letterSpacing: 1.4,

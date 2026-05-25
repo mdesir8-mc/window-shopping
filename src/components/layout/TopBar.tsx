@@ -76,7 +76,7 @@ export default function TopBar({ onOpenTags, onOpenAddItem }: TopBarProps) {
         onClick={onOpenTags}
         style={{
           padding: "8px 14px",
-          background: "transparent",
+          background: "var(--ws-hover-bg, transparent)",
           border: "1px solid var(--ws-hairline)",
           cursor: "pointer",
           fontSize: 11,
