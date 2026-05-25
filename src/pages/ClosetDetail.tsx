@@ -14,7 +14,7 @@ import { formatCompactCurrency, hashTone, parsePriceToNumber } from "../lib/form
 export default function ClosetDetail() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
-  const { openItemDrawer, openClosetForm } = useAppShell();
+  const { openItemDrawer, openClosetForm, openItemForm } = useAppShell();
   const closetQuery = useCloset(id);
   const createSectionMutation = useCreateSection();
   const patchSectionMutation = usePatchSection();
@@ -278,7 +278,7 @@ export default function ClosetDetail() {
         </button>
       </div>
 
-      <ItemGrid items={items} onOpen={(item) => openItemDrawer(item.id)} />
+      <ItemGrid items={items} onOpen={(item) => openItemDrawer(item.id)} onEdit={(item) => openItemForm(item)} />
 
       <Modal open={sectionModalOpen} onClose={() => setSectionModalOpen(false)} width={480}>
         <form onSubmit={handleSectionSave} style={{ padding: 28 }}>
