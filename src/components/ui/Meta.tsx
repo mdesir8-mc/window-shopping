@@ -1,6 +1,6 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
-export default function Meta({ items, style }: { items: Array<string | null | undefined>; style?: CSSProperties }) {
+export default function Meta({ items, style }: { items: Array<ReactNode | null | undefined>; style?: CSSProperties }) {
   const visibleItems = items.filter(Boolean);
 
   return (
@@ -18,7 +18,7 @@ export default function Meta({ items, style }: { items: Array<string | null | un
       }}
     >
       {visibleItems.map((item, index) => (
-        <span key={`${item}-${index}`} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+        <span key={index} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
           {index > 0 ? <span style={{ opacity: 0.35 }}>·</span> : null}
           <span>{item}</span>
         </span>

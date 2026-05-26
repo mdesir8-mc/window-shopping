@@ -273,7 +273,16 @@ export default function ItemDrawer({
             <Eyebrow style={{ marginBottom: 12 }}>Details</Eyebrow>
             <Meta
               items={[
-                item.source ? `↗ ${item.source}` : null,
+                item.source && item.url && /^https?:\/\//i.test(item.url) ? (
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ color: "inherit", textDecoration: "none" }}
+                  >
+                    ↗ {item.source}
+                  </a>
+                ) : item.source ? `↗ ${item.source}` : null,
                 formatRelativeDate(item.addedAt),
                 item.colors.join(", "),
                 item.favorited ? "Favorited" : null
