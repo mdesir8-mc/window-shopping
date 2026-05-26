@@ -46,6 +46,7 @@ export default function Modal({
           border: align === "right" ? "none" : "1px solid var(--ws-hairline)",
           boxShadow: "0 24px 48px rgba(0,0,0,0.12)",
           overflow: "auto",
+          animation: align === "right" ? "slideInRight 260ms ease-out" : undefined,
           ...panelStyle
         }}
       >
