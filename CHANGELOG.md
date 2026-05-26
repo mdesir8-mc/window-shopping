@@ -1,3 +1,10 @@
+# [0.5.0](https://github.com/mdesir8-mc/window-shopping/compare/v0.4.0...v0.5.0) (2026-05-26)
+
+
+### Features
+
+* UI polish — hover states, sticky sidebar, card sizing, accent gradients, clickable source link ([#18](https://github.com/mdesir8-mc/window-shopping/issues/18)) ([bf3585f](https://github.com/mdesir8-mc/window-shopping/commit/bf3585f8cf831afa4ad34627bf3682093ed2b06a))
+
 # [0.4.0](https://github.com/mdesir8-mc/window-shopping/compare/v0.3.3...v0.4.0) (2026-05-26)
 
 
