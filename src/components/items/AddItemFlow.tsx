@@ -32,7 +32,7 @@ export default function AddItemFlow({
   const [season, setSeason] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [customTag, setCustomTag] = useState("");
-  const closets = closetsQuery.data ?? [];
+  const closets = useMemo(() => closetsQuery.data ?? [], [closetsQuery.data]);
   const selectedCloset = closets.find((closet) => closet.id === closetId) ?? closets[0];
   const availableSections = selectedCloset?.sections ?? [];
 

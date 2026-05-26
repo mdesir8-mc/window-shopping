@@ -121,6 +121,25 @@ export default function AppShell() {
             color: "var(--ws-ink)"
           }}
         >
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(false)}
+            style={{
+              position: "absolute",
+              top: 8,
+              right: 8,
+              width: 32,
+              height: 32,
+              borderRadius: 32,
+              border: "none",
+              background: "var(--ws-overlay-paper)",
+              color: "var(--ws-ink)",
+              cursor: "pointer",
+              fontSize: 14
+            }}
+          >
+            ×
+          </button>
           <div style={{ fontFamily: "var(--ws-display)", fontSize: 22, fontWeight: 300 }}>Settings</div>
           <div style={{ marginTop: 14 }}>
             <Eyebrow style={{ marginBottom: 8 }}>Appearance</Eyebrow>
