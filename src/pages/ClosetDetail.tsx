@@ -9,7 +9,7 @@ import Modal from "../components/ui/Modal";
 import { useAppShell } from "../components/layout/AppShell";
 import { useCloset, useCreateSection, useDeleteSection, usePatchSection } from "../hooks/useClosets";
 import { useItems } from "../hooks/useItems";
-import { formatCompactCurrency, hashTone, parsePriceToNumber } from "../lib/format";
+import { formatCompactCurrency, hashTone, lightenHex, parsePriceToNumber } from "../lib/format";
 
 export default function ClosetDetail() {
   const { id } = useParams();
@@ -205,7 +205,11 @@ export default function ClosetDetail() {
                 height: index === 0 ? 220 : index === 1 ? 130 : 90
               }}
             >
-              <ProductTile tone={hashTone(`${closet.id}-${index}`)} style={{ width: "100%", height: "100%" }} />
+              <ProductTile
+                tone={hashTone(`${closet.id}-${index}`)}
+                gradientColors={closet.accent ? [lightenHex(closet.accent, 0.55), lightenHex(closet.accent, 0.10)] : undefined}
+                style={{ width: "100%", height: "100%" }}
+              />
             </div>
           ))}
         </div>

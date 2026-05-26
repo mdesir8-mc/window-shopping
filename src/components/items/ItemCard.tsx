@@ -20,7 +20,7 @@ export default function ItemCard({
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onClick(); }}
       style={{
         background: "var(--ws-hover-bg, transparent)",
-        padding: 0,
+        padding: "8px 8px 14px",
         cursor: "pointer",
         textAlign: "left"
       }}

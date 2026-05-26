@@ -2,6 +2,14 @@ export function hashTone(value: string) {
   return Array.from(value).reduce((acc, char) => acc + char.charCodeAt(0), 0);
 }
 
+export function lightenHex(hex: string, t: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const blend = (c: number) => Math.round(c + (255 - c) * t).toString(16).padStart(2, "0");
+  return `#${blend(r)}${blend(g)}${blend(b)}`;
+}
+
 export function formatRelativeDate(isoDate: string) {
   const input = new Date(isoDate).getTime();
   const now = Date.now();

@@ -14,7 +14,7 @@ export default function ItemGrid({
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fill, minmax(180px, 260px))",
         gap: 20
       }}
     >
