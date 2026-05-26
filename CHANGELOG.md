@@ -1,3 +1,10 @@
+# [0.4.0](https://github.com/mdesir8-mc/window-shopping/compare/v0.3.3...v0.4.0) (2026-05-26)
+
+
+### Features
+
+* add hover states to all interactive elements and fix sticky sidebar ([#17](https://github.com/mdesir8-mc/window-shopping/issues/17)) ([2f64479](https://github.com/mdesir8-mc/window-shopping/commit/2f64479a07b6fc01dd8ffda6f7b3ebaf61398324))
+
 ## [0.3.3](https://github.com/mdesir8-mc/window-shopping/compare/v0.3.2...v0.3.3) (2026-05-25)
 
 
