@@ -125,7 +125,7 @@ export default function AddItemFlow({
             onClick={onClose}
             style={{
               border: "none",
-              background: "transparent",
+              background: "var(--ws-hover-bg, transparent)",
               cursor: "pointer",
               fontSize: 11,
               letterSpacing: 1.5,
@@ -182,7 +182,7 @@ export default function AddItemFlow({
                 style={{
                   padding: "14px 16px",
                   border: "1px solid var(--ws-hairline)",
-                  background: "transparent",
+                  background: "var(--ws-hover-bg, transparent)",
                   cursor: "pointer",
                   fontSize: 11,
                   textTransform: "uppercase",

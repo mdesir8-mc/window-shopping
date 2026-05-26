@@ -192,7 +192,7 @@ export default function ItemFormModal({ open, item, onClose }: ItemFormModalProp
             style={{
               padding: "12px 16px",
               border: "1px solid var(--ws-hairline)",
-              background: "transparent",
+              background: "var(--ws-hover-bg, transparent)",
               cursor: "pointer",
               textTransform: "uppercase",
               letterSpacing: 1.5,

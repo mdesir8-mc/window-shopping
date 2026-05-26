@@ -25,7 +25,7 @@ export default function Tag({
 }: TagProps) {
   const fontSize = size === "sm" ? 10 : 11;
   const padding = size === "sm" ? "3px 8px" : "5px 10px";
-  const background = filled ? color ?? "var(--ws-ink)" : season ? "var(--ws-accent-bg)" : "transparent";
+  const background = filled ? color ?? "var(--ws-ink)" : season ? "var(--ws-accent-bg)" : onClick ? "var(--ws-hover-bg, transparent)" : "transparent";
   const textColor = filled ? "var(--ws-paper)" : color ?? (season ? "var(--ws-accent)" : "var(--ws-ink)");
 
   return (

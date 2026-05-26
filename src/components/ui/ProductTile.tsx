@@ -3,6 +3,7 @@ import { PLACEHOLDER_TONES } from "../../constants";
 
 interface ProductTileProps {
   tone?: number;
+  gradientColors?: [string, string];
   label?: string;
   imageUrl?: string | null;
   size?: CSSProperties["width"];
@@ -12,6 +13,7 @@ interface ProductTileProps {
 
 export default function ProductTile({
   tone = 0,
+  gradientColors,
   label,
   imageUrl,
   size = "100%",
@@ -19,7 +21,7 @@ export default function ProductTile({
   style
 }: ProductTileProps) {
   const [failed, setFailed] = useState(false);
-  const [a, b] = PLACEHOLDER_TONES[tone % PLACEHOLDER_TONES.length];
+  const [a, b] = gradientColors ?? PLACEHOLDER_TONES[tone % PLACEHOLDER_TONES.length];
 
   if (imageUrl && !failed) {
     return (

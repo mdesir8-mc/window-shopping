@@ -62,3 +62,15 @@ img {
   scrollbar-width: thin;
   scrollbar-color: var(--ws-hairline) transparent;
 }
+
+button:not(:disabled),
+a,
+[role="button"] {
+  transition: background 120ms ease;
+}
+
+button:not(:disabled):hover,
+a:hover,
+[role="button"]:hover {
+  --ws-hover-bg: var(--ws-surface);
+}

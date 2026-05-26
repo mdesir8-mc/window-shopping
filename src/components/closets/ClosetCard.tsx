@@ -2,7 +2,7 @@ import type { Closet } from "../../types";
 import ProductTile from "../ui/ProductTile";
 import Eyebrow from "../ui/Eyebrow";
 import Tag from "../ui/Tag";
-import { hashTone } from "../../lib/format";
+import { hashTone, lightenHex } from "../../lib/format";
 
 interface ClosetCardProps {
   closet: Closet;
@@ -11,13 +11,16 @@ interface ClosetCardProps {
 
 export default function ClosetCard({ closet, onClick }: ClosetCardProps) {
   const tone = hashTone(closet.id);
+  const gradientColors: [string, string] | undefined = closet.accent
+    ? [lightenHex(closet.accent, 0.55), lightenHex(closet.accent, 0.10)]
+    : undefined;
 
   return (
     <button
       type="button"
       onClick={onClick}
       style={{
-        background: "transparent",
+        background: "var(--ws-hover-bg, transparent)",
         border: "none",
         padding: 0,
         cursor: "pointer",
@@ -27,6 +30,7 @@ export default function ClosetCard({ closet, onClick }: ClosetCardProps) {
       <div style={{ position: "relative", aspectRatio: "3 / 4" }}>
         <ProductTile
           tone={tone}
+          gradientColors={gradientColors}
           imageUrl={null}
           label={closet.name}
           style={{ width: "100%", height: "100%" }}
