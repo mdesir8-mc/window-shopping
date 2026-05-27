@@ -124,7 +124,8 @@ function extractOfferField(offers: unknown, field: string) {
       continue;
     }
 
-    const value = (candidate as Record<string, unknown>)[field];
+    const record = candidate as Record<string, unknown>;
+    const value = record[field];
     const text = asText(value);
     if (text) {
       return text;
@@ -132,6 +133,19 @@ function extractOfferField(offers: unknown, field: string) {
 
     if (field === "price" && value !== undefined && value !== null) {
       return String(value);
+    }
+  }
+
+  if (field === "price") {
+    for (const candidate of candidates) {
+      if (!candidate || typeof candidate !== "object") {
+        continue;
+      }
+
+      const lowPrice = (candidate as Record<string, unknown>).lowPrice;
+      if (lowPrice !== undefined && lowPrice !== null) {
+        return String(lowPrice);
+      }
     }
   }
 
@@ -269,8 +283,8 @@ function parseClaudeResponse(text: string): Partial<ParsedProduct> {
     return {
       brand: asText(record.brand) ?? null,
       name: asText(record.name) ?? null,
-      price: asText(record.price) ?? null,
-      originalPrice: asText(record.originalPrice) ?? null,
+      price: asText(record.price) ?? (typeof record.price === "number" ? String(record.price) : null),
+      originalPrice: asText(record.originalPrice) ?? (typeof record.originalPrice === "number" ? String(record.originalPrice) : null),
       currency: asText(record.currency) ?? null,
       imageUrl: asText(record.imageUrl) ?? null,
       description: asText(record.description) ?? null,
@@ -293,7 +307,7 @@ async function claudeEnrich(html: string, _partial: ParsedProduct): Promise<Part
     const { default: Anthropic } = await import("@anthropic-ai/sdk");
     const client = new Anthropic({ apiKey });
     const response = await client.messages.create({
-      model: process.env.ANTHROPIC_MODEL?.trim() || "claude-3-5-haiku-latest",
+      model: process.env.ANTHROPIC_MODEL?.trim() || "claude-haiku-4-5-20251001",
       max_tokens: 512,
       system:
         "You extract product information from retail HTML. Return only a JSON object. Use null for uncertain fields and never invent missing data.",
