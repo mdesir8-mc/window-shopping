@@ -6,6 +6,16 @@ import {
   type HtmlFetcher
 } from "../src/services/parser";
 
+const anthropicMessagesCreate = vi.fn();
+
+vi.mock("@anthropic-ai/sdk", () => ({
+  default: vi.fn().mockImplementation(() => ({
+    messages: {
+      create: anthropicMessagesCreate
+    }
+  }))
+}));
+
 function htmlFetcher(html: string): HtmlFetcher {
   return async () => html;
 }
@@ -15,6 +25,8 @@ describe("parseProductPage", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.ANTHROPIC_MODEL;
   });
 
   it("extracts Open Graph and meta tag fields", async () => {
@@ -74,6 +86,37 @@ describe("parseProductPage", () => {
     expect(product.price).toBe("1290");
     expect(product.currency).toBe("USD");
     expect(product.suggestedTags).toEqual(expect.arrayContaining(["cashmere", "oversized", "layering"]));
+  });
+
+  it("extracts AggregateOffer lowPrice as the product price", async () => {
+    const aiEnricher: AiEnricher = vi.fn().mockResolvedValue({});
+
+    const product = await parseProductPage("https://shop.example.com/sport-jacket", {
+      fetcher: htmlFetcher(`
+        <html>
+          <head>
+            <script type="application/ld+json">
+              {
+                "@context": "https://schema.org",
+                "@type": "Product",
+                "name": "Sport Jacket Grey Houndstooth Wool",
+                "image": ["https://cdn.example.com/sport-jacket.jpg"],
+                "offers": {
+                  "@type": "AggregateOffer",
+                  "lowPrice": 412.5,
+                  "highPrice": 412.5,
+                  "priceCurrency": "USD"
+                }
+              }
+            </script>
+          </head>
+        </html>
+      `),
+      aiEnricher
+    });
+
+    expect(product.price).toBe("412.5");
+    expect(aiEnricher).not.toHaveBeenCalled();
   });
 
   it("falls back to the title tag when structured product data is missing", async () => {
@@ -197,6 +240,35 @@ describe("parseProductPage", () => {
     expect(aiEnricher).toHaveBeenCalledOnce();
     expect(product.price).toBe("320");
     expect(product.imageUrl).toBe("https://cdn.example.com/shirt.jpg");
+  });
+
+  it("uses Claude Haiku fallback and preserves numeric price fields", async () => {
+    process.env.ANTHROPIC_API_KEY = "test-key";
+    anthropicMessagesCreate.mockResolvedValue({
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            name: "Wool Jacket",
+            price: 412.5,
+            originalPrice: 550,
+            imageUrl: "https://cdn.example.com/wool-jacket.jpg"
+          })
+        }
+      ]
+    });
+
+    const product = await parseProductPage("https://shop.example.com/wool-jacket", {
+      fetcher: htmlFetcher("<html><body>Wool Jacket</body></html>")
+    });
+
+    expect(anthropicMessagesCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: "claude-haiku-4-5-20251001"
+      })
+    );
+    expect(product.price).toBe("412.5");
+    expect(product.originalPrice).toBe("550");
   });
 
   it("throws a fetch error when the remote page cannot be reached", async () => {
