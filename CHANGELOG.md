@@ -1,3 +1,10 @@
+## [0.5.1](https://github.com/mdesir8-mc/window-shopping/compare/v0.5.0...v0.5.1) (2026-05-27)
+
+
+### Bug Fixes
+
+* correct Claude parser fallback ([#20](https://github.com/mdesir8-mc/window-shopping/issues/20)) ([28358a1](https://github.com/mdesir8-mc/window-shopping/commit/28358a13efe3879cc85693f0fdbf90d0ef97092d))
+
 # [0.5.0](https://github.com/mdesir8-mc/window-shopping/compare/v0.4.0...v0.5.0) (2026-05-26)
 
 
