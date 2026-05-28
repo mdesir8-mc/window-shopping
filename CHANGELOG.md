@@ -1,3 +1,10 @@
+## [0.7.1](https://github.com/mdesir8-mc/window-shopping/compare/v0.7.0...v0.7.1) (2026-05-28)
+
+
+### Bug Fixes
+
+* harden server against SSRF, add security headers, rate limit, and non-root Docker user ([#24](https://github.com/mdesir8-mc/window-shopping/issues/24)) ([6309b6e](https://github.com/mdesir8-mc/window-shopping/commit/6309b6e33e120f10e78351e004d90adee6c2e976))
+
 # [0.7.0](https://github.com/mdesir8-mc/window-shopping/compare/v0.6.0...v0.7.0) (2026-05-28)
 
 
