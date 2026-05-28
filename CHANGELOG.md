@@ -1,3 +1,10 @@
+# [0.6.0](https://github.com/mdesir8-mc/window-shopping/compare/v0.5.1...v0.6.0) (2026-05-28)
+
+
+### Features
+
+* add manual entry fallback when URL parse fails ([#22](https://github.com/mdesir8-mc/window-shopping/issues/22)) ([07d4dc3](https://github.com/mdesir8-mc/window-shopping/commit/07d4dc36481b1bc7cc97592da1b1c584c39abfca))
+
 ## [0.5.1](https://github.com/mdesir8-mc/window-shopping/compare/v0.5.0...v0.5.1) (2026-05-27)
 
 
