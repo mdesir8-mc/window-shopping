@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import path from "node:path";
 import { existsSync } from "node:fs";
@@ -18,6 +19,7 @@ export function createApp() {
   const isProduction = process.env.NODE_ENV === "production";
   const publicDir = path.resolve(__dirname, "../../../public");
 
+  app.use(helmet());
   app.use(
     cors({
       origin: isProduction ? process.env.FRONTEND_ORIGIN ?? false : true,

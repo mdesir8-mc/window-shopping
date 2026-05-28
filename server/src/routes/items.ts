@@ -1,9 +1,11 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { prisma } from "../lib/prisma";
 import { parseProductPage, ParserFetchError } from "../services/parser";
 import type { AuthenticatedRequest } from "../types";
 import { asyncHandler, HttpError } from "../utils/http";
 import { serializeItem } from "../utils/serializers";
+import { validateSsrfSafeUrl } from "../utils/ssrf";
 import {
   optionalBoolean,
   optionalNullableBoolean,
@@ -14,30 +16,26 @@ import {
 
 const router = Router();
 
+const parseLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests. Try again in a minute." }
+});
+
 function parsePriceToNumber(value?: string | null) {
   const n = Number((value ?? "").replace(/[^0-9.]/g, ""));
   return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
-function requireRefreshableUrl(value: string | null) {
+async function requireRefreshableUrl(value: string | null) {
   if (!value) {
     throw new HttpError(400, "Item has no URL to refresh.");
   }
 
-  try {
-    const url = new URL(value);
-    if (!["http:", "https:"].includes(url.protocol)) {
-      throw new HttpError(400, "Item URL must be http or https.");
-    }
-
-    return url.toString();
-  } catch (error) {
-    if (error instanceof HttpError) {
-      throw error;
-    }
-
-    throw new HttpError(400, "Item URL must be a valid http or https URL.");
-  }
+  const url = await validateSsrfSafeUrl(value);
+  return url.toString();
 }
 
 async function findOwnedItem(userId: string, itemId: string) {
@@ -157,17 +155,15 @@ router.get(
 
 router.post(
   "/parse-url",
+  parseLimiter,
   asyncHandler(async (req, res) => {
     const rawUrl = requireString(req.body?.url, "url");
+    const safeUrl = await validateSsrfSafeUrl(rawUrl);
 
     try {
-      const parsed = await parseProductPage(rawUrl);
+      const parsed = await parseProductPage(safeUrl.toString());
       res.json(parsed);
     } catch (error) {
-      if (error instanceof TypeError || error instanceof URIError || /URL/i.test(String(error))) {
-        throw new HttpError(400, "url must be a valid http or https URL.");
-      }
-
       if (error instanceof ParserFetchError) {
         throw new HttpError(502, error.message);
       }
@@ -330,6 +326,7 @@ router.delete(
 
 router.post(
   "/:id/refresh",
+  parseLimiter,
   asyncHandler(async (req, res) => {
     const request = req as AuthenticatedRequest;
     const itemId = requireString(req.params.id, "id");
@@ -339,16 +336,12 @@ router.post(
       throw new HttpError(404, "Item not found.");
     }
 
-    const url = requireRefreshableUrl(item.url);
+    const url = await requireRefreshableUrl(item.url);
     let parsed;
 
     try {
       parsed = await parseProductPage(url);
     } catch (error) {
-      if (error instanceof TypeError || error instanceof URIError || /URL/i.test(String(error))) {
-        throw new HttpError(400, "Item URL must be a valid http or https URL.");
-      }
-
       if (error instanceof ParserFetchError) {
         throw new HttpError(502, error.message);
       }

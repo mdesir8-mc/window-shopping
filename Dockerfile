@@ -43,5 +43,8 @@ COPY server/prisma ./server/prisma
 # Copy built frontend static files
 COPY --from=frontend /app/server/public ./server/public
 
+RUN useradd -r -u 1001 -g root appuser && chown -R appuser /app
+USER appuser
+
 EXPOSE 3000
 CMD ["sh", "-c", "cd server && npx prisma migrate deploy && node dist/server/src/index.js"]
