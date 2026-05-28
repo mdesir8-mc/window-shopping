@@ -1,4 +1,4 @@
-# window-shopping
+# [window-shopping.app - click here](app.window-shopping.app)
 
 A personal wardrobe organizer that lets you save and catalog clothing items from any online store. Paste a product URL and the app parses the page — pulling the brand, name, price, images, and colors — then uses AI enrichment to suggest tags and a season. Items live inside closets, which can be divided into sections and given a default season so newly added pieces are automatically categorized.
 
