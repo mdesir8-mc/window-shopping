@@ -1,8 +1,19 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import supertest from "supertest";
 import { hasTestDatabase, prepareTestDatabase, resetDatabase, testPrisma } from "./test-db";
+import { parseProductPage, ParserFetchError } from "../src/services/parser";
+
+vi.mock("../src/services/parser", () => {
+  class MockParserFetchError extends Error {}
+
+  return {
+    ParserFetchError: MockParserFetchError,
+    parseProductPage: vi.fn()
+  };
+});
 
 const describeDb = hasTestDatabase ? describe : describe.skip;
+const mockedParseProductPage = vi.mocked(parseProductPage);
 
 describeDb("API integration", () => {
   let request: ReturnType<typeof supertest>;
@@ -16,6 +27,7 @@ describeDb("API integration", () => {
   });
 
   beforeEach(async () => {
+    vi.clearAllMocks();
     await resetDatabase();
   });
 
@@ -220,6 +232,132 @@ describeDb("API integration", () => {
     expect(success.status).toBe(200);
     expect(success.body.closetId).toBe(closetB.id);
     expect(success.body.sectionId).toBe(sectionB.body.id);
+  });
+
+  it("serializes freshness fields and accepts nullable stock patches", async () => {
+    const token = await registerUser("freshness@example.com");
+    const closet = await createCloset(token);
+
+    const item = await request
+      .post("/api/items")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        closetId: closet.id,
+        brand: "Toteme",
+        name: "Coat",
+        season: "Winter",
+        url: "https://shop.example.com/coat",
+        inStock: true,
+        tags: [],
+        colors: []
+      });
+
+    expect(item.status).toBe(201);
+    expect(item.body.lastCheckedAt).toEqual(expect.any(String));
+    expect(item.body.inStock).toBe(true);
+    expect(item.body.onSale).toBe(false);
+
+    const patched = await request
+      .patch(`/api/items/${item.body.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ inStock: null });
+
+    expect(patched.status).toBe(200);
+    expect(patched.body.inStock).toBeNull();
+  });
+
+  it("refreshes URL-backed items and marks sale drops", async () => {
+    const token = await registerUser("refresh@example.com");
+    const closet = await createCloset(token);
+    const item = await request
+      .post("/api/items")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        closetId: closet.id,
+        brand: "Lemaire",
+        name: "Jacket",
+        season: "Fall",
+        price: "$100.00",
+        url: "https://shop.example.com/jacket",
+        inStock: true,
+        tags: [],
+        colors: []
+      });
+
+    mockedParseProductPage.mockResolvedValueOnce({
+      brand: "Lemaire",
+      name: "Jacket",
+      price: "$89.99",
+      originalPrice: "$120.00",
+      currency: "USD",
+      imageUrl: "https://cdn.example.com/jacket.jpg",
+      description: "Updated",
+      inStock: false,
+      colors: [],
+      suggestedTags: [],
+      suggestedSeason: null,
+      source: "shop.example.com"
+    });
+
+    const refreshed = await request
+      .post(`/api/items/${item.body.id}/refresh`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(refreshed.status).toBe(200);
+    expect(mockedParseProductPage).toHaveBeenCalledWith("https://shop.example.com/jacket");
+    expect(refreshed.body.price).toBe("$89.99");
+    expect(refreshed.body.originalPrice).toBe("$120.00");
+    expect(refreshed.body.inStock).toBe(false);
+    expect(refreshed.body.onSale).toBe(true);
+    expect(refreshed.body.lastCheckedAt).toEqual(expect.any(String));
+  });
+
+  it("rejects refresh for items without usable URLs", async () => {
+    const token = await registerUser("refresh-missing@example.com");
+    const closet = await createCloset(token);
+    const item = await request
+      .post("/api/items")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        closetId: closet.id,
+        brand: "Khaite",
+        name: "Jeans",
+        season: "S/S",
+        tags: [],
+        colors: []
+      });
+
+    const response = await request
+      .post(`/api/items/${item.body.id}/refresh`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(response.status).toBe(400);
+    expect(mockedParseProductPage).not.toHaveBeenCalled();
+  });
+
+  it("returns 502 when refresh parsing cannot fetch the product page", async () => {
+    const token = await registerUser("refresh-fail@example.com");
+    const closet = await createCloset(token);
+    const item = await request
+      .post("/api/items")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        closetId: closet.id,
+        brand: "A.P.C.",
+        name: "Bag",
+        season: "Spring",
+        url: "https://shop.example.com/bag",
+        tags: [],
+        colors: []
+      });
+
+    mockedParseProductPage.mockRejectedValueOnce(new ParserFetchError("Request failed"));
+
+    const response = await request
+      .post(`/api/items/${item.body.id}/refresh`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(response.status).toBe(502);
   });
 
   it("toggles favorites and deletes tag usage across closets, sections, and items", async () => {

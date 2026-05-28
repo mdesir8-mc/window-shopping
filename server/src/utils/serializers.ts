@@ -47,6 +47,9 @@ type SerializedItemInput = {
   description: string | null;
   imageUrl: string | null;
   favorited: boolean;
+  lastCheckedAt: Date | null;
+  inStock: boolean | null;
+  onSale: boolean;
   addedAt: Date;
   updatedAt: Date;
   closet?: {
@@ -117,6 +120,9 @@ export function serializeItem(item: SerializedItemInput) {
     description: item.description,
     imageUrl: item.imageUrl,
     favorited: item.favorited,
+    lastCheckedAt: item.lastCheckedAt?.toISOString() ?? null,
+    inStock: item.inStock,
+    onSale: item.onSale,
     addedAt: item.addedAt.toISOString(),
     updatedAt: item.updatedAt.toISOString(),
     closet: item.closet ?? undefined,

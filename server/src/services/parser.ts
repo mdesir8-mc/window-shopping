@@ -36,6 +36,19 @@ const SEASON_PATTERNS: Array<[string, RegExp]> = [
   ["Spring", /\bspring\b/]
 ];
 
+const IN_STOCK_AVAILABILITY = new Set([
+  "instock",
+  "limitedavailability",
+  "preorder",
+  "backorder"
+]);
+
+const OUT_OF_STOCK_AVAILABILITY = new Set([
+  "discontinued",
+  "outofstock",
+  "soldout"
+]);
+
 function normalizeUrl(rawUrl: string) {
   const url = new URL(rawUrl);
 
@@ -147,6 +160,94 @@ function extractOfferField(offers: unknown, field: string) {
         return String(lowPrice);
       }
     }
+  }
+
+  return null;
+}
+
+function normalizeAvailability(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/^https?:\/\/(?:www\.)?schema\.org\//, "")
+    .replace(/[^a-z]/g, "");
+}
+
+function stockFromAvailability(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  const normalized = normalizeAvailability(value);
+
+  if (IN_STOCK_AVAILABILITY.has(normalized)) {
+    return true;
+  }
+
+  if (OUT_OF_STOCK_AVAILABILITY.has(normalized)) {
+    return false;
+  }
+
+  return null;
+}
+
+function extractStockFromOffers(offers: unknown) {
+  const candidates = Array.isArray(offers) ? offers : [offers];
+
+  for (const candidate of candidates) {
+    if (!candidate || typeof candidate !== "object") {
+      continue;
+    }
+
+    const availability = asText((candidate as Record<string, unknown>).availability);
+    const stock = stockFromAvailability(availability);
+    if (stock !== null) {
+      return stock;
+    }
+  }
+
+  return null;
+}
+
+function stockFromOgAvailability(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  const normalized = value.toLowerCase().replace(/[^a-z]/g, "");
+
+  if (normalized.includes("outofstock") || normalized.includes("soldout")) {
+    return false;
+  }
+
+  if (normalized.includes("instock")) {
+    return true;
+  }
+
+  return null;
+}
+
+function stockFromBodyText(text: string) {
+  const lower = text.toLowerCase();
+  const outOfStockSignals = [
+    "sold out",
+    "out of stock",
+    "currently unavailable",
+    "notify me when available"
+  ];
+  const inStockSignals = [
+    "add to cart",
+    "add to bag",
+    "in stock",
+    "available now",
+    "ready to ship"
+  ];
+
+  if (outOfStockSignals.some((signal) => lower.includes(signal))) {
+    return false;
+  }
+
+  if (inStockSignals.some((signal) => lower.includes(signal))) {
+    return true;
   }
 
   return null;
@@ -288,6 +389,7 @@ function parseClaudeResponse(text: string): Partial<ParsedProduct> {
       currency: asText(record.currency) ?? null,
       imageUrl: asText(record.imageUrl) ?? null,
       description: asText(record.description) ?? null,
+      inStock: typeof record.inStock === "boolean" ? record.inStock : null,
       colors: Array.isArray(record.colors)
         ? record.colors.filter((entry): entry is string => typeof entry === "string")
         : undefined
@@ -316,7 +418,7 @@ async function claudeEnrich(html: string, _partial: ParsedProduct): Promise<Part
           role: "user",
           content:
             "Extract product data from this product page content. " +
-            'Return JSON with keys: brand, name, price, originalPrice, currency, imageUrl, description, colors. ' +
+            'Return JSON with keys: brand, name, price, originalPrice, currency, imageUrl, description, inStock, colors. ' +
             `HTML content:\n${extractBodyText(html)}`
         }
       ]
@@ -339,6 +441,7 @@ function mergePartial(base: ParsedProduct, extra: Partial<ParsedProduct>): Parse
     currency: base.currency || extra.currency || null,
     imageUrl: base.imageUrl || extra.imageUrl || null,
     description: base.description || extra.description || null,
+    inStock: base.inStock ?? extra.inStock ?? null,
     colors: base.colors.length > 0 ? base.colors : extra.colors ?? [],
     suggestedTags: base.suggestedTags,
     suggestedSeason: base.suggestedSeason,
@@ -378,6 +481,7 @@ export async function parseProductPage(
   const ogPrice = metaContent($, "og:price:amount") ?? metaContent($, "product:price:amount");
   const ogCurrency =
     metaContent($, "og:price:currency") ?? metaContent($, "product:price:currency");
+  const ogAvailability = metaContent($, "product:availability");
 
   const products: Record<string, unknown>[] = [];
   $('script[type="application/ld+json"]').each((_, element) => {
@@ -403,6 +507,11 @@ export async function parseProductPage(
   const price = extractOfferField(offers, "price") ?? ogPrice;
   const originalPrice = extractOriginalPrice(offers);
   const currency = extractOfferField(offers, "priceCurrency") ?? ogCurrency;
+  const bodyText = extractBodyText(html, 5_000);
+  const inStock =
+    extractStockFromOffers(offers) ??
+    stockFromOgAvailability(ogAvailability) ??
+    stockFromBodyText(bodyText);
   const imageUrl =
     firstText([
       Array.isArray(product.image) ? product.image[0] : product.image,
@@ -419,6 +528,7 @@ export async function parseProductPage(
     currency,
     imageUrl,
     description,
+    inStock,
     colors,
     suggestedTags: inferTags(textForInference),
     suggestedSeason: inferSeason(textForInference),

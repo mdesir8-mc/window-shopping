@@ -66,6 +66,11 @@ export async function favoriteItem(id: string) {
   return response.data;
 }
 
+export async function refreshItem(id: string) {
+  const response = await apiClient.post<Item>(`/api/items/${id}/refresh`);
+  return response.data;
+}
+
 export async function moveItem(id: string, payload: { closetId: string; sectionId?: string | null }) {
   const response = await apiClient.post<Item>(`/api/items/${id}/move`, payload);
   return response.data;

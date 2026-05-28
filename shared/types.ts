@@ -6,6 +6,7 @@ export interface ParsedProduct {
   currency: string | null;
   imageUrl: string | null;
   description: string | null;
+  inStock: boolean | null;
   colors: string[];
   suggestedTags: string[];
   suggestedSeason: string | null;

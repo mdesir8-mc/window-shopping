@@ -6,7 +6,7 @@ import Display from "../ui/Display";
 import Hairline from "../ui/Hairline";
 import Tag from "../ui/Tag";
 import Meta from "../ui/Meta";
-import { SEASONS } from "../../constants";
+import { FRESHNESS_THRESHOLD_MS, SEASONS } from "../../constants";
 import { formatRelativeDate, hashTone } from "../../lib/format";
 import { useClosets } from "../../hooks/useClosets";
 import {
@@ -15,9 +15,18 @@ import {
   useItem,
   useMoveItem,
   useOptimisticTagUpdate,
-  usePatchItem
+  usePatchItem,
+  useRefreshItem
 } from "../../hooks/useItems";
 import { useTags } from "../../hooks/useTags";
+
+function hasRefreshableUrl(url: string | null) {
+  return Boolean(url && /^https?:\/\//i.test(url));
+}
+
+function isFreshnessStale(lastCheckedAt: string | null) {
+  return !lastCheckedAt || Date.now() - new Date(lastCheckedAt).getTime() > FRESHNESS_THRESHOLD_MS;
+}
 
 export default function ItemDrawer({
   itemId,
@@ -33,6 +42,7 @@ export default function ItemDrawer({
   const favoriteMutation = useFavoriteItem();
   const moveMutation = useMoveItem();
   const deleteMutation = useDeleteItem();
+  const refreshMutation = useRefreshItem();
   const { updateItemTags, isPending: isTagPending } = useOptimisticTagUpdate();
   const [newTag, setNewTag] = useState("");
   const [moveClosetId, setMoveClosetId] = useState("");
@@ -42,6 +52,8 @@ export default function ItemDrawer({
   const moveCloset = closets.find((closet) => closet.id === moveClosetId) ?? closets.find((closet) => closet.id === item?.closetId);
   const availableSections = moveCloset?.sections ?? [];
   const suggestedTags = useMemo(() => tagsQuery.data ?? [], [tagsQuery.data]);
+  const refreshableUrl = hasRefreshableUrl(item?.url ?? null);
+  const stale = item ? refreshableUrl && isFreshnessStale(item.lastCheckedAt) : false;
 
   useEffect(() => {
     if (item) {
@@ -114,6 +126,21 @@ export default function ItemDrawer({
                   {item.originalPrice}
                 </span>
               ) : null}
+              {item.onSale ? (
+                <span
+                  style={{
+                    alignSelf: "center",
+                    padding: "4px 7px",
+                    background: "var(--ws-accent)",
+                    color: "var(--ws-paper)",
+                    fontFamily: "var(--ws-mono)",
+                    fontSize: 9,
+                    letterSpacing: 0.8
+                  }}
+                >
+                  ON SALE
+                </span>
+              ) : null}
             </div>
 
             {item.description ? (
@@ -127,6 +154,45 @@ export default function ItemDrawer({
                 }}
               >
                 {item.description}
+              </div>
+            ) : null}
+
+            {refreshableUrl ? (
+              <div
+                style={{
+                  display: "grid",
+                  gap: 8,
+                  marginTop: 18,
+                  padding: "14px 0",
+                  fontFamily: "var(--ws-ui)",
+                  fontSize: 13,
+                  color: "var(--ws-muted)"
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 14 }}>
+                  <span>Price and stock</span>
+                  <span style={{ fontFamily: "var(--ws-mono)", fontSize: 11 }}>
+                    {item.lastCheckedAt ? formatRelativeDate(item.lastCheckedAt) : "Not checked"}
+                  </span>
+                </div>
+                {stale ? (
+                  <div style={{ color: "var(--ws-accent)" }}>
+                    This price or stock info may be stale.
+                  </div>
+                ) : null}
+                {item.inStock !== null ? (
+                  <div
+                    style={{
+                      fontFamily: "var(--ws-mono)",
+                      fontSize: 11,
+                      color: item.inStock ? "#4F7A5A" : "var(--ws-accent)",
+                      letterSpacing: 0.5,
+                      textTransform: "uppercase"
+                    }}
+                  >
+                    {item.inStock ? "In Stock" : "Out of Stock"}
+                  </div>
+                ) : null}
               </div>
             ) : null}
 
@@ -310,6 +376,26 @@ export default function ItemDrawer({
                 >
                   Visit store ↗
                 </a>
+              ) : null}
+
+              {refreshableUrl ? (
+                <button
+                  type="button"
+                  disabled={refreshMutation.isPending}
+                  onClick={() => void refreshMutation.mutateAsync(item.id)}
+                  style={{
+                    padding: "14px 18px",
+                    border: "1px solid var(--ws-hairline)",
+                    background: "var(--ws-hover-bg, transparent)",
+                    cursor: refreshMutation.isPending ? "not-allowed" : "pointer",
+                    opacity: refreshMutation.isPending ? 0.5 : 1,
+                    fontSize: 11,
+                    letterSpacing: 1.5,
+                    textTransform: "uppercase"
+                  }}
+                >
+                  {refreshMutation.isPending ? "Refreshing..." : "Refresh"}
+                </button>
               ) : null}
 
               <button

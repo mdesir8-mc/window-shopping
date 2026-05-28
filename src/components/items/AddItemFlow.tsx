@@ -111,6 +111,7 @@ export default function AddItemFlow({
       currency: null,
       imageUrl: manualImageUrl.trim() || null,
       description: null,
+      inStock: null,
       colors: [],
       suggestedTags: [],
       suggestedSeason: null,
@@ -144,7 +145,8 @@ export default function AddItemFlow({
       tags: finalTags,
       colors: parsed.colors,
       description: parsed.description,
-      imageUrl: parsed.imageUrl
+      imageUrl: parsed.imageUrl,
+      inStock: parsed.inStock
     });
 
     onClose();
