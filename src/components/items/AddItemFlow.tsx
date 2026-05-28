@@ -11,7 +11,7 @@ import { SEASONS } from "../../constants";
 import { hashTone } from "../../lib/format";
 import type { ParsedProduct } from "../../types";
 
-type Step = "paste" | "parsing" | "preview";
+type Step = "paste" | "parsing" | "preview" | "manual";
 
 export default function AddItemFlow({
   open,
@@ -32,6 +32,10 @@ export default function AddItemFlow({
   const [season, setSeason] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [customTag, setCustomTag] = useState("");
+  const [manualName, setManualName] = useState("");
+  const [manualBrand, setManualBrand] = useState("");
+  const [manualPrice, setManualPrice] = useState("");
+  const [manualImageUrl, setManualImageUrl] = useState("");
   const closets = useMemo(() => closetsQuery.data ?? [], [closetsQuery.data]);
   const selectedCloset = closets.find((closet) => closet.id === closetId) ?? closets[0];
   const availableSections = selectedCloset?.sections ?? [];
@@ -46,6 +50,10 @@ export default function AddItemFlow({
       setSeason("");
       setSelectedTags([]);
       setCustomTag("");
+      setManualName("");
+      setManualBrand("");
+      setManualPrice("");
+      setManualImageUrl("");
       return;
     }
 
@@ -77,13 +85,40 @@ export default function AddItemFlow({
 
     try {
       const result = await parseMutation.mutateAsync(url);
+      const isEmpty = !result.price && !result.imageUrl;
+      if (isEmpty) {
+        setStep("manual");
+        return;
+      }
       setParsed(result);
       setSelectedTags(result.suggestedTags);
       setSeason(result.suggestedSeason ?? selectedCloset?.season ?? "");
       setStep("preview");
     } catch {
-      setStep("paste");
+      setStep("manual");
     }
+  }
+
+  function handleManualSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    let source = "manual";
+    try { source = new URL(url).hostname.replace(/^www\./, ""); } catch {}
+    setParsed({
+      brand: manualBrand.trim() || null,
+      name: manualName.trim(),
+      price: manualPrice.trim() || null,
+      originalPrice: null,
+      currency: null,
+      imageUrl: manualImageUrl.trim() || null,
+      description: null,
+      colors: [],
+      suggestedTags: [],
+      suggestedSeason: null,
+      source
+    });
+    setSelectedTags([]);
+    setSeason(selectedCloset?.season ?? "");
+    setStep("preview");
   }
 
   async function handleSave() {
@@ -211,9 +246,117 @@ export default function AddItemFlow({
           ) : null}
         </form>
 
-        {parseMutation.isError ? (
-          <div style={{ marginTop: 12, color: "var(--ws-accent)", fontSize: 13 }}>
-            Unable to parse that link. Try a direct product page URL.
+        {step === "manual" ? (
+          <div style={{ marginTop: 24 }}>
+            <Display size={28} style={{ lineHeight: 1.3 }}>
+              Sorry, but this website isn&apos;t as cool as you.{" "}
+              <span style={{ fontStyle: "italic", fontWeight: 300, color: "var(--ws-accent)" }}>
+                Please type in the important stuff or find a different (better) brand.
+              </span>
+            </Display>
+
+            <form onSubmit={handleManualSubmit}>
+              <div style={{ display: "grid", gap: 18, marginTop: 24 }}>
+                <label style={{ display: "grid", gap: 8 }}>
+                  <Eyebrow>Name</Eyebrow>
+                  <input
+                    required
+                    value={manualName}
+                    onChange={(event) => setManualName(event.target.value)}
+                    placeholder="Linen Blazer"
+                    style={{
+                      border: "1px solid var(--ws-hairline)",
+                      background: "var(--ws-surface)",
+                      color: "var(--ws-ink)",
+                      padding: "14px 16px"
+                    }}
+                  />
+                </label>
+
+                <label style={{ display: "grid", gap: 8 }}>
+                  <Eyebrow>Brand</Eyebrow>
+                  <input
+                    required
+                    value={manualBrand}
+                    onChange={(event) => setManualBrand(event.target.value)}
+                    placeholder="H&M"
+                    style={{
+                      border: "1px solid var(--ws-hairline)",
+                      background: "var(--ws-surface)",
+                      color: "var(--ws-ink)",
+                      padding: "14px 16px"
+                    }}
+                  />
+                </label>
+
+                <label style={{ display: "grid", gap: 8 }}>
+                  <Eyebrow>Price</Eyebrow>
+                  <input
+                    required
+                    value={manualPrice}
+                    onChange={(event) => setManualPrice(event.target.value)}
+                    placeholder="49.99"
+                    style={{
+                      border: "1px solid var(--ws-hairline)",
+                      background: "var(--ws-surface)",
+                      color: "var(--ws-ink)",
+                      padding: "14px 16px"
+                    }}
+                  />
+                </label>
+
+                <label style={{ display: "grid", gap: 8 }}>
+                  <Eyebrow>Image URL <span style={{ color: "var(--ws-muted)", fontStyle: "italic", textTransform: "none", letterSpacing: 0 }}>(optional)</span></Eyebrow>
+                  <input
+                    value={manualImageUrl}
+                    onChange={(event) => setManualImageUrl(event.target.value)}
+                    placeholder="https://..."
+                    style={{
+                      border: "1px solid var(--ws-hairline)",
+                      background: "var(--ws-surface)",
+                      color: "var(--ws-ink)",
+                      padding: "14px 16px",
+                      fontFamily: "var(--ws-mono)",
+                      fontSize: 13
+                    }}
+                  />
+                </label>
+              </div>
+
+              <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
+                <button
+                  type="button"
+                  onClick={() => setStep("paste")}
+                  style={{
+                    padding: "14px 16px",
+                    border: "1px solid var(--ws-hairline)",
+                    background: "var(--ws-hover-bg, transparent)",
+                    cursor: "pointer",
+                    fontSize: 11,
+                    textTransform: "uppercase",
+                    letterSpacing: 1.5
+                  }}
+                >
+                  ← Try another link
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    flex: 1,
+                    padding: "14px 16px",
+                    border: "none",
+                    background: "var(--ws-ink)",
+                    color: "var(--ws-paper)",
+                    cursor: "pointer",
+                    fontSize: 11,
+                    textTransform: "uppercase",
+                    letterSpacing: 1.8
+                  }}
+                >
+                  Fill it in myself
+                </button>
+              </div>
+            </form>
           </div>
         ) : null}
 
