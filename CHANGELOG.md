@@ -1,3 +1,10 @@
+# [0.7.0](https://github.com/mdesir8-mc/window-shopping/compare/v0.6.0...v0.7.0) (2026-05-28)
+
+
+### Features
+
+* capabilities to update price and stock status ([#23](https://github.com/mdesir8-mc/window-shopping/issues/23)) ([361bf14](https://github.com/mdesir8-mc/window-shopping/commit/361bf14866bbaea55afe3e9fe0bd53c6ab087509))
+
 # [0.6.0](https://github.com/mdesir8-mc/window-shopping/compare/v0.5.1...v0.6.0) (2026-05-28)
 
 
