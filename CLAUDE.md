@@ -26,3 +26,7 @@ Use specific subjects, for example `fix: correct auth refresh` or `feat(api): ad
 Never use vague commit messages such as `updates`, `fix stuff`, or `changes`.
 
 When opening PRs, use semantic PR titles because release automation depends on the final merged commit being semantic.
+
+## agent coordination
+
+Do not call background or secondary agents unless the estimated task completion time exceeds 20 minutes.
