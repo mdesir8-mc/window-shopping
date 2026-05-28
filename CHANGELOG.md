@@ -1,3 +1,10 @@
+# [0.8.0](https://github.com/mdesir8-mc/window-shopping/compare/v0.7.1...v0.8.0) (2026-05-28)
+
+
+### Features
+
+* show BETA label on login page instead of DEVELOPMENT ([#25](https://github.com/mdesir8-mc/window-shopping/issues/25)) ([514656b](https://github.com/mdesir8-mc/window-shopping/commit/514656bc511eab5528771e0d7a576efb587c9724))
+
 ## [0.7.1](https://github.com/mdesir8-mc/window-shopping/compare/v0.7.0...v0.7.1) (2026-05-28)
 
 
