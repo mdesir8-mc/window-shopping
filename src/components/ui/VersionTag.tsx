@@ -6,7 +6,7 @@ interface VersionTagProps {
 
 function formatVersion(version?: string) {
   if (!version || version === "development") {
-    return "development";
+    return "beta";
   }
 
   return version.startsWith("v") ? version : `v${version}`;
