@@ -57,6 +57,18 @@ export function optionalBoolean(value: unknown, fieldName: string) {
   return value;
 }
 
+export function optionalNullableBoolean(value: unknown, fieldName: string) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === null) {
+    return null;
+  }
+
+  return optionalBoolean(value, fieldName);
+}
+
 export function optionalInteger(value: unknown, fieldName: string) {
   if (value === undefined) {
     return undefined;

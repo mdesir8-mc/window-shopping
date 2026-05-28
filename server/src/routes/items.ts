@@ -6,12 +6,39 @@ import { asyncHandler, HttpError } from "../utils/http";
 import { serializeItem } from "../utils/serializers";
 import {
   optionalBoolean,
+  optionalNullableBoolean,
   optionalString,
   optionalStringArray,
   requireString
 } from "../utils/validation";
 
 const router = Router();
+
+function parsePriceToNumber(value?: string | null) {
+  const n = Number((value ?? "").replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+function requireRefreshableUrl(value: string | null) {
+  if (!value) {
+    throw new HttpError(400, "Item has no URL to refresh.");
+  }
+
+  try {
+    const url = new URL(value);
+    if (!["http:", "https:"].includes(url.protocol)) {
+      throw new HttpError(400, "Item URL must be http or https.");
+    }
+
+    return url.toString();
+  } catch (error) {
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError(400, "Item URL must be a valid http or https URL.");
+  }
+}
 
 async function findOwnedItem(userId: string, itemId: string) {
   return prisma.item.findFirst({
@@ -179,7 +206,9 @@ router.post(
         colors: optionalStringArray(req.body?.colors, "colors") ?? [],
         description: optionalString(req.body?.description),
         imageUrl: optionalString(req.body?.imageUrl),
-        favorited: optionalBoolean(req.body?.favorited, "favorited") ?? false
+        favorited: optionalBoolean(req.body?.favorited, "favorited") ?? false,
+        lastCheckedAt: optionalString(req.body?.url) ? new Date() : null,
+        inStock: optionalNullableBoolean(req.body?.inStock, "inStock") ?? null
       },
       include: {
         closet: {
@@ -255,7 +284,8 @@ router.patch(
         ...(req.body?.colors !== undefined ? { colors: optionalStringArray(req.body.colors, "colors") ?? [] } : {}),
         ...(req.body?.description !== undefined ? { description: optionalString(req.body.description) } : {}),
         ...(req.body?.imageUrl !== undefined ? { imageUrl: optionalString(req.body.imageUrl) } : {}),
-        ...(req.body?.favorited !== undefined ? { favorited: optionalBoolean(req.body.favorited, "favorited") } : {})
+        ...(req.body?.favorited !== undefined ? { favorited: optionalBoolean(req.body.favorited, "favorited") } : {}),
+        ...(req.body?.inStock !== undefined ? { inStock: optionalNullableBoolean(req.body.inStock, "inStock") } : {})
       },
       include: {
         closet: {
@@ -295,6 +325,71 @@ router.delete(
     });
 
     res.status(204).send();
+  })
+);
+
+router.post(
+  "/:id/refresh",
+  asyncHandler(async (req, res) => {
+    const request = req as AuthenticatedRequest;
+    const itemId = requireString(req.params.id, "id");
+    const item = await findOwnedItem(request.user.id, itemId);
+
+    if (!item) {
+      throw new HttpError(404, "Item not found.");
+    }
+
+    const url = requireRefreshableUrl(item.url);
+    let parsed;
+
+    try {
+      parsed = await parseProductPage(url);
+    } catch (error) {
+      if (error instanceof TypeError || error instanceof URIError || /URL/i.test(String(error))) {
+        throw new HttpError(400, "Item URL must be a valid http or https URL.");
+      }
+
+      if (error instanceof ParserFetchError) {
+        throw new HttpError(502, error.message);
+      }
+
+      throw error;
+    }
+
+    const prevPrice = parsePriceToNumber(item.price);
+    const newPrice = parsePriceToNumber(parsed.price);
+    const onSale = prevPrice > 0 && newPrice > 0
+      ? newPrice <= prevPrice * 0.9
+      : item.onSale;
+
+    const updated = await prisma.item.update({
+      where: {
+        id: item.id
+      },
+      data: {
+        price: parsed.price,
+        originalPrice: parsed.originalPrice,
+        inStock: parsed.inStock,
+        onSale,
+        lastCheckedAt: new Date()
+      },
+      include: {
+        closet: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        section: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
+
+    res.json(serializeItem(updated));
   })
 );
 

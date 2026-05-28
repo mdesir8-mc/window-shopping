@@ -7,7 +7,8 @@ import {
   listItems,
   moveItem,
   parseUrl,
-  patchItem
+  patchItem,
+  refreshItem
 } from "../api/items";
 import type { Item, ItemFilters, ItemPayload } from "../types";
 
@@ -138,6 +139,18 @@ export function useFavoriteItem() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["items"] });
+    }
+  });
+}
+
+export function useRefreshItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: refreshItem,
+    onSuccess: (item) => {
+      queryClient.setQueryData(["items", "detail", item.id], item);
+      patchItemInLists(queryClient, (entry) => entry.id === item.id ? item : entry);
     }
   });
 }

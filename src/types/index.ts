@@ -63,6 +63,9 @@ export interface Item {
   description: string | null;
   imageUrl: string | null;
   favorited: boolean;
+  lastCheckedAt: string | null;
+  inStock: boolean | null;
+  onSale: boolean;
   addedAt: string;
   updatedAt: string;
   closet?: ItemLink;
@@ -119,4 +122,5 @@ export interface ItemPayload {
   description?: string | null;
   imageUrl?: string | null;
   favorited?: boolean;
+  inStock?: boolean | null;
 }

@@ -1,7 +1,20 @@
 import type { Item } from "../../types";
 import ProductTile from "../ui/ProductTile";
 import Tag from "../ui/Tag";
+import { FRESHNESS_THRESHOLD_MS } from "../../constants";
 import { formatRelativeDate, hashTone } from "../../lib/format";
+
+function hasRefreshableUrl(url: string | null) {
+  return Boolean(url && /^https?:\/\//i.test(url));
+}
+
+function isStale(item: Item) {
+  if (!hasRefreshableUrl(item.url)) {
+    return false;
+  }
+
+  return !item.lastCheckedAt || Date.now() - new Date(item.lastCheckedAt).getTime() > FRESHNESS_THRESHOLD_MS;
+}
 
 export default function ItemCard({
   item,
@@ -12,6 +25,8 @@ export default function ItemCard({
   onClick: () => void;
   onEdit?: () => void;
 }) {
+  const stale = isStale(item);
+
   return (
     <div
       role="button"
@@ -52,6 +67,24 @@ export default function ItemCard({
           >
             Edit
           </button>
+        ) : null}
+        {item.onSale ? (
+          <div
+            style={{
+              position: "absolute",
+              top: onEdit ? 38 : 10,
+              left: 10,
+              padding: "3px 7px",
+              background: "var(--ws-accent)",
+              backdropFilter: "blur(4px)",
+              fontFamily: "var(--ws-mono)",
+              fontSize: 9,
+              color: "var(--ws-paper)",
+              letterSpacing: 0.5
+            }}
+          >
+            ON SALE
+          </div>
         ) : null}
         <div
           style={{
@@ -119,7 +152,17 @@ export default function ItemCard({
             </span>
           ) : null}
         </div>
-        <span style={{ fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-muted)" }}>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            fontFamily: "var(--ws-mono)",
+            fontSize: 10,
+            color: "var(--ws-muted)"
+          }}
+        >
+          {stale ? <span aria-label="Stale price or stock data">●</span> : null}
           {formatRelativeDate(item.addedAt)}
         </span>
       </div>

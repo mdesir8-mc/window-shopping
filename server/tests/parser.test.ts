@@ -88,6 +88,82 @@ describe("parseProductPage", () => {
     expect(product.suggestedTags).toEqual(expect.arrayContaining(["cashmere", "oversized", "layering"]));
   });
 
+  it("extracts stock from JSON-LD offer availability", async () => {
+    const product = await parseProductPage("https://shop.example.com/preorder", {
+      fetcher: htmlFetcher(`
+        <html>
+          <head>
+            <script type="application/ld+json">
+              {
+                "@context": "https://schema.org",
+                "@type": "Product",
+                "name": "Preorder Coat",
+                "image": ["https://cdn.example.com/coat.jpg"],
+                "offers": {
+                  "@type": "Offer",
+                  "price": "450",
+                  "availability": "https://schema.org/PreOrder"
+                }
+              }
+            </script>
+          </head>
+        </html>
+      `),
+      aiEnricher: noopEnricher
+    });
+
+    expect(product.inStock).toBe(true);
+  });
+
+  it("extracts stock from Open Graph product availability", async () => {
+    const product = await parseProductPage("https://shop.example.com/sold-out", {
+      fetcher: htmlFetcher(`
+        <html>
+          <head>
+            <meta property="og:title" content="Sold Out Bag" />
+            <meta property="product:availability" content="sold out" />
+          </head>
+        </html>
+      `),
+      aiEnricher: noopEnricher
+    });
+
+    expect(product.inStock).toBe(false);
+  });
+
+  it("falls back to body text stock signals", async () => {
+    const product = await parseProductPage("https://shop.example.com/available", {
+      fetcher: htmlFetcher(`
+        <html>
+          <body>
+            <h1>Linen Shirt</h1>
+            <button>Add to cart</button>
+            <p>Ready to ship.</p>
+          </body>
+        </html>
+      `),
+      aiEnricher: noopEnricher
+    });
+
+    expect(product.inStock).toBe(true);
+  });
+
+  it("prefers out-of-stock body text when stock signals conflict", async () => {
+    const product = await parseProductPage("https://shop.example.com/conflict", {
+      fetcher: htmlFetcher(`
+        <html>
+          <body>
+            <button>Add to bag</button>
+            <p>Currently unavailable. Notify me when available.</p>
+          </body>
+        </html>
+      `),
+      aiEnricher: noopEnricher
+    });
+
+    expect(product.inStock).toBe(false);
+  });
+
   it("extracts AggregateOffer lowPrice as the product price", async () => {
     const aiEnricher: AiEnricher = vi.fn().mockResolvedValue({});
 
