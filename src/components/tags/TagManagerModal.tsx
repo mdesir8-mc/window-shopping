@@ -28,6 +28,25 @@ export default function TagManagerModal({
   return (
     <Modal open={open} onClose={onClose} width={760}>
       <div style={{ padding: 28 }}>
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            width: 32,
+            height: 32,
+            borderRadius: 32,
+            border: "none",
+            background: "var(--ws-overlay-paper)",
+            color: "var(--ws-ink)",
+            cursor: "pointer",
+            fontSize: 14
+          }}
+        >
+          ×
+        </button>
         <Eyebrow>Tags</Eyebrow>
         <Display size={36} style={{ marginTop: 10 }}>
           Manage your tag library

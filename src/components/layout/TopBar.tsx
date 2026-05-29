@@ -69,6 +69,29 @@ export default function TopBar({ onOpenTags, onOpenAddItem }: TopBarProps) {
         />
       </div>
 
+      <select
+        value={searchParams.get("sort") ?? "newest"}
+        onChange={(event) => {
+          const next = new URLSearchParams(searchParams);
+          next.set("sort", event.target.value);
+          navigate(`${location.pathname}?${next.toString()}`);
+        }}
+        style={{
+          border: "1px solid var(--ws-hairline)",
+          background: "var(--ws-surface)",
+          color: "var(--ws-ink)",
+          padding: "8px 12px",
+          fontSize: 11,
+          letterSpacing: 1.2,
+          textTransform: "uppercase",
+          cursor: "pointer"
+        }}
+      >
+        <option value="newest">Newest</option>
+        <option value="oldest">Oldest</option>
+        <option value="updated">Recently updated</option>
+      </select>
+
       <div style={{ flex: 1 }} />
 
       <button
