@@ -19,7 +19,14 @@ export function createApp() {
   const isProduction = process.env.NODE_ENV === "production";
   const publicDir = path.resolve(__dirname, "../../../public");
 
-  app.use(helmet());
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        "img-src": ["'self'", "https:", "data:"]
+      }
+    }
+  }));
   app.use(
     cors({
       origin: isProduction ? process.env.FRONTEND_ORIGIN ?? false : true,
