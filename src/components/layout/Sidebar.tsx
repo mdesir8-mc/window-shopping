@@ -4,6 +4,7 @@ import type { Closet, Item, User } from "../../types";
 import ProductTile from "../ui/ProductTile";
 import Eyebrow from "../ui/Eyebrow";
 import { hashTone } from "../../lib/format";
+import { useTags } from "../../hooks/useTags";
 
 interface SidebarProps {
   closets: Closet[];
@@ -25,6 +26,8 @@ export default function Sidebar({
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const activeSeason = searchParams.get("season");
+  const activeTags = (searchParams.get("tags") ?? "").split(",").filter(Boolean);
+  const tagsQuery = useTags();
   const seasonCounts = items.reduce<Record<string, number>>((acc, item) => {
     acc[item.season] = (acc[item.season] ?? 0) + 1;
     return acc;
@@ -64,10 +67,30 @@ export default function Sidebar({
       <nav>
         <Eyebrow style={{ marginBottom: 8 }}>Library</Eyebrow>
         {[
-          { label: "All closets", count: closets.length, to: "/", active: location.pathname === "/" },
-          { label: "Everything", count: items.length, to: "/", active: false },
-          { label: "Recently added", count: Math.min(items.length, 12), to: "/?sort=newest", active: false },
-          { label: "Price drops", count: items.filter((item) => item.originalPrice).length, to: "/", active: false }
+          {
+            label: "All closets",
+            count: closets.length,
+            to: "/",
+            active: location.pathname === "/" && !searchParams.get("view") && !searchParams.get("priceDrops")
+          },
+          {
+            label: "Everything",
+            count: items.length,
+            to: "/?view=all",
+            active: searchParams.get("view") === "all"
+          },
+          {
+            label: "Recently added",
+            count: Math.min(items.length, 12),
+            to: "/?sort=newest",
+            active: location.pathname === "/" && searchParams.get("sort") === "newest" && !searchParams.get("view") && !searchParams.get("priceDrops")
+          },
+          {
+            label: "Price drops",
+            count: items.filter((item) => item.originalPrice).length,
+            to: "/?priceDrops=true",
+            active: searchParams.get("priceDrops") === "true"
+          }
         ].map((entry) => (
           <Link
             key={entry.label}
@@ -163,6 +186,58 @@ export default function Sidebar({
           </button>
         ))}
       </div>
+
+      {(tagsQuery.data ?? []).length > 0 ? (
+        <div>
+          <Eyebrow style={{ marginBottom: 8 }}>Tags</Eyebrow>
+          {(tagsQuery.data ?? []).map((tag) => {
+            const isActive = activeTags.includes(tag.name);
+            return (
+              <button
+                key={tag.id}
+                type="button"
+                onClick={() => {
+                  const next = new URLSearchParams(searchParams);
+                  if (isActive) {
+                    const remaining = activeTags.filter((t) => t !== tag.name);
+                    if (remaining.length) {
+                      next.set("tags", remaining.join(","));
+                    } else {
+                      next.delete("tags");
+                    }
+                  } else {
+                    next.set("tags", [...activeTags, tag.name].join(","));
+                  }
+                  navigate(`/?${next.toString()}`);
+                }}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "7px 10px",
+                  border: "none",
+                  background: isActive ? "var(--ws-surface)" : "var(--ws-hover-bg, transparent)",
+                  cursor: "pointer",
+                  textAlign: "left"
+                }}
+              >
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: 6,
+                    background: tag.color ?? "var(--ws-muted)",
+                    flexShrink: 0
+                  }}
+                />
+                <span style={{ flex: 1, fontSize: 12, color: "var(--ws-muted)" }}>{tag.name}</span>
+                <span style={{ fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-muted)" }}>{tag.itemCount}</span>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
 
       <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid var(--ws-hairline)" }}>
         <button

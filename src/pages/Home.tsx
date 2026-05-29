@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Display from "../components/ui/Display";
 import Eyebrow from "../components/ui/Eyebrow";
 import ClosetGrid from "../components/closets/ClosetGrid";
@@ -18,16 +18,79 @@ export default function Home() {
   const { openItemDrawer, openClosetForm } = useAppShell();
   const user = useAuthStore((state) => state.user);
   const closetsQuery = useClosets();
+  const activeTags = (searchParams.get("tags") ?? "").split(",").filter(Boolean);
   const itemsQuery = useItems({
     search: searchParams.get("search") ?? "",
     season: searchParams.get("season"),
-    sort: (searchParams.get("sort") as "newest" | "oldest" | "updated" | null) ?? "newest"
+    sort: (searchParams.get("sort") as "newest" | "oldest" | "updated" | null) ?? "newest",
+    tags: activeTags.length ? activeTags : undefined
   });
   const tagsQuery = useTags();
   const closets = closetsQuery.data ?? [];
-  const items = itemsQuery.data ?? [];
+  const allItems = itemsQuery.data ?? [];
   const tags = tagsQuery.data ?? [];
-  const totalValue = items.reduce((sum, item) => sum + parsePriceToNumber(item.price), 0);
+
+  const viewAll = searchParams.get("view") === "all";
+  const priceDrops = searchParams.get("priceDrops") === "true";
+  const favoritedOnly = searchParams.get("favorited") === "true";
+  const noSectionOnly = searchParams.get("noSection") === "true";
+
+  const items = (() => {
+    let result = allItems;
+    if (priceDrops) result = result.filter((item) => item.originalPrice);
+    if (favoritedOnly) result = result.filter((item) => item.favorited);
+    if (noSectionOnly) result = result.filter((item) => !item.sectionId);
+    return result;
+  })();
+
+  const totalValue = allItems.reduce((sum, item) => sum + parsePriceToNumber(item.price), 0);
+
+  if (viewAll || priceDrops || favoritedOnly || noSectionOnly) {
+    const viewLabel = priceDrops
+      ? "Price drops"
+      : favoritedOnly
+      ? "Favorited"
+      : noSectionOnly
+      ? "Needs a section"
+      : "Everything";
+
+    return (
+      <div style={{ padding: "32px 40px 60px" }}>
+        <Link
+          to="/"
+          style={{
+            display: "inline-block",
+            marginBottom: 18,
+            fontSize: 11,
+            letterSpacing: 1.5,
+            textTransform: "uppercase",
+            color: "var(--ws-muted)"
+          }}
+        >
+          ← All closets
+        </Link>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 20, marginBottom: 28 }}>
+          <div>
+            <Eyebrow>{searchParams.get("season") ?? "All seasons"} · {viewLabel}</Eyebrow>
+            <Display as="h2" size={48} style={{ marginTop: 8 }}>
+              {viewLabel}
+            </Display>
+          </div>
+          <Eyebrow>{items.length} items</Eyebrow>
+        </div>
+        {items.length === 0 ? (
+          <div style={{ padding: "60px 0", textAlign: "center", color: "var(--ws-muted)", fontSize: 14 }}>
+            No items match this filter.
+          </div>
+        ) : (
+          <ItemGrid items={items} onOpen={(item) => openItemDrawer(item.id)} />
+        )}
+        <footer style={{ marginTop: 48, paddingTop: 18, borderTop: "1px solid var(--ws-hairline)" }}>
+          <VersionTag align="right" />
+        </footer>
+      </div>
+    );
+  }
 
   if (!closets.length) {
     return (
@@ -111,10 +174,22 @@ export default function Home() {
           }}
         >
           <Eyebrow>Snapshot</Eyebrow>
-          <div style={{ marginTop: 12, display: "grid", gap: 10, color: "var(--ws-muted)", fontSize: 13 }}>
-            <div>{items.filter((item) => item.favorited).length} favorited pieces ready to revisit.</div>
-            <div>{items.filter((item) => item.originalPrice).length} items currently track a marked-down price.</div>
-            <div>{items.filter((item) => !item.sectionId).length} items still need a section home.</div>
+          <div style={{ marginTop: 12, display: "grid", gap: 10, fontSize: 13 }}>
+            {[
+              { count: allItems.filter((item) => item.favorited).length, label: "favorited pieces ready to revisit.", to: "/?favorited=true" },
+              { count: allItems.filter((item) => item.originalPrice).length, label: "items currently track a marked-down price.", to: "/?priceDrops=true" },
+              { count: allItems.filter((item) => !item.sectionId).length, label: "items still need a section home.", to: "/?noSection=true" }
+            ].map(({ count, label, to }) => (
+              <Link
+                key={to}
+                to={to}
+                style={{ color: "var(--ws-muted)", textDecoration: "none" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "var(--ws-ink)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "var(--ws-muted)"; }}
+              >
+                {count} {label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>
@@ -133,10 +208,20 @@ export default function Home() {
         <Display as="h2" size={28}>
           Recent arrivals
         </Display>
-        <Eyebrow>{items.length} visible items</Eyebrow>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <Eyebrow>{allItems.length} total items</Eyebrow>
+          {allItems.length > 8 ? (
+            <Link
+              to="/?view=all"
+              style={{ fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase", color: "var(--ws-muted)" }}
+            >
+              View all →
+            </Link>
+          ) : null}
+        </div>
       </div>
 
-      <ItemGrid items={items.slice(0, 8)} onOpen={(item) => openItemDrawer(item.id)} />
+      <ItemGrid items={allItems.slice(0, 8)} onOpen={(item) => openItemDrawer(item.id)} />
 
       <footer
         style={{
