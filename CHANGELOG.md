@@ -1,3 +1,10 @@
+## [0.8.1](https://github.com/mdesir8-mc/window-shopping/compare/v0.8.0...v0.8.1) (2026-05-29)
+
+
+### Bug Fixes
+
+* allow external https images in CSP to unblock item card thumbnails ([#27](https://github.com/mdesir8-mc/window-shopping/issues/27)) ([1b324f1](https://github.com/mdesir8-mc/window-shopping/commit/1b324f1d800c75abd449bb399779549304041410))
+
 # [0.8.0](https://github.com/mdesir8-mc/window-shopping/compare/v0.7.1...v0.8.0) (2026-05-28)
 
 
