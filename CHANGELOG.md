@@ -1,3 +1,10 @@
+# [0.10.0](https://github.com/mdesir8-mc/window-shopping/compare/v0.9.0...v0.10.0) (2026-05-30)
+
+
+### Features
+
+* add bulk refresh of stale items with price-drop toast ([#29](https://github.com/mdesir8-mc/window-shopping/issues/29)) ([145ae2b](https://github.com/mdesir8-mc/window-shopping/commit/145ae2bc280fd9cdd2f7c3ce0d363798735e3288))
+
 # [0.9.0](https://github.com/mdesir8-mc/window-shopping/compare/v0.8.1...v0.9.0) (2026-05-29)
 
 
