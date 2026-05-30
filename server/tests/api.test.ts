@@ -360,6 +360,75 @@ describeDb("API integration", () => {
     expect(response.status).toBe(502);
   });
 
+  it("bulk-refreshes only stale URL-backed items and summarizes the run", async () => {
+    const token = await registerUser("bulk-refresh@example.com");
+    const closet = await createCloset(token);
+
+    const stale = await request
+      .post("/api/items")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        closetId: closet.id,
+        brand: "Lemaire",
+        name: "Coat",
+        season: "Fall",
+        price: "$200.00",
+        url: "https://shop.example.com/coat",
+        inStock: true,
+        tags: [],
+        colors: []
+      });
+
+    // Freshly added URL-backed items are marked checked, so backdate to force staleness.
+    await testPrisma!.item.update({
+      where: { id: stale.body.id },
+      data: { lastCheckedAt: new Date(Date.now() - 48 * 60 * 60 * 1000) }
+    });
+
+    // A second item without a URL must be ignored by the bulk run.
+    await request
+      .post("/api/items")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        closetId: closet.id,
+        brand: "Khaite",
+        name: "Tee",
+        season: "Summer",
+        tags: [],
+        colors: []
+      });
+
+    mockedParseProductPage.mockResolvedValueOnce({
+      brand: "Lemaire",
+      name: "Coat",
+      price: "$150.00",
+      originalPrice: "$200.00",
+      currency: "USD",
+      imageUrl: "https://cdn.example.com/coat.jpg",
+      description: "Updated",
+      inStock: false,
+      colors: [],
+      suggestedTags: [],
+      suggestedSeason: null,
+      source: "shop.example.com"
+    });
+
+    const response = await request
+      .post("/api/items/refresh-stale")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(mockedParseProductPage).toHaveBeenCalledTimes(1);
+    expect(mockedParseProductPage).toHaveBeenCalledWith("https://shop.example.com/coat");
+    expect(response.body).toEqual({
+      checked: 1,
+      refreshed: 1,
+      priceDrops: 1,
+      outOfStock: 1,
+      failed: 0
+    });
+  });
+
   it("toggles favorites and deletes tag usage across closets, sections, and items", async () => {
     const token = await registerUser("tags@example.com");
     const closet = await request

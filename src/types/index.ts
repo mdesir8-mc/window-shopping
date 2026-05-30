@@ -106,6 +106,14 @@ export interface SectionPayload {
   order?: number;
 }
 
+export interface RefreshStaleSummary {
+  checked: number;
+  refreshed: number;
+  priceDrops: number;
+  outOfStock: number;
+  failed: number;
+}
+
 export interface ItemPayload {
   closetId: string;
   sectionId?: string | null;

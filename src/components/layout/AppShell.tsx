@@ -22,6 +22,7 @@ interface AppShellContextValue {
   closeItemDrawer: () => void;
   openClosetForm: (closet?: Closet | null) => void;
   openItemForm: (item: Item) => void;
+  showToast: (message: string) => void;
 }
 
 const AppShellContext = createContext<AppShellContextValue | null>(null);
@@ -50,6 +51,15 @@ export default function AppShell() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [theme, setTheme] = useState<ThemeName>(DEFAULT_THEME);
   const [dark, setDark] = useState(false);
+  const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
+
+  useEffect(() => {
+    if (!toast) {
+      return;
+    }
+    const timer = setTimeout(() => setToast(null), 5000);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   useEffect(() => {
     const raw = localStorage.getItem(THEME_STORAGE_KEY);
@@ -74,7 +84,8 @@ export default function AppShell() {
       openItemDrawer: (itemId) => setItemDrawerId(itemId),
       closeItemDrawer: () => setItemDrawerId(null),
       openClosetForm: (closet) => setClosetFormTarget(closet),
-      openItemForm: (item) => setItemFormTarget(item)
+      openItemForm: (item) => setItemFormTarget(item),
+      showToast: (message) => setToast({ id: Date.now(), message })
     }),
     []
   );
@@ -200,6 +211,48 @@ export default function AppShell() {
               Log out
             </button>
           </div>
+        </div>
+      ) : null}
+
+      {toast ? (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            position: "fixed",
+            left: 20,
+            bottom: 20,
+            zIndex: 90,
+            maxWidth: 320,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "12px 14px",
+            background: "var(--ws-overlay-paper)",
+            backdropFilter: "blur(12px)",
+            border: "1px solid var(--ws-hairline)",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+            color: "var(--ws-ink)"
+          }}
+        >
+          <span style={{ width: 6, height: 6, borderRadius: 6, background: "var(--ws-accent)", flexShrink: 0 }} />
+          <span style={{ flex: 1, fontSize: 13, lineHeight: 1.4 }}>{toast.message}</span>
+          <button
+            type="button"
+            onClick={() => setToast(null)}
+            aria-label="Dismiss"
+            style={{
+              border: "none",
+              background: "transparent",
+              color: "var(--ws-muted)",
+              cursor: "pointer",
+              fontSize: 14,
+              lineHeight: 1,
+              padding: 0
+            }}
+          >
+            ×
+          </button>
         </div>
       ) : null}
 
