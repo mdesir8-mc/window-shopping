@@ -15,6 +15,11 @@ export async function login(payload: { email: string; password: string }) {
   return response.data;
 }
 
+export async function googleLogin(credential: string) {
+  const response = await apiClient.post<AuthResponse>("/api/auth/google", { credential });
+  return response.data;
+}
+
 export async function logout() {
   await apiClient.post("/api/auth/logout");
 }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Display from "../components/ui/Display";
 import Eyebrow from "../components/ui/Eyebrow";
+import GoogleSignInButton from "../components/auth/GoogleSignInButton";
 import { useAuth } from "../hooks/useAuth";
 
 export default function Register() {
@@ -104,6 +105,8 @@ export default function Register() {
         >
           Create account
         </button>
+
+        <GoogleSignInButton />
 
         <div style={{ marginTop: 16, fontSize: 13, color: "var(--ws-muted)" }}>
           Already have one? <Link to="/login" style={{ color: "var(--ws-accent)" }}>Log in</Link>

@@ -12,6 +12,16 @@ vi.mock("../src/services/parser", () => {
   };
 });
 
+const verifyIdToken = vi.hoisted(() => vi.fn());
+
+vi.mock("google-auth-library", () => ({
+  OAuth2Client: vi.fn().mockImplementation(() => ({ verifyIdToken }))
+}));
+
+function mockGooglePayload(payload: Record<string, unknown>) {
+  verifyIdToken.mockResolvedValue({ getPayload: () => payload });
+}
+
 const describeDb = hasTestDatabase ? describe : describe.skip;
 const mockedParseProductPage = vi.mocked(parseProductPage);
 
@@ -21,6 +31,7 @@ describeDb("API integration", () => {
   beforeAll(async () => {
     process.env.NODE_ENV = "test";
     process.env.JWT_SECRET = process.env.JWT_SECRET ?? "test-secret";
+    process.env.GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID ?? "test-google-client-id";
     await prepareTestDatabase();
     const { createApp } = await import("../src/index");
     request = supertest(createApp());
@@ -99,6 +110,78 @@ describeDb("API integration", () => {
     });
 
     expect(duplicate.status).toBe(409);
+  });
+
+  it("signs in with Google, stores the avatar, and reuses the account on repeat sign-in", async () => {
+    mockGooglePayload({
+      sub: "google-sub-1",
+      email: "glenda@example.com",
+      email_verified: true,
+      name: "Glenda",
+      picture: "https://lh3.googleusercontent.com/a/glenda"
+    });
+
+    const first = await request.post("/api/auth/google").send({ credential: "id-token-1" });
+
+    expect(first.status).toBe(200);
+    expect(first.body.user).toMatchObject({
+      email: "glenda@example.com",
+      name: "Glenda",
+      avatarUrl: "https://lh3.googleusercontent.com/a/glenda"
+    });
+    expect(first.body.token).toEqual(expect.any(String));
+    expect(getAuthCookie(first)).toEqual(expect.stringContaining("auth_token="));
+
+    const stored = await testPrisma!.user.findUniqueOrThrow({ where: { email: "glenda@example.com" } });
+    expect(stored.googleId).toBe("google-sub-1");
+    expect(stored.password).toBeNull();
+
+    const second = await request.post("/api/auth/google").send({ credential: "id-token-1" });
+    expect(second.status).toBe(200);
+    expect(second.body.user.id).toBe(first.body.user.id);
+
+    const count = await testPrisma!.user.count({ where: { email: "glenda@example.com" } });
+    expect(count).toBe(1);
+  });
+
+  it("links Google sign-in to an existing password account with the same email", async () => {
+    const register = await request.post("/api/auth/register").send({
+      email: "bob@example.com",
+      name: "Bob",
+      password: "password123"
+    });
+
+    mockGooglePayload({
+      sub: "google-sub-2",
+      email: "bob@example.com",
+      email_verified: true,
+      name: "Bob",
+      picture: "https://lh3.googleusercontent.com/a/bob"
+    });
+
+    const google = await request.post("/api/auth/google").send({ credential: "id-token-2" });
+
+    expect(google.status).toBe(200);
+    expect(google.body.user.id).toBe(register.body.user.id);
+
+    const linked = await testPrisma!.user.findUniqueOrThrow({ where: { email: "bob@example.com" } });
+    expect(linked.googleId).toBe("google-sub-2");
+    expect(linked.password).not.toBeNull();
+
+    const count = await testPrisma!.user.count({ where: { email: "bob@example.com" } });
+    expect(count).toBe(1);
+  });
+
+  it("rejects a Google sign-in with an unverified email", async () => {
+    mockGooglePayload({
+      sub: "google-sub-3",
+      email: "unverified@example.com",
+      email_verified: false,
+      name: "Una"
+    });
+
+    const response = await request.post("/api/auth/google").send({ credential: "id-token-3" });
+    expect(response.status).toBe(401);
   });
 
   it("enforces authentication on protected routes", async () => {

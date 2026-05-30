@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCurrentUser, login, logout as logoutApi, register } from "../api/auth";
+import { getCurrentUser, googleLogin, login, logout as logoutApi, register } from "../api/auth";
 import { useAuthStore } from "../store/auth";
 
 export function useCurrentUser() {
@@ -35,6 +35,14 @@ export function useAuth() {
     }
   });
 
+  const googleLoginMutation = useMutation({
+    mutationFn: googleLogin,
+    onSuccess: (data) => {
+      setAuth(data);
+      queryClient.setQueryData(["current-user"], data.user);
+    }
+  });
+
   const logout = async () => {
     await logoutApi().catch(() => {});
     clearAuth();
@@ -46,6 +54,7 @@ export function useAuth() {
     currentUser,
     loginMutation,
     registerMutation,
+    googleLoginMutation,
     logout
   };
 }

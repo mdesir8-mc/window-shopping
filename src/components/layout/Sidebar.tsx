@@ -329,21 +329,35 @@ export default function Sidebar({
             transition: "background 120ms ease"
           }}
         >
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 28,
-              display: "grid",
-              placeItems: "center",
-              background: "var(--ws-accent)",
-              color: "var(--ws-paper)",
-              fontFamily: "var(--ws-display)",
-              fontSize: 13
-            }}
-          >
-            {user?.name?.[0] ?? "W"}
-          </div>
+          {user?.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt={user.name ?? "Account"}
+              referrerPolicy="no-referrer"
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 28,
+                objectFit: "cover"
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 28,
+                display: "grid",
+                placeItems: "center",
+                background: "var(--ws-accent)",
+                color: "var(--ws-paper)",
+                fontFamily: "var(--ws-display)",
+                fontSize: 13
+              }}
+            >
+              {user?.name?.[0] ?? "W"}
+            </div>
+          )}
           <div>
             <div style={{ fontSize: 12 }}>{user?.name ?? "Window Shopping"}</div>
             <div style={{ fontFamily: "var(--ws-mono)", fontSize: 9, color: "var(--ws-muted)" }}>
