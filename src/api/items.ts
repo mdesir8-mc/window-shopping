@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import type { Item, ItemFilters, ItemPayload, ParsedProduct } from "../types";
+import type { Item, ItemFilters, ItemPayload, ParsedProduct, RefreshStaleSummary } from "../types";
 
 function toSearchParams(filters: ItemFilters) {
   const params = new URLSearchParams();
@@ -68,6 +68,11 @@ export async function favoriteItem(id: string) {
 
 export async function refreshItem(id: string) {
   const response = await apiClient.post<Item>(`/api/items/${id}/refresh`);
+  return response.data;
+}
+
+export async function refreshStaleItems() {
+  const response = await apiClient.post<RefreshStaleSummary>("/api/items/refresh-stale");
   return response.data;
 }
 

@@ -5,6 +5,16 @@ import ProductTile from "../ui/ProductTile";
 import Eyebrow from "../ui/Eyebrow";
 import { hashTone } from "../../lib/format";
 import { useTags } from "../../hooks/useTags";
+import { useRefreshStaleItems } from "../../hooks/useItems";
+import { FRESHNESS_THRESHOLD_MS } from "../../constants";
+import { useAppShell } from "./AppShell";
+
+function isStaleItem(item: Item) {
+  if (!/^https?:\/\//i.test(item.url ?? "")) {
+    return false;
+  }
+  return !item.lastCheckedAt || Date.now() - new Date(item.lastCheckedAt).getTime() > FRESHNESS_THRESHOLD_MS;
+}
 
 interface SidebarProps {
   closets: Closet[];
@@ -28,6 +38,10 @@ export default function Sidebar({
   const activeSeason = searchParams.get("season");
   const activeTags = (searchParams.get("tags") ?? "").split(",").filter(Boolean);
   const tagsQuery = useTags();
+  const { showToast } = useAppShell();
+  const refreshStale = useRefreshStaleItems();
+  const staleCount = items.filter(isStaleItem).length;
+  const summary = refreshStale.data;
   const seasonCounts = items.reduce<Record<string, number>>((acc, item) => {
     acc[item.season] = (acc[item.season] ?? 0) + 1;
     return acc;
@@ -111,6 +125,60 @@ export default function Sidebar({
             <span style={{ fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-muted)" }}>{entry.count}</span>
           </Link>
         ))}
+        <button
+          type="button"
+          disabled={refreshStale.isPending || (staleCount === 0 && !summary)}
+          onClick={() => {
+            void refreshStale
+              .mutateAsync()
+              .then((result) => {
+                const parts: string[] = [];
+                if (result.priceDrops > 0) {
+                  parts.push(`${result.priceDrops} price drop${result.priceDrops === 1 ? "" : "s"}`);
+                }
+                if (result.outOfStock > 0) {
+                  parts.push(`${result.outOfStock} now out of stock`);
+                }
+                if (parts.length) {
+                  showToast(parts.join(" · "));
+                }
+              })
+              .catch(() => {});
+          }}
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "7px 10px",
+            marginTop: 6,
+            border: "1px solid var(--ws-hairline)",
+            borderRadius: 2,
+            background: "var(--ws-hover-bg, transparent)",
+            fontFamily: "var(--ws-ui)",
+            fontSize: 13,
+            cursor: refreshStale.isPending || staleCount === 0 ? "default" : "pointer",
+            opacity: refreshStale.isPending || (staleCount === 0 && !summary) ? 0.55 : 1,
+            textAlign: "left"
+          }}
+        >
+          <span style={{ flex: 1 }}>
+            {refreshStale.isPending ? "Refreshing…" : "Refresh stale"}
+          </span>
+          <span style={{ fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-muted)" }}>{staleCount}</span>
+        </button>
+        {refreshStale.isError ? (
+          <div style={{ marginTop: 6, padding: "0 10px", fontSize: 11, color: "var(--ws-accent)" }}>
+            Couldn't refresh. Try again shortly.
+          </div>
+        ) : summary && !refreshStale.isPending ? (
+          <div style={{ marginTop: 6, padding: "0 10px", fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-muted)", lineHeight: 1.5 }}>
+            Checked {summary.checked}
+            {summary.priceDrops > 0 ? ` · ${summary.priceDrops} price drop${summary.priceDrops === 1 ? "" : "s"}` : ""}
+            {summary.outOfStock > 0 ? ` · ${summary.outOfStock} out of stock` : ""}
+            {summary.failed > 0 ? ` · ${summary.failed} failed` : ""}
+          </div>
+        ) : null}
       </nav>
 
       <div>
