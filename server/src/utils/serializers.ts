@@ -62,12 +62,13 @@ type SerializedItemInput = {
   } | null;
 };
 
-export function serializeAuthUser(user: AuthenticatedUser & { plan?: string }) {
+export function serializeAuthUser(user: AuthenticatedUser & { plan?: string; avatarUrl?: string | null }) {
   return {
     id: user.id,
     email: user.email,
     name: user.name,
-    ...(user.plan ? { plan: user.plan } : {})
+    ...(user.plan ? { plan: user.plan } : {}),
+    ...(user.avatarUrl ? { avatarUrl: user.avatarUrl } : {})
   };
 }
 

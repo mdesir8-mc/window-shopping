@@ -16,7 +16,8 @@ router.get(
           id: true,
           name: true,
           email: true,
-          plan: true
+          plan: true,
+          avatarUrl: true
         }
       }),
       prisma.item.count({

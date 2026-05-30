@@ -3,6 +3,7 @@ export interface User {
   email: string;
   name: string;
   plan?: string;
+  avatarUrl?: string | null;
   itemCount?: number;
 }
 

@@ -23,9 +23,15 @@ export function createApp() {
     contentSecurityPolicy: {
       directives: {
         ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-        "img-src": ["'self'", "https:", "data:"]
+        "img-src": ["'self'", "https:", "data:"],
+        "script-src": ["'self'", "https://accounts.google.com/gsi/client"],
+        "frame-src": ["https://accounts.google.com/gsi/"],
+        "connect-src": ["'self'", "https://accounts.google.com/gsi/"],
+        "style-src": ["'self'", "'unsafe-inline'", "https://accounts.google.com/gsi/style"]
       }
-    }
+    },
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" }
   }));
   app.use(
     cors({
