@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/mdesir8-mc/window-shopping/compare/v1.0.0...v1.1.0) (2026-05-30)
+
+
+### Features
+
+* sign in with Google ([#31](https://github.com/mdesir8-mc/window-shopping/issues/31)) ([cf3848f](https://github.com/mdesir8-mc/window-shopping/commit/cf3848fde23af3f9715b69a12d7cd9f812d27b18))
+
 # [1.0.0](https://github.com/mdesir8-mc/window-shopping/compare/v0.10.0...v1.0.0) (2026-05-30)
 
 
