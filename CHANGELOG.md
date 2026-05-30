@@ -1,3 +1,15 @@
+# [1.0.0](https://github.com/mdesir8-mc/window-shopping/compare/v0.10.0...v1.0.0) (2026-05-30)
+
+
+* feat!: promote window-shopping to a stable 1.0 release ([#30](https://github.com/mdesir8-mc/window-shopping/issues/30)) ([fe15d4b](https://github.com/mdesir8-mc/window-shopping/commit/fe15d4b23885ba3438ded95e131205191615e7ce))
+
+
+### BREAKING CHANGES
+
+* first stable release; establishes the 1.x API surface.
+
+Co-authored-by: Michael <michael@centralcont516256.local>
+
 # [0.10.0](https://github.com/mdesir8-mc/window-shopping/compare/v0.9.0...v0.10.0) (2026-05-30)
 
 
