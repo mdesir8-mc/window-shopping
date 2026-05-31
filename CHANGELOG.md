@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/mdesir8-mc/window-shopping/compare/v1.1.1...v1.1.2) (2026-05-31)
+
+
+### Bug Fixes
+
+* inject VITE_GOOGLE_CLIENT_ID at docker build so Google sign-in renders in production ([#34](https://github.com/mdesir8-mc/window-shopping/issues/34)) ([#35](https://github.com/mdesir8-mc/window-shopping/issues/35)) ([c7cef94](https://github.com/mdesir8-mc/window-shopping/commit/c7cef947bae397075e949cb31eaa3fd003616599))
+
 ## [1.1.1](https://github.com/mdesir8-mc/window-shopping/compare/v1.1.0...v1.1.1) (2026-05-31)
 
 
