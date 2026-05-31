@@ -1,3 +1,10 @@
+## [1.1.4](https://github.com/mdesir8-mc/window-shopping/compare/v1.1.3...v1.1.4) (2026-05-31)
+
+
+### Bug Fixes
+
+* mock SSRF guard in refresh tests so they pass offline ([#37](https://github.com/mdesir8-mc/window-shopping/issues/37)) ([2b2de1c](https://github.com/mdesir8-mc/window-shopping/commit/2b2de1ce00079a60fe0a023eb10f1734cd51221e))
+
 ## [1.1.3](https://github.com/mdesir8-mc/window-shopping/compare/v1.1.2...v1.1.3) (2026-05-31)
 
 
