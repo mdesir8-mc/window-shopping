@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/mdesir8-mc/window-shopping/compare/v1.1.0...v1.1.1) (2026-05-31)
+
+
+### Bug Fixes
+
+* force google auth appearance ([#33](https://github.com/mdesir8-mc/window-shopping/issues/33)) ([ee13f7d](https://github.com/mdesir8-mc/window-shopping/commit/ee13f7d80982648a05ef67e56c2b403e3e8432a6))
+
 # [1.1.0](https://github.com/mdesir8-mc/window-shopping/compare/v1.0.0...v1.1.0) (2026-05-30)
 
 
