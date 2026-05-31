@@ -6,6 +6,8 @@ RUN npm ci
 COPY index.html vite.config.ts tsconfig.json tsconfig.node.json ./
 COPY src/ ./src/
 COPY shared/ ./shared/
+ARG VITE_GOOGLE_CLIENT_ID
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 RUN npm run build
 # Vite outputs to server/public per vite.config.ts
 
