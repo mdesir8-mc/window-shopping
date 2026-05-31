@@ -12,6 +12,12 @@ vi.mock("../src/services/parser", () => {
   };
 });
 
+// Bypass the real SSRF guard (which does live DNS) so URL-backed refresh tests
+// stay hermetic and don't depend on test-fixture hosts resolving.
+vi.mock("../src/utils/ssrf", () => ({
+  validateSsrfSafeUrl: vi.fn(async (rawUrl: string) => new URL(rawUrl))
+}));
+
 const verifyIdToken = vi.hoisted(() => vi.fn());
 
 vi.mock("google-auth-library", () => ({
