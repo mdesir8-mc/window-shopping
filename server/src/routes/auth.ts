@@ -18,7 +18,10 @@ const authLimiter = rateLimit({
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: "Too many attempts. Try again in 15 minutes." }
+  message: { error: "Too many attempts. Try again in 15 minutes." },
+  // Skip rate limiting under test so the suite's many auth requests don't share a
+  // single per-IP budget (which makes test outcomes order-dependent).
+  skip: () => process.env.NODE_ENV === "test"
 });
 
 function setAuthCookie(res: Response, token: string) {
