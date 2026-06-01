@@ -1,5 +1,6 @@
 # Agent Instructions
 
+
 Do not call background or secondary agents unless the estimated task completion time exceeds 20 minutes.
 
 All commits and PR titles must follow Conventional Commits because semantic-release uses them to decide whether to create patch, minor, or major releases.
