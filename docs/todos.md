@@ -32,6 +32,7 @@ bottom of each section; check things off as they ship.
 - [ ] **Password reset** — forgot-password + reset-password flow; new
   `PasswordResetToken` Prisma model, two new routes, two new frontend pages;
   depends on email infrastructure above.
+- [ ] **(add your next idea here)**
 
 ## Ideas / Maybe
 
