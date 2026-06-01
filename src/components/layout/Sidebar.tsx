@@ -21,7 +21,7 @@ interface SidebarProps {
   items: Item[];
   user: User | null;
   onOpenNewCloset: () => void;
-  onToggleSettings: () => void;
+  onOpenAccount: () => void;
 }
 
 export default function Sidebar({
@@ -29,7 +29,7 @@ export default function Sidebar({
   items,
   user,
   onOpenNewCloset,
-  onToggleSettings
+  onOpenAccount
 }: SidebarProps) {
   const [isAvatarHovered, setIsAvatarHovered] = useState(false);
   const location = useLocation();
@@ -310,7 +310,7 @@ export default function Sidebar({
       <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid var(--ws-hairline)" }}>
         <button
           type="button"
-          onClick={onToggleSettings}
+          onClick={onOpenAccount}
           onMouseEnter={() => setIsAvatarHovered(true)}
           onMouseLeave={() => setIsAvatarHovered(false)}
           onFocus={() => setIsAvatarHovered(true)}

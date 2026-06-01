@@ -214,6 +214,33 @@ describeDb("API integration", () => {
     expect(bearerAuth.body.email).toBe("cookie@example.com");
   });
 
+  it("updates the display name via PATCH /api/user", async () => {
+    const token = await registerUser("rename@example.com");
+
+    const updated = await request
+      .patch("/api/user")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: "Renamed Person" });
+
+    expect(updated.status).toBe(200);
+    expect(updated.body.name).toBe("Renamed Person");
+    expect(updated.body.isGoogleAccount).toBe(false);
+
+    const fetched = await request.get("/api/user").set("Authorization", `Bearer ${token}`);
+    expect(fetched.body.name).toBe("Renamed Person");
+  });
+
+  it("rejects an empty display name", async () => {
+    const token = await registerUser("emptyname@example.com");
+
+    const response = await request
+      .patch("/api/user")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: "   " });
+
+    expect(response.status).toBe(400);
+  });
+
   it("clears the auth cookie on logout", async () => {
     const response = await request.post("/api/auth/logout");
     const setCookie = response.headers["set-cookie"];

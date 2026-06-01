@@ -11,9 +11,9 @@ import ItemDrawer from "../items/ItemDrawer";
 import TagManagerModal from "../tags/TagManagerModal";
 import ClosetFormModal from "../closets/ClosetFormModal";
 import ItemFormModal from "../items/ItemFormModal";
-import { DEFAULT_THEME, THEME_OPTIONS, type ThemeName } from "../../constants";
+import AccountSettingsModal from "../account/AccountSettingsModal";
+import { DEFAULT_THEME, type ThemeName } from "../../constants";
 import { useAuth } from "../../hooks/useAuth";
-import Eyebrow from "../ui/Eyebrow";
 
 interface AppShellContextValue {
   openAddItem: () => void;
@@ -48,7 +48,7 @@ export default function AppShell() {
   const [itemDrawerId, setItemDrawerId] = useState<string | null>(null);
   const [closetFormTarget, setClosetFormTarget] = useState<Closet | null | undefined>(undefined);
   const [itemFormTarget, setItemFormTarget] = useState<Item | undefined>(undefined);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [theme, setTheme] = useState<ThemeName>(DEFAULT_THEME);
   const [dark, setDark] = useState(false);
   const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
@@ -107,7 +107,7 @@ export default function AppShell() {
           items={itemsQuery.data ?? []}
           user={user}
           onOpenNewCloset={() => setClosetFormTarget(null)}
-          onToggleSettings={() => setSettingsOpen((current) => !current)}
+          onOpenAccount={() => setAccountOpen(true)}
         />
 
         <main style={{ overflow: "auto", position: "relative" }}>
@@ -116,103 +116,19 @@ export default function AppShell() {
         </main>
       </div>
 
-      {settingsOpen ? (
-        <div
-          style={{
-            position: "fixed",
-            right: 20,
-            bottom: 20,
-            width: 280,
-            zIndex: 85,
-            background: "var(--ws-overlay-paper)",
-            backdropFilter: "blur(12px)",
-            border: "1px solid var(--ws-hairline)",
-            padding: 16,
-            boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
-            color: "var(--ws-ink)"
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => setSettingsOpen(false)}
-            style={{
-              position: "absolute",
-              top: 8,
-              right: 8,
-              width: 32,
-              height: 32,
-              borderRadius: 32,
-              border: "none",
-              background: "var(--ws-overlay-paper)",
-              color: "var(--ws-ink)",
-              cursor: "pointer",
-              fontSize: 14
-            }}
-          >
-            ×
-          </button>
-          <div style={{ fontFamily: "var(--ws-display)", fontSize: 22, fontWeight: 300 }}>Settings</div>
-          <div style={{ marginTop: 14 }}>
-            <Eyebrow style={{ marginBottom: 8 }}>Appearance</Eyebrow>
-            <div style={{ fontSize: 9, letterSpacing: 1.2, textTransform: "uppercase", color: "var(--ws-muted)", marginBottom: 6 }}>
-              Theme
-            </div>
-            <div style={{ display: "flex", gap: 4 }}>
-              {THEME_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setTheme(option.value)}
-                  style={{
-                    flex: 1,
-                    padding: "8px 6px",
-                    border: "1px solid var(--ws-hairline)",
-                    background: theme === option.value ? "var(--ws-ink)" : "var(--ws-hover-bg, transparent)",
-                    color: theme === option.value ? "var(--ws-paper)" : "var(--ws-ink)",
-                    cursor: "pointer",
-                    fontSize: 10,
-                    textTransform: "uppercase"
-                  }}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => setDark((current) => !current)}
-              style={{
-                width: "100%",
-                marginTop: 12,
-                padding: "10px 12px",
-                border: "1px solid var(--ws-hairline)",
-                background: "var(--ws-hover-bg, transparent)",
-                cursor: "pointer",
-                color: "var(--ws-ink)"
-              }}
-            >
-              {dark ? "Dark mode on" : "Dark mode off"}
-            </button>
-          </div>
-          <div style={{ marginTop: 18 }}>
-            <Eyebrow style={{ marginBottom: 8 }}>Account</Eyebrow>
-            <button
-              type="button"
-              onClick={() => void logout()}
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                border: "1px solid var(--ws-hairline)",
-                background: "var(--ws-hover-bg, transparent)",
-                cursor: "pointer",
-                color: "var(--ws-accent)"
-              }}
-            >
-              Log out
-            </button>
-          </div>
-        </div>
-      ) : null}
+      <AccountSettingsModal
+        open={accountOpen}
+        onClose={() => setAccountOpen(false)}
+        user={user}
+        theme={theme}
+        dark={dark}
+        onSelectTheme={setTheme}
+        onToggleDark={() => setDark((current) => !current)}
+        onSignOut={() => {
+          setAccountOpen(false);
+          void logout();
+        }}
+      />
 
       {toast ? (
         <div
