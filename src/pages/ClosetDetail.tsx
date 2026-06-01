@@ -14,7 +14,7 @@ import { formatCompactCurrency, hashTone, lightenHex, parsePriceToNumber } from 
 export default function ClosetDetail() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
-  const { openItemDrawer, openClosetForm, openItemForm } = useAppShell();
+  const { openItemDrawer, openClosetForm, openItemForm, openAddItem } = useAppShell();
   const closetQuery = useCloset(id);
   const createSectionMutation = useCreateSection();
   const patchSectionMutation = usePatchSection();
@@ -282,7 +282,48 @@ export default function ClosetDetail() {
         </button>
       </div>
 
-      <ItemGrid items={items} onOpen={(item) => openItemDrawer(item.id)} onEdit={(item) => openItemForm(item)} />
+      {items.length === 0 ? (
+        searchParams.get("search") ? (
+          <div style={{ padding: "60px 0", textAlign: "center", color: "var(--ws-muted)", fontSize: 14 }}>
+            No items match your search.
+          </div>
+        ) : activeSectionObject ? (
+          <div style={{ padding: "60px 0", textAlign: "center", color: "var(--ws-muted)", fontSize: 14 }}>
+            Nothing in “{activeSectionObject.name}” yet.
+          </div>
+        ) : (
+          <div style={{ padding: "60px 40px", maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
+            <div style={{ padding: "60px 40px", border: "1px dashed var(--ws-hairline)" }}>
+              <Eyebrow>Empty closet</Eyebrow>
+              <Display size={40} style={{ marginTop: 16, marginBottom: 10 }}>
+                Nothing here
+                <em style={{ fontStyle: "italic", color: "var(--ws-accent)", fontWeight: 300 }}> yet</em>.
+              </Display>
+              <div style={{ maxWidth: 420, margin: "0 auto 28px", fontSize: 14, lineHeight: 1.6, color: "var(--ws-muted)" }}>
+                Paste a product link to save your first piece into this closet.
+              </div>
+              <button
+                type="button"
+                onClick={openAddItem}
+                style={{
+                  padding: "14px 32px",
+                  border: "none",
+                  background: "var(--ws-ink)",
+                  color: "var(--ws-paper)",
+                  cursor: "pointer",
+                  fontSize: 11,
+                  textTransform: "uppercase",
+                  letterSpacing: 1.8
+                }}
+              >
+                Add your first item
+              </button>
+            </div>
+          </div>
+        )
+      ) : (
+        <ItemGrid items={items} onOpen={(item) => openItemDrawer(item.id)} onEdit={(item) => openItemForm(item)} />
+      )}
 
       <Modal open={sectionModalOpen} onClose={() => setSectionModalOpen(false)} width={480}>
         <form onSubmit={handleSectionSave} style={{ padding: 28 }}>
