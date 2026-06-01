@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/mdesir8-mc/window-shopping/compare/v1.1.4...v1.2.0) (2026-06-01)
+
+
+### Features
+
+* new account settings modal ([#38](https://github.com/mdesir8-mc/window-shopping/issues/38)) ([9d09f19](https://github.com/mdesir8-mc/window-shopping/commit/9d09f197d6ab4767e41ff62d8ae7e164eebd71c0))
+
 ## [1.1.4](https://github.com/mdesir8-mc/window-shopping/compare/v1.1.3...v1.1.4) (2026-05-31)
 
 
