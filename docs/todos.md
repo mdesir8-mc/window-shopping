@@ -18,6 +18,20 @@ bottom of each section; check things off as they ship.
 - [x] **Editable display name / profile** — Profile tab lets users change their
   display name (PATCH /api/user); Google accounts can override the synced name
   (Google login no longer re-syncs name for linked accounts).
+- [x] **Empty state gaps** — audited every main view. Only gap was ClosetDetail's
+  item grid; added empty states for empty closet (CTA to add first item), empty
+  section, and no-search-match. Home and ClosetGrid already covered.
+- [ ] **Mobile / responsive layout** — AppShell is a fixed 232px sidebar + 1fr
+  grid with no media queries; needs a hamburger/drawer pattern so the app is
+  usable on small screens.
+- [ ] **Email infrastructure** — pick a transactional email provider (Resend,
+  SendGrid, etc.), wire it up, and build on top of it for both price-drop
+  notifications and password reset.
+- [ ] **Price drop notifications** — email users when a refreshed item drops in
+  price or goes out of stock; depends on email infrastructure above.
+- [ ] **Password reset** — forgot-password + reset-password flow; new
+  `PasswordResetToken` Prisma model, two new routes, two new frontend pages;
+  depends on email infrastructure above.
 - [ ] **(add your next idea here)**
 
 ## Ideas / Maybe
