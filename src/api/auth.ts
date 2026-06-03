@@ -29,7 +29,7 @@ export async function getCurrentUser() {
   return response.data;
 }
 
-export async function updateProfile(payload: { name: string }) {
+export async function updateProfile(payload: { name?: string; emailNotifications?: boolean }) {
   const response = await apiClient.patch<User & { itemCount: number }>("/api/user", payload);
   return response.data;
 }

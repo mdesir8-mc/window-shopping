@@ -31,8 +31,11 @@ bottom of each section; check things off as they ship.
   plus `email-templates.ts` (inline-CSS layout + `simpleNotice`). Inert under
   `NODE_ENV=test` / missing `RESEND_API_KEY`; env keys added to `.env.example`.
   Price-drop + password-reset features build on top of this.
-- [ ] **Price drop notifications** — email users when a refreshed item drops in
-  price or goes out of stock; depends on email infrastructure above.
+- [x] **Price drop notifications** — `refreshStaleItemsForUser` (server/src/services/refresh.ts)
+  shared by the manual `refresh-stale` route and a daily `jobs/refresh-all.ts` cron;
+  emails a digest of price drops + out-of-stock *transitions* via `priceDropEmail`,
+  gated on a new `User.emailNotifications` pref (toggle in Account settings). Every send
+  is recorded in the new `EmailLog` table. Railway Cron runs `npm run job:refresh` daily.
 - [x] **Password reset** — `PasswordResetToken` model (sha256-hashed, single-use,
   1h expiry); `POST /api/auth/forgot-password` (anti-enumeration, always 200) +
   `POST /api/auth/reset-password`; `/forgot-password` + `/reset-password` pages and

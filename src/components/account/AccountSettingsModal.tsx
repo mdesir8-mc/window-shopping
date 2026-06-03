@@ -45,6 +45,7 @@ export default function AccountSettingsModal({
 
   const trimmedName = name.trim();
   const nameUnchanged = trimmedName.length === 0 || trimmedName === (user?.name ?? "");
+  const emailsOn = user?.emailNotifications ?? true;
 
   return (
     <Modal open={open} onClose={onClose} width={460}>
@@ -119,6 +120,29 @@ export default function AccountSettingsModal({
             >
               {dark ? "Dark mode on" : "Dark mode off"}
             </button>
+
+            <div style={{ marginTop: 22 }}>
+              <Eyebrow style={{ marginBottom: 8 }}>Notifications</Eyebrow>
+              <button
+                type="button"
+                disabled={updateProfileMutation.isPending}
+                onClick={() => updateProfileMutation.mutate({ emailNotifications: !emailsOn })}
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  border: "1px solid var(--ws-hairline)",
+                  background: "var(--ws-hover-bg, transparent)",
+                  cursor: updateProfileMutation.isPending ? "default" : "pointer",
+                  color: "var(--ws-ink)",
+                  opacity: updateProfileMutation.isPending ? 0.7 : 1
+                }}
+              >
+                {emailsOn ? "Price-drop emails on" : "Price-drop emails off"}
+              </button>
+              <div style={{ marginTop: 6, fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-muted)", lineHeight: 1.5 }}>
+                Get an email when a refreshed item drops in price or goes out of stock.
+              </div>
+            </div>
 
             <div style={{ marginTop: 22 }}>
               <Eyebrow style={{ marginBottom: 8 }}>Account</Eyebrow>

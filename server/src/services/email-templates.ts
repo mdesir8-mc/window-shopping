@@ -111,3 +111,97 @@ export function passwordResetEmail(resetUrl: string): RenderedEmail {
     ctaUrl: resetUrl
   });
 }
+
+export type PriceDropEntry = {
+  brand: string;
+  name: string;
+  oldPrice: string;
+  newPrice: string;
+  url: string | null;
+  closetName: string;
+};
+
+export type OutOfStockEntry = {
+  brand: string;
+  name: string;
+  url: string | null;
+  closetName: string;
+};
+
+type PriceDropEmailInput = {
+  drops: PriceDropEntry[];
+  outOfStock: OutOfStockEntry[];
+  baseUrl: string;
+};
+
+function itemLabel(brand: string, name: string, url: string | null): string {
+  const label = escapeHtml(`${brand} — ${name}`);
+  return url ? `<a href="${escapeHtml(url)}" style="color:#111827;font-weight:600;">${label}</a>` : `<strong>${label}</strong>`;
+}
+
+/**
+ * Digest emailed after a refresh run that found price drops and/or newly out-of-stock
+ * items. Lists each change with a link back to the product, and a CTA into the in-app
+ * price-drops view.
+ */
+export function priceDropEmail({ drops, outOfStock, baseUrl }: PriceDropEmailInput): RenderedEmail {
+  const dropCount = drops.length;
+  const oosCount = outOfStock.length;
+
+  const subjectParts: string[] = [];
+  if (dropCount > 0) subjectParts.push(`${dropCount} price drop${dropCount === 1 ? "" : "s"}`);
+  if (oosCount > 0) subjectParts.push(`${oosCount} out of stock`);
+  const subject = `Window Shopping: ${subjectParts.join(" · ")}`;
+
+  const sections: string[] = [];
+  if (dropCount > 0) {
+    const rows = drops
+      .map(
+        (d) =>
+          `<li style="margin-bottom:8px;">${itemLabel(d.brand, d.name, d.url)}<br/>` +
+          `<span style="color:#6b7280;">${escapeHtml(d.closetName)} · ${escapeHtml(d.oldPrice)} → </span>` +
+          `<span style="color:#15803d;font-weight:600;">${escapeHtml(d.newPrice)}</span></li>`
+      )
+      .join("");
+    sections.push(`<p style="font-weight:600;margin:0 0 8px;">Price drops</p><ul style="padding-left:18px;margin:0 0 16px;">${rows}</ul>`);
+  }
+  if (oosCount > 0) {
+    const rows = outOfStock
+      .map(
+        (o) =>
+          `<li style="margin-bottom:8px;">${itemLabel(o.brand, o.name, o.url)}<br/>` +
+          `<span style="color:#6b7280;">${escapeHtml(o.closetName)} · now out of stock</span></li>`
+      )
+      .join("");
+    sections.push(`<p style="font-weight:600;margin:0 0 8px;">Out of stock</p><ul style="padding-left:18px;margin:0;">${rows}</ul>`);
+  }
+
+  const textLines = [BRAND.toUpperCase(), "", subjectParts.join(" · "), ""];
+  if (dropCount > 0) {
+    textLines.push("Price drops:");
+    for (const d of drops) {
+      textLines.push(`- ${d.brand} — ${d.name} (${d.closetName}): ${d.oldPrice} -> ${d.newPrice}${d.url ? ` ${d.url}` : ""}`);
+    }
+    textLines.push("");
+  }
+  if (oosCount > 0) {
+    textLines.push("Out of stock:");
+    for (const o of outOfStock) {
+      textLines.push(`- ${o.brand} — ${o.name} (${o.closetName})${o.url ? ` ${o.url}` : ""}`);
+    }
+    textLines.push("");
+  }
+  textLines.push(`View your closet: ${baseUrl}/?priceDrops=true`);
+  textLines.push("", `You're receiving this because you have a ${BRAND} account.`);
+
+  return {
+    subject,
+    html: renderLayout({
+      heading: "Updates from your closet",
+      bodyHtml: sections.join(""),
+      ctaLabel: "View your closet",
+      ctaUrl: `${baseUrl}/?priceDrops=true`
+    }),
+    text: textLines.join("\n")
+  };
+}

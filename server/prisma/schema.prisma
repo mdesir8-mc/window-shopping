@@ -16,10 +16,28 @@ model User {
   googleId  String?  @unique
   avatarUrl String?
   plan      String   @default("free")
+  emailNotifications Boolean @default(true)
   createdAt DateTime @default(now())
   closets   Closet[]
   tags      Tag[]
   passwordResetTokens PasswordResetToken[]
+  emailLogs EmailLog[]
+}
+
+model EmailLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  type       String
+  recipient  String
+  subject    String
+  providerId String?
+  status     String
+  error      String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([type, createdAt])
 }
 
 model PasswordResetToken {

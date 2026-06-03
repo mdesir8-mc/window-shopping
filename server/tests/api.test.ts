@@ -649,6 +649,130 @@ describeDb("API integration", () => {
     });
   });
 
+  async function createStalePricedItem(
+    token: string,
+    closetId: string,
+    overrides: { price?: string; inStock?: boolean; name?: string } = {}
+  ) {
+    const item = await request
+      .post("/api/items")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        closetId,
+        brand: "Lemaire",
+        name: overrides.name ?? "Coat",
+        season: "Fall",
+        price: overrides.price ?? "$200.00",
+        url: `https://shop.example.com/${overrides.name ?? "coat"}`.toLowerCase(),
+        inStock: overrides.inStock ?? true,
+        tags: [],
+        colors: []
+      });
+
+    await testPrisma!.item.update({
+      where: { id: item.body.id },
+      data: { lastCheckedAt: new Date(Date.now() - 48 * 60 * 60 * 1000) }
+    });
+
+    return item.body;
+  }
+
+  function mockParsed(overrides: { price?: string; inStock?: boolean | null }) {
+    mockedParseProductPage.mockResolvedValueOnce({
+      brand: "Lemaire",
+      name: "Coat",
+      price: overrides.price ?? "$200.00",
+      originalPrice: "$200.00",
+      currency: "USD",
+      imageUrl: "https://cdn.example.com/coat.jpg",
+      description: "Updated",
+      inStock: overrides.inStock ?? true,
+      colors: [],
+      suggestedTags: [],
+      suggestedSeason: null,
+      source: "shop.example.com"
+    });
+  }
+
+  it("emails a price-drop digest and records an EmailLog row", async () => {
+    const token = await registerUser("drop@example.com");
+    const closet = await createCloset(token);
+    await createStalePricedItem(token, closet.id, { price: "$200.00", inStock: true });
+
+    mockParsed({ price: "$150.00", inStock: true });
+    sendEmailMock.mockResolvedValueOnce({ id: "resend-123", skipped: false });
+
+    const response = await request.post("/api/items/refresh-stale").set("Authorization", `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({ priceDrops: 1, outOfStock: 0 });
+    expect(sendEmailMock).toHaveBeenCalledTimes(1);
+
+    const sent = sendEmailMock.mock.calls[0][0];
+    expect(sent.to).toBe("drop@example.com");
+    expect(sent.html).toContain("Coat");
+
+    const logs = await testPrisma!.emailLog.findMany({ where: { type: "price_drop" } });
+    expect(logs).toHaveLength(1);
+    expect(logs[0]).toMatchObject({ recipient: "drop@example.com", status: "sent", providerId: "resend-123" });
+  });
+
+  it("emails on out-of-stock transition but not while an item stays out of stock", async () => {
+    const token = await registerUser("oos@example.com");
+    const closet = await createCloset(token);
+    const item = await createStalePricedItem(token, closet.id, { price: "$200.00", inStock: true });
+
+    // First run: in-stock -> out-of-stock transition, price unchanged.
+    mockParsed({ price: "$200.00", inStock: false });
+    const first = await request.post("/api/items/refresh-stale").set("Authorization", `Bearer ${token}`);
+    expect(first.body).toMatchObject({ priceDrops: 0, outOfStock: 1 });
+    expect(sendEmailMock).toHaveBeenCalledTimes(1);
+
+    // Backdate again and re-run: still out of stock, no new transition -> no email.
+    sendEmailMock.mockClear();
+    await testPrisma!.item.update({
+      where: { id: item.id },
+      data: { lastCheckedAt: new Date(Date.now() - 48 * 60 * 60 * 1000) }
+    });
+    mockParsed({ price: "$200.00", inStock: false });
+    const second = await request.post("/api/items/refresh-stale").set("Authorization", `Bearer ${token}`);
+    expect(second.body).toMatchObject({ priceDrops: 0, outOfStock: 1 });
+    expect(sendEmailMock).not.toHaveBeenCalled();
+  });
+
+  it("does not email when the user disabled notifications", async () => {
+    const token = await registerUser("muted@example.com");
+    const closet = await createCloset(token);
+    await createStalePricedItem(token, closet.id, { price: "$200.00", inStock: true });
+
+    await request
+      .patch("/api/user")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ emailNotifications: false });
+
+    mockParsed({ price: "$150.00", inStock: true });
+    const response = await request.post("/api/items/refresh-stale").set("Authorization", `Bearer ${token}`);
+
+    expect(response.body).toMatchObject({ priceDrops: 1 });
+    expect(sendEmailMock).not.toHaveBeenCalled();
+    const logs = await testPrisma!.emailLog.findMany({ where: { type: "price_drop" } });
+    expect(logs).toHaveLength(0);
+  });
+
+  it("persists the emailNotifications preference", async () => {
+    const token = await registerUser("prefs@example.com");
+
+    const patched = await request
+      .patch("/api/user")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ emailNotifications: false });
+    expect(patched.status).toBe(200);
+    expect(patched.body.emailNotifications).toBe(false);
+
+    const fetched = await request.get("/api/user").set("Authorization", `Bearer ${token}`);
+    expect(fetched.body.emailNotifications).toBe(false);
+  });
+
   it("toggles favorites and deletes tag usage across closets, sections, and items", async () => {
     const token = await registerUser("tags@example.com");
     const closet = await request
