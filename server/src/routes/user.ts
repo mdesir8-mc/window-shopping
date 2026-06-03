@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma";
-import { asyncHandler } from "../utils/http";
-import { requireString } from "../utils/validation";
+import { asyncHandler, HttpError } from "../utils/http";
+import { optionalBoolean, requireString } from "../utils/validation";
 import type { AuthenticatedRequest } from "../types";
 
 const router = Router();
@@ -12,7 +12,8 @@ const userSelect = {
   email: true,
   plan: true,
   avatarUrl: true,
-  googleId: true
+  googleId: true,
+  emailNotifications: true
 } as const;
 
 type SelectedUser = {
@@ -22,6 +23,7 @@ type SelectedUser = {
   plan: string;
   avatarUrl: string | null;
   googleId: string | null;
+  emailNotifications: boolean;
 };
 
 function serializeUser(user: SelectedUser, itemCount: number) {
@@ -63,12 +65,24 @@ router.patch(
   "/",
   asyncHandler(async (req, res) => {
     const request = req as AuthenticatedRequest;
-    const name = requireString(req.body?.name, "name");
+
+    const data: { name?: string; emailNotifications?: boolean } = {};
+    if (req.body?.name !== undefined) {
+      data.name = requireString(req.body.name, "name");
+    }
+    const emailNotifications = optionalBoolean(req.body?.emailNotifications, "emailNotifications");
+    if (emailNotifications !== undefined) {
+      data.emailNotifications = emailNotifications;
+    }
+
+    if (Object.keys(data).length === 0) {
+      throw new HttpError(400, "No updatable fields provided.");
+    }
 
     const [user, itemCount] = await Promise.all([
       prisma.user.update({
         where: { id: request.user.id },
-        data: { name },
+        data,
         select: userSelect
       }),
       countItems(request.user.id)

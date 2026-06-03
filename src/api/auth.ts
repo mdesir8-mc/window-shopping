@@ -29,7 +29,17 @@ export async function getCurrentUser() {
   return response.data;
 }
 
-export async function updateProfile(payload: { name: string }) {
+export async function updateProfile(payload: { name?: string; emailNotifications?: boolean }) {
   const response = await apiClient.patch<User & { itemCount: number }>("/api/user", payload);
+  return response.data;
+}
+
+export async function requestPasswordReset(email: string) {
+  const response = await apiClient.post<{ ok: true }>("/api/auth/forgot-password", { email });
+  return response.data;
+}
+
+export async function resetPassword(payload: { token: string; password: string }) {
+  const response = await apiClient.post<{ ok: true }>("/api/auth/reset-password", payload);
   return response.data;
 }

@@ -6,6 +6,7 @@ import type { AuthenticatedRequest } from "../types";
 import { asyncHandler, HttpError } from "../utils/http";
 import { serializeItem } from "../utils/serializers";
 import { validateSsrfSafeUrl } from "../utils/ssrf";
+import { refreshItemRecord, refreshStaleItemsForUser } from "../services/refresh";
 import {
   optionalBoolean,
   optionalNullableBoolean,
@@ -29,71 +30,11 @@ const bulkRefreshLimiter = rateLimit({
   max: 3,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: "Too many bulk refreshes. Try again in a few minutes." }
+  message: { error: "Too many bulk refreshes. Try again in a few minutes." },
+  // Skip under test so the suite's many refresh requests don't share a single
+  // per-IP budget (which makes test outcomes order-dependent).
+  skip: () => process.env.NODE_ENV === "test"
 });
-
-const FRESHNESS_THRESHOLD_MS = 24 * 60 * 60 * 1000;
-const BULK_REFRESH_LIMIT = 25;
-
-function parsePriceToNumber(value?: string | null) {
-  const n = Number((value ?? "").replace(/[^0-9.]/g, ""));
-  return Number.isFinite(n) && n > 0 ? n : 0;
-}
-
-async function requireRefreshableUrl(value: string | null) {
-  if (!value) {
-    throw new HttpError(400, "Item has no URL to refresh.");
-  }
-
-  const url = await validateSsrfSafeUrl(value);
-  return url.toString();
-}
-
-type RefreshableItem = {
-  id: string;
-  url: string | null;
-  price: string | null;
-  onSale: boolean;
-};
-
-async function refreshItemRecord(item: RefreshableItem) {
-  const url = await requireRefreshableUrl(item.url);
-  const parsed = await parseProductPage(url);
-
-  const prevPrice = parsePriceToNumber(item.price);
-  const newPrice = parsePriceToNumber(parsed.price);
-  const onSale =
-    prevPrice > 0 && newPrice > 0 ? newPrice <= prevPrice * 0.9 : item.onSale;
-
-  const updated = await prisma.item.update({
-    where: {
-      id: item.id
-    },
-    data: {
-      price: parsed.price,
-      originalPrice: parsed.originalPrice,
-      inStock: parsed.inStock,
-      onSale,
-      lastCheckedAt: new Date()
-    },
-    include: {
-      closet: {
-        select: {
-          id: true,
-          name: true
-        }
-      },
-      section: {
-        select: {
-          id: true,
-          name: true
-        }
-      }
-    }
-  });
-
-  return { updated, prevPrice, newPrice };
-}
 
 async function findOwnedItem(userId: string, itemId: string) {
   return prisma.item.findFirst({
@@ -411,59 +352,8 @@ router.post(
   bulkRefreshLimiter,
   asyncHandler(async (req, res) => {
     const request = req as AuthenticatedRequest;
-    const threshold = new Date(Date.now() - FRESHNESS_THRESHOLD_MS);
-
-    const candidates = await prisma.item.findMany({
-      where: {
-        closet: {
-          userId: request.user.id
-        },
-        url: {
-          not: null
-        },
-        OR: [{ lastCheckedAt: null }, { lastCheckedAt: { lt: threshold } }]
-      },
-      select: {
-        id: true,
-        url: true,
-        price: true,
-        onSale: true
-      },
-      orderBy: {
-        lastCheckedAt: { sort: "asc", nulls: "first" }
-      }
-    });
-
-    const stale = candidates
-      .filter((item) => /^https?:\/\//i.test(item.url ?? ""))
-      .slice(0, BULK_REFRESH_LIMIT);
-
-    let refreshed = 0;
-    let priceDrops = 0;
-    let outOfStock = 0;
-    let failed = 0;
-
-    for (const item of stale) {
-      try {
-        const { updated, prevPrice, newPrice } = await refreshItemRecord(item);
-        refreshed += 1;
-        if (prevPrice > 0 && newPrice > 0 && newPrice < prevPrice) {
-          priceDrops += 1;
-        }
-        if (updated.inStock === false) {
-          outOfStock += 1;
-        }
-      } catch (error) {
-        if (error instanceof ParserFetchError || error instanceof HttpError) {
-          failed += 1;
-          continue;
-        }
-
-        throw error;
-      }
-    }
-
-    res.json({ checked: stale.length, refreshed, priceDrops, outOfStock, failed });
+    const summary = await refreshStaleItemsForUser(request.user.id);
+    res.json(summary);
   })
 );
 

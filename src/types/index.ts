@@ -6,6 +6,7 @@ export interface User {
   avatarUrl?: string | null;
   itemCount?: number;
   isGoogleAccount?: boolean;
+  emailNotifications?: boolean;
 }
 
 export interface AuthResponse {

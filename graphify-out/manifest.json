@@ -55,8 +55,8 @@
     "semantic_hash": "87f0d903477984d0587a02f8fe185263"
   },
   "/Users/michael/window-shopping/server/package.json": {
-    "mtime": 1780158518.926156,
-    "ast_hash": "e7c4e9b7adee1b0f8be279da4d483fa5",
+    "mtime": 1780456484.013063,
+    "ast_hash": "0942c744533ee044c9456059fb2c9f0c",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/server/tsconfig.json": {
@@ -100,8 +100,8 @@
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/server/tests/api.test.ts": {
-    "mtime": 1780262637.659295,
-    "ast_hash": "5929de4cde0dc6b0ab64fbc51545b240",
+    "mtime": 1780456689.3943815,
+    "ast_hash": "5f35b1aef8c32994991e810e34402341",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/server/public/browser-window.jsx": {
@@ -185,8 +185,8 @@
     "semantic_hash": "6063530dcf52d8e490f20587e3db20d7"
   },
   "/Users/michael/window-shopping/server/src/routes/items.ts": {
-    "mtime": 1780113472.314311,
-    "ast_hash": "dfc01da97c04e066f30d4a9b23218ba2",
+    "mtime": 1780456756.2054548,
+    "ast_hash": "a1589595ae56a6c749a260d45ffde143",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/server/src/routes/closets.ts": {
@@ -195,13 +195,13 @@
     "semantic_hash": "7190277ce824e0424d264b5f057dddc7"
   },
   "/Users/michael/window-shopping/server/src/routes/user.ts": {
-    "mtime": 1780262637.6591244,
-    "ast_hash": "588aefd73ae3c74c3ec1356c50c93e03",
+    "mtime": 1780456514.603027,
+    "ast_hash": "29a636c0936726d73a8696885ec0e232",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/server/src/routes/auth.ts": {
-    "mtime": 1780262713.3290682,
-    "ast_hash": "6b0466ffe4986c762ca1f7ce0dd5ada4",
+    "mtime": 1780449638.8871746,
+    "ast_hash": "21211aa5127a2c61921d095ad818a1fb",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/server/src/routes/tags.ts": {
@@ -220,8 +220,8 @@
     "semantic_hash": "c94930be99446054f4a9ec84a9f2e7cf"
   },
   "/Users/michael/window-shopping/src/App.tsx": {
-    "mtime": 1779720806.1756666,
-    "ast_hash": "ce3100dd63f46411efc2007f0933709c",
+    "mtime": 1780449679.2352226,
+    "ast_hash": "07aabf43f3b92e9ab01d7d093acef935",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/src/main.tsx": {
@@ -235,8 +235,8 @@
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/src/types/index.ts": {
-    "mtime": 1780262462.6734235,
-    "ast_hash": "0a213e34641856b465e1bd2d84cd1806",
+    "mtime": 1780456546.0523431,
+    "ast_hash": "78f035c565008559a12c1f53871b69b1",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/src/components/ui/Meta.tsx": {
@@ -370,8 +370,8 @@
     "semantic_hash": "bbe6a3c51f34198612c1c09c57775930"
   },
   "/Users/michael/window-shopping/src/api/auth.ts": {
-    "mtime": 1780262469.384451,
-    "ast_hash": "c9c8eb5cade8d7c1774304964ca2cc3d",
+    "mtime": 1780456562.752582,
+    "ast_hash": "221555cf87d362f27c425d76798da22c",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/src/api/tags.ts": {
@@ -380,8 +380,8 @@
     "semantic_hash": "305b7470800a763086c433a0f40434d5"
   },
   "/Users/michael/window-shopping/src/pages/Login.tsx": {
-    "mtime": 1780158871.51908,
-    "ast_hash": "c184382204bb1e3e8062f7f1918b006d",
+    "mtime": 1780449684.6707425,
+    "ast_hash": "89aaea65cee14c97c1f5bfccb4cc0f27",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/src/pages/ClosetDetail.tsx": {
@@ -420,13 +420,13 @@
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/CLAUDE.md": {
-    "mtime": 1779934526.72124,
-    "ast_hash": "b3951a91e6b852181cf661d5c052ef53",
+    "mtime": 1780452753.9113302,
+    "ast_hash": "814b9a9ad318e21e9108da0f2f0a503b",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/server/public/index.html": {
-    "mtime": 1780263296.0415998,
-    "ast_hash": "f14e788b9d14898775f23c8fa3c716d7",
+    "mtime": 1780456801.3710134,
+    "ast_hash": "cc4746dc6cf5f7a5ffd37552cf62886d",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/.claude/settings.local.json": {
@@ -499,14 +499,9 @@
     "ast_hash": "d4bd6a9ee338674b419ab7010f863452",
     "semantic_hash": ""
   },
-  "/Users/michael/window-shopping/server/public/assets/index-BnPVEwH4.js": {
-    "mtime": 1779721117.2188106,
-    "ast_hash": "0f7bfefab8a72e333baecf4dfd412b98",
-    "semantic_hash": ""
-  },
   "/Users/michael/window-shopping/CHANGELOG.md": {
-    "mtime": 1780286719.160035,
-    "ast_hash": "b681949a06b38a13067bf79dbb698655",
+    "mtime": 1780363007.1762025,
+    "ast_hash": "2db994ed1fd3e1886d19d779c25197eb",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/server/test-parser-temp.ts": {
@@ -524,19 +519,9 @@
     "ast_hash": "67c617caad010a0a02ea1d53408f9b34",
     "semantic_hash": ""
   },
-  "/Users/michael/window-shopping/server/public/assets/index-B0HQlx1g.js": {
-    "mtime": 1780113757.9984837,
-    "ast_hash": "da8206258408e2d8eb3e3b7e67979c26",
-    "semantic_hash": ""
-  },
   "/Users/michael/window-shopping/server/prisma/migrations/20260530123247_add_google_auth/migration.sql": {
     "mtime": 1780158767.9137046,
     "ast_hash": "7526d07fd9bee1b27bae7c922829c1c2",
-    "semantic_hash": ""
-  },
-  "/Users/michael/window-shopping/server/public/assets/index-4sd7Oarb.js": {
-    "mtime": 1780158893.872046,
-    "ast_hash": "b8c09144dfb1c1a90ec6efbaee20c833",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/src/types/google.d.ts": {
@@ -549,29 +534,79 @@
     "ast_hash": "52f1518a19a11b62829c806b9b1ce0e1",
     "semantic_hash": ""
   },
-  "/Users/michael/window-shopping/server/public/assets/index-fvyRcJAA.js": {
-    "mtime": 1780203644.3971896,
-    "ast_hash": "b076f8b2a99a90299a3f4af02768e923",
-    "semantic_hash": ""
-  },
   "/Users/michael/window-shopping/docs/todos.md": {
-    "mtime": 1780286231.7330334,
-    "ast_hash": "8e025a985d76dda2ef81f84bc9fb3524",
-    "semantic_hash": ""
-  },
-  "/Users/michael/window-shopping/server/public/assets/index-CKLFBRb2.js": {
-    "mtime": 1780263296.0416975,
-    "ast_hash": "af7328561ee1a3f80c6c7db12ce48686",
-    "semantic_hash": ""
-  },
-  "/Users/michael/window-shopping/server/public/assets/index-CcSFnl4N.js": {
-    "mtime": 1780262557.9125245,
-    "ast_hash": "fbecfa94d0edc0cdb09a3f6611989d17",
+    "mtime": 1780449812.5617056,
+    "ast_hash": "eafcffeed0f59aac276f9c3fc9f4b803",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/src/components/account/AccountSettingsModal.tsx": {
-    "mtime": 1780263213.1275785,
-    "ast_hash": "d38fd0666015025d2ee2d056b5bc1e86",
+    "mtime": 1780456590.2658222,
+    "ast_hash": "2b525f3470a0df9f7ee9fd404703b808",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/server/public/assets/index-BV80foti.js": {
+    "mtime": 1780286905.5344193,
+    "ast_hash": "6c65b6cc6dc6efdd324570648868060f",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/server/tests/email.test.ts": {
+    "mtime": 1780363256.9673505,
+    "ast_hash": "f0c626067662a69b2778ca9def1bdc1e",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/server/src/services/email.ts": {
+    "mtime": 1780363143.5791068,
+    "ast_hash": "ce1998d37f170e5e1a8aa09f054e4597",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/server/src/services/email-templates.ts": {
+    "mtime": 1780456312.9224083,
+    "ast_hash": "96c25da3058456da79b86baf20ff851d",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/server/prisma/migrations/20260603012009_add_password_reset_token/migration.sql": {
+    "mtime": 1780449609.4561334,
+    "ast_hash": "c81cf44ca828169a1dd97d7898af06c5",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/server/src/utils/passwordReset.ts": {
+    "mtime": 1780449615.8288863,
+    "ast_hash": "6c9da9e48e2bbbb92899740bed3d9206",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/src/pages/ResetPassword.tsx": {
+    "mtime": 1780449670.9562917,
+    "ast_hash": "b5ef0e9d341053bae5b92e284bd780a9",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/src/pages/ForgotPassword.tsx": {
+    "mtime": 1780449655.8197167,
+    "ast_hash": "6ad53092a0f43573907051ecb3200107",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/server/prisma/migrations/20260603031108_add_email_prefs_and_log/migration.sql": {
+    "mtime": 1780456268.5321229,
+    "ast_hash": "9ca93b834f3baa710741e31f62f409d1",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/server/public/assets/index-BaEJ9BMA.js": {
+    "mtime": 1780456801.371004,
+    "ast_hash": "fd5d7b8043a794c8523ec21a3e577816",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/server/src/jobs/refresh-all.ts": {
+    "mtime": 1780456466.6896515,
+    "ast_hash": "00dcf45e475f7491fa167589de889317",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/server/src/services/refresh.ts": {
+    "mtime": 1780456389.4643922,
+    "ast_hash": "1a1b3b8830df321321d0a06a2792fd9b",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/server/src/services/email-log.ts": {
+    "mtime": 1780456281.4716284,
+    "ast_hash": "d537ea1e9ca5cd47fef734a7c49d9d85",
     "semantic_hash": ""
   }
 }

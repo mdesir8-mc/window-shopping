@@ -5,6 +5,11 @@ bottom of each section; check things off as they ship.
 
 ## Fixes
 
+- [ ] **Refresh-stale button not updating item cards in prod** — clicking "Refresh
+  stale" in the sidebar doesn't update the time-indicator on item cards; investigate
+  whether the mutation response is invalidating the right query keys or if the
+  card's `lastCheckedAt` display isn't re-rendering.
+
 - [x] **Item refresh tests failing** — mocked the SSRF guard in tests so refresh
   assertions pass without live DNS. Fix on `claude/fix-refresh-tests`.
 - [x] **Verify Google sign-in renders in production** — after the Dockerfile
@@ -21,17 +26,24 @@ bottom of each section; check things off as they ship.
 - [x] **Empty state gaps** — audited every main view. Only gap was ClosetDetail's
   item grid; added empty states for empty closet (CTA to add first item), empty
   section, and no-search-match. Home and ClosetGrid already covered.
+- [x] **Email infrastructure** — Resend transactional email service at
+  `server/src/services/email.ts` (`sendEmail`, `getAppBaseUrl`, `EmailSendError`)
+  plus `email-templates.ts` (inline-CSS layout + `simpleNotice`). Inert under
+  `NODE_ENV=test` / missing `RESEND_API_KEY`; env keys added to `.env.example`.
+  Price-drop + password-reset features build on top of this.
+- [x] **Price drop notifications** — `refreshStaleItemsForUser` (server/src/services/refresh.ts)
+  shared by the manual `refresh-stale` route and a daily `jobs/refresh-all.ts` cron;
+  emails a digest of price drops + out-of-stock *transitions* via `priceDropEmail`,
+  gated on a new `User.emailNotifications` pref (toggle in Account settings). Every send
+  is recorded in the new `EmailLog` table. Railway Cron runs `npm run job:refresh` daily.
+- [x] **Password reset** — `PasswordResetToken` model (sha256-hashed, single-use,
+  1h expiry); `POST /api/auth/forgot-password` (anti-enumeration, always 200) +
+  `POST /api/auth/reset-password`; `/forgot-password` + `/reset-password` pages and
+  a "Forgot password?" link on Login. Google accounts can set a password without
+  breaking either login method. Existing JWTs still survive a reset (noted).
 - [ ] **Mobile / responsive layout** — AppShell is a fixed 232px sidebar + 1fr
   grid with no media queries; needs a hamburger/drawer pattern so the app is
   usable on small screens.
-- [ ] **Email infrastructure** — pick a transactional email provider (Resend,
-  SendGrid, etc.), wire it up, and build on top of it for both price-drop
-  notifications and password reset.
-- [ ] **Price drop notifications** — email users when a refreshed item drops in
-  price or goes out of stock; depends on email infrastructure above.
-- [ ] **Password reset** — forgot-password + reset-password flow; new
-  `PasswordResetToken` Prisma model, two new routes, two new frontend pages;
-  depends on email infrastructure above.
 - [ ] **(add your next idea here)**
 
 ## Ideas / Maybe

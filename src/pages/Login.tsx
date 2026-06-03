@@ -101,6 +101,10 @@ export default function Login() {
           New here? <Link to="/register" style={{ color: "var(--ws-accent)" }}>Create an account</Link>
         </div>
 
+        <div style={{ marginTop: 8, fontSize: 13, color: "var(--ws-muted)" }}>
+          <Link to="/forgot-password" style={{ color: "var(--ws-accent)" }}>Forgot password?</Link>
+        </div>
+
         <div style={{ marginTop: 28 }}>
           <VersionTag align="center" />
         </div>

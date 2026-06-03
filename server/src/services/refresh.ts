@@ -1,0 +1,203 @@
+import { prisma } from "../lib/prisma";
+import { HttpError } from "../utils/http";
+import { validateSsrfSafeUrl } from "../utils/ssrf";
+import { parseProductPage, ParserFetchError } from "./parser";
+import { EmailSendError, getAppBaseUrl, sendEmail, type SendEmailResult } from "./email";
+import { priceDropEmail, type OutOfStockEntry, type PriceDropEntry } from "./email-templates";
+import { recordEmailLog } from "./email-log";
+
+const FRESHNESS_THRESHOLD_MS = 24 * 60 * 60 * 1000;
+const BULK_REFRESH_LIMIT = 25;
+
+export function parsePriceToNumber(value?: string | null) {
+  const n = Number((value ?? "").replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+async function requireRefreshableUrl(value: string | null) {
+  if (!value) {
+    throw new HttpError(400, "Item has no URL to refresh.");
+  }
+
+  const url = await validateSsrfSafeUrl(value);
+  return url.toString();
+}
+
+type RefreshableItem = {
+  id: string;
+  url: string | null;
+  price: string | null;
+  onSale: boolean;
+  inStock: boolean | null;
+};
+
+export async function refreshItemRecord(item: RefreshableItem) {
+  const url = await requireRefreshableUrl(item.url);
+  const parsed = await parseProductPage(url);
+
+  const prevPrice = parsePriceToNumber(item.price);
+  const newPrice = parsePriceToNumber(parsed.price);
+  const onSale =
+    prevPrice > 0 && newPrice > 0 ? newPrice <= prevPrice * 0.9 : item.onSale;
+
+  const updated = await prisma.item.update({
+    where: {
+      id: item.id
+    },
+    data: {
+      price: parsed.price,
+      originalPrice: parsed.originalPrice,
+      inStock: parsed.inStock,
+      onSale,
+      lastCheckedAt: new Date()
+    },
+    include: {
+      closet: {
+        select: {
+          id: true,
+          name: true
+        }
+      },
+      section: {
+        select: {
+          id: true,
+          name: true
+        }
+      }
+    }
+  });
+
+  return { updated, prevPrice, newPrice, prevInStock: item.inStock };
+}
+
+export type RefreshStaleSummary = {
+  checked: number;
+  refreshed: number;
+  priceDrops: number;
+  outOfStock: number;
+  failed: number;
+};
+
+/**
+ * Refresh a single user's stale, URL-backed items (up to BULK_REFRESH_LIMIT). Collects
+ * genuine price drops and out-of-stock *transitions* and, if the user has email
+ * notifications enabled, sends one digest email for the run. Shared by the manual
+ * `POST /api/items/refresh-stale` route and the scheduled refresh-all job.
+ */
+export async function refreshStaleItemsForUser(userId: string): Promise<RefreshStaleSummary> {
+  const threshold = new Date(Date.now() - FRESHNESS_THRESHOLD_MS);
+
+  const candidates = await prisma.item.findMany({
+    where: {
+      closet: { userId },
+      url: { not: null },
+      OR: [{ lastCheckedAt: null }, { lastCheckedAt: { lt: threshold } }]
+    },
+    select: {
+      id: true,
+      url: true,
+      price: true,
+      onSale: true,
+      inStock: true,
+      brand: true,
+      name: true,
+      closet: { select: { name: true } }
+    },
+    orderBy: {
+      lastCheckedAt: { sort: "asc", nulls: "first" }
+    }
+  });
+
+  const stale = candidates
+    .filter((item) => /^https?:\/\//i.test(item.url ?? ""))
+    .slice(0, BULK_REFRESH_LIMIT);
+
+  let refreshed = 0;
+  let priceDrops = 0;
+  let outOfStock = 0;
+  let failed = 0;
+
+  const drops: PriceDropEntry[] = [];
+  const oosTransitions: OutOfStockEntry[] = [];
+
+  for (const item of stale) {
+    try {
+      const { updated, prevPrice, newPrice, prevInStock } = await refreshItemRecord(item);
+      refreshed += 1;
+
+      if (prevPrice > 0 && newPrice > 0 && newPrice < prevPrice) {
+        priceDrops += 1;
+        drops.push({
+          brand: item.brand,
+          name: item.name,
+          oldPrice: item.price ?? "",
+          newPrice: updated.price ?? "",
+          url: item.url,
+          closetName: item.closet.name
+        });
+      }
+
+      if (updated.inStock === false) {
+        outOfStock += 1;
+        if (prevInStock !== false) {
+          oosTransitions.push({
+            brand: item.brand,
+            name: item.name,
+            url: item.url,
+            closetName: item.closet.name
+          });
+        }
+      }
+    } catch (error) {
+      if (error instanceof ParserFetchError || error instanceof HttpError) {
+        failed += 1;
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
+  if (drops.length > 0 || oosTransitions.length > 0) {
+    await notifyPriceChanges(userId, drops, oosTransitions);
+  }
+
+  return { checked: stale.length, refreshed, priceDrops, outOfStock, failed };
+}
+
+async function notifyPriceChanges(
+  userId: string,
+  drops: PriceDropEntry[],
+  outOfStock: OutOfStockEntry[]
+): Promise<void> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, emailNotifications: true }
+  });
+
+  if (!user || !user.emailNotifications) {
+    return;
+  }
+
+  const rendered = priceDropEmail({ drops, outOfStock, baseUrl: getAppBaseUrl() });
+
+  let result: SendEmailResult | undefined;
+  let sendError: unknown;
+  try {
+    result = await sendEmail({ to: user.email, ...rendered });
+  } catch (error) {
+    sendError = error;
+    if (!(error instanceof EmailSendError)) {
+      console.error("[refresh] unexpected error sending price-drop email:", error);
+    }
+  }
+
+  await recordEmailLog({
+    userId,
+    type: "price_drop",
+    recipient: user.email,
+    subject: rendered.subject,
+    result,
+    error: sendError
+  });
+}
