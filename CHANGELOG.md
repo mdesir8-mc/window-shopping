@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/mdesir8-mc/window-shopping/compare/v1.3.0...v1.4.0) (2026-06-03)
+
+
+### Features
+
+* email infrastructure + password reset + price drops ([#40](https://github.com/mdesir8-mc/window-shopping/issues/40)) ([8686ae0](https://github.com/mdesir8-mc/window-shopping/commit/8686ae086f506ecde6a8fdb2969057231e6bec63))
+
 # [1.3.0](https://github.com/mdesir8-mc/window-shopping/compare/v1.2.0...v1.3.0) (2026-06-01)
 
 
