@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import supertest from "supertest";
 import { hasTestDatabase, prepareTestDatabase, resetDatabase, testPrisma } from "./test-db";
 import { parseProductPage, ParserFetchError } from "../src/services/parser";
+import { hashResetToken } from "../src/utils/passwordReset";
 
 vi.mock("../src/services/parser", () => {
   class MockParserFetchError extends Error {}
@@ -22,6 +23,14 @@ const verifyIdToken = vi.hoisted(() => vi.fn());
 
 vi.mock("google-auth-library", () => ({
   OAuth2Client: vi.fn().mockImplementation(() => ({ verifyIdToken }))
+}));
+
+const sendEmailMock = vi.hoisted(() => vi.fn());
+
+vi.mock("../src/services/email", () => ({
+  sendEmail: sendEmailMock,
+  getAppBaseUrl: () => "http://localhost:5173",
+  EmailSendError: class EmailSendError extends Error {}
 }));
 
 function mockGooglePayload(payload: Record<string, unknown>) {
@@ -249,6 +258,101 @@ describeDb("API integration", () => {
 
     expect(response.status).toBe(200);
     expect(clearCookie).toEqual(expect.stringContaining("auth_token=;"));
+  });
+
+  async function seedResetToken(userId: string, overrides: { usedAt?: Date; expiresAt?: Date } = {}) {
+    const rawToken = `raw-${Math.random().toString(36).slice(2)}`;
+    await testPrisma!.passwordResetToken.create({
+      data: {
+        userId,
+        tokenHash: hashResetToken(rawToken),
+        expiresAt: overrides.expiresAt ?? new Date(Date.now() + 60 * 60 * 1000),
+        usedAt: overrides.usedAt ?? null
+      }
+    });
+    return rawToken;
+  }
+
+  it("does not reveal whether an account exists on forgot-password", async () => {
+    const unknown = await request.post("/api/auth/forgot-password").send({ email: "nobody@example.com" });
+    expect(unknown.status).toBe(200);
+    expect(unknown.body).toEqual({ ok: true });
+    expect(await testPrisma!.passwordResetToken.count()).toBe(0);
+    expect(sendEmailMock).not.toHaveBeenCalled();
+
+    await registerUser("known@example.com");
+    const known = await request.post("/api/auth/forgot-password").send({ email: "known@example.com" });
+    expect(known.status).toBe(200);
+    expect(known.body).toEqual({ ok: true });
+    expect(await testPrisma!.passwordResetToken.count()).toBe(1);
+    expect(sendEmailMock).toHaveBeenCalledTimes(1);
+    expect(sendEmailMock).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "known@example.com" })
+    );
+  });
+
+  it("resets the password with a valid token and invalidates the old one", async () => {
+    await registerUser("resetme@example.com");
+    const user = await testPrisma!.user.findUniqueOrThrow({ where: { email: "resetme@example.com" } });
+    const rawToken = await seedResetToken(user.id);
+
+    const reset = await request.post("/api/auth/reset-password").send({
+      token: rawToken,
+      password: "brand-new-pw"
+    });
+    expect(reset.status).toBe(200);
+
+    // New password works, old password rejected, token consumed.
+    const newLogin = await request.post("/api/auth/login").send({ email: "resetme@example.com", password: "brand-new-pw" });
+    expect(newLogin.status).toBe(200);
+    const oldLogin = await request.post("/api/auth/login").send({ email: "resetme@example.com", password: "password123" });
+    expect(oldLogin.status).toBe(401);
+    expect(await testPrisma!.passwordResetToken.count()).toBe(0);
+  });
+
+  it("rejects invalid, expired, and already-used reset tokens", async () => {
+    await registerUser("tokens@example.com");
+    const user = await testPrisma!.user.findUniqueOrThrow({ where: { email: "tokens@example.com" } });
+
+    const unknown = await request.post("/api/auth/reset-password").send({ token: "not-a-real-token", password: "brand-new-pw" });
+    expect(unknown.status).toBe(400);
+
+    const expiredToken = await seedResetToken(user.id, { expiresAt: new Date(Date.now() - 1000) });
+    const expired = await request.post("/api/auth/reset-password").send({ token: expiredToken, password: "brand-new-pw" });
+    expect(expired.status).toBe(400);
+
+    const usedToken = await seedResetToken(user.id, { usedAt: new Date() });
+    const used = await request.post("/api/auth/reset-password").send({ token: usedToken, password: "brand-new-pw" });
+    expect(used.status).toBe(400);
+
+    const short = await request.post("/api/auth/reset-password").send({ token: await seedResetToken(user.id), password: "short" });
+    expect(short.status).toBe(400);
+  });
+
+  it("lets a Google account set a password without breaking either login method", async () => {
+    mockGooglePayload({
+      sub: "google-reset-sub",
+      email: "googler@example.com",
+      email_verified: true,
+      name: "Googler",
+      picture: "https://lh3.googleusercontent.com/a/googler"
+    });
+    const google = await request.post("/api/auth/google").send({ credential: "google-reset-token" });
+    expect(google.status).toBe(200);
+
+    const user = await testPrisma!.user.findUniqueOrThrow({ where: { email: "googler@example.com" } });
+    const rawToken = await seedResetToken(user.id);
+    const reset = await request.post("/api/auth/reset-password").send({ token: rawToken, password: "added-password" });
+    expect(reset.status).toBe(200);
+
+    // Email/password login now works...
+    const passwordLogin = await request.post("/api/auth/login").send({ email: "googler@example.com", password: "added-password" });
+    expect(passwordLogin.status).toBe(200);
+
+    // ...and Google sign-in still resolves to the same account.
+    const googleAgain = await request.post("/api/auth/google").send({ credential: "google-reset-token" });
+    expect(googleAgain.status).toBe(200);
+    expect(googleAgain.body.user.id).toBe(user.id);
   });
 
   it("isolates closets by owner", async () => {

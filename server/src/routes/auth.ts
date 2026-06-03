@@ -7,6 +7,9 @@ import { asyncHandler, HttpError } from "../utils/http";
 import { signAuthToken } from "../utils/jwt";
 import { serializeAuthUser } from "../utils/serializers";
 import { requireString } from "../utils/validation";
+import { generateResetToken, hashResetToken } from "../utils/passwordReset";
+import { sendEmail, getAppBaseUrl, EmailSendError } from "../services/email";
+import { passwordResetEmail } from "../services/email-templates";
 
 const router = Router();
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -176,6 +179,75 @@ router.post(
       token,
       user: safeUser
     });
+  })
+);
+
+router.post(
+  "/forgot-password",
+  authLimiter,
+  asyncHandler(async (req, res) => {
+    const email = requireString(req.body?.email, "email").toLowerCase();
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (user) {
+      // Invalidate any outstanding tokens before issuing a fresh one.
+      await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } });
+
+      const { token, tokenHash, expiresAt } = generateResetToken();
+      await prisma.passwordResetToken.create({
+        data: { userId: user.id, tokenHash, expiresAt }
+      });
+
+      const resetUrl = `${getAppBaseUrl()}/reset-password?token=${token}`;
+
+      try {
+        await sendEmail({ to: email, ...passwordResetEmail(resetUrl) });
+      } catch (error) {
+        if (error instanceof EmailSendError) {
+          console.error("[auth] failed to send password reset email", error);
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    // Always respond the same way so the endpoint can't be used to enumerate accounts.
+    res.json({ ok: true });
+  })
+);
+
+router.post(
+  "/reset-password",
+  authLimiter,
+  asyncHandler(async (req, res) => {
+    const token = requireString(req.body?.token, "token");
+    const password = requireString(req.body?.password, "password");
+
+    if (password.length < 8) {
+      throw new HttpError(400, "password must be at least 8 characters.");
+    }
+
+    const record = await prisma.passwordResetToken.findUnique({
+      where: { tokenHash: hashResetToken(token) }
+    });
+
+    if (!record || record.usedAt || record.expiresAt < new Date()) {
+      throw new HttpError(400, "Invalid or expired reset link.");
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: record.userId },
+        data: { password: passwordHash }
+      }),
+      // Mark this token used and clear any siblings so the link is single-use.
+      prisma.passwordResetToken.deleteMany({ where: { userId: record.userId } })
+    ]);
+
+    res.json({ ok: true });
   })
 );
 
