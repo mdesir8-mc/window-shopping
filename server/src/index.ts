@@ -4,7 +4,7 @@ import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import path from "node:path";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import authRoutes from "./routes/auth";
 import userRoutes from "./routes/user";
 import closetRoutes from "./routes/closets";
@@ -13,6 +13,15 @@ import tagRoutes from "./routes/tags";
 import { closeBrowser, launchBrowser } from "./services/browser";
 import { errorHandler, HttpError } from "./utils/http";
 import { requireAuth } from "./middleware/auth";
+
+function getBakedVersion(): string {
+  try {
+    const pkg = JSON.parse(readFileSync(path.resolve(process.cwd(), "..", "package.json"), "utf8"));
+    return typeof pkg.version === "string" ? pkg.version : "development";
+  } catch {
+    return "development";
+  }
+}
 
 export function createApp() {
   const app = express();
@@ -44,7 +53,7 @@ export function createApp() {
 
   app.get("/version", (_req, res) => {
     res.json({
-      version: process.env.APP_VERSION ?? "development",
+      version: process.env.APP_VERSION ?? getBakedVersion(),
       sha: process.env.GIT_SHA ?? "local",
       released_at: process.env.RELEASE_DATE ?? null
     });

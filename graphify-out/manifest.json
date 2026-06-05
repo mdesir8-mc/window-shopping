@@ -30,8 +30,8 @@
     "semantic_hash": "cfb8be183152a0cb0a575e6598192153"
   },
   "/Users/michael/window-shopping/package.json": {
-    "mtime": 1779679307.679009,
-    "ast_hash": "f1858a7f7f732448bf4cf78b2d0a0e74",
+    "mtime": 1780683269.0104525,
+    "ast_hash": "d416d45adeaaacd6fd1509361c67fa84",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/tsconfig.json": {
@@ -40,9 +40,9 @@
     "semantic_hash": "17dbdf193a1bcb38321f5181b86d4f57"
   },
   "/Users/michael/window-shopping/vite.config.ts": {
-    "mtime": 1780263080.8166974,
-    "ast_hash": "0fe29d7a4fa6bcb3c74dcd5989e7dd8a",
-    "semantic_hash": "0fe29d7a4fa6bcb3c74dcd5989e7dd8a"
+    "mtime": 1780683363.502474,
+    "ast_hash": "2f17c73ba439e53c919011723a0c77e6",
+    "semantic_hash": ""
   },
   "/Users/michael/window-shopping/primitives.jsx": {
     "mtime": 1777048471.0466273,
@@ -140,8 +140,8 @@
     "semantic_hash": "4ae561aa5fb52a5d0722c45f7f359a66"
   },
   "/Users/michael/window-shopping/server/src/index.ts": {
-    "mtime": 1780162053.1324086,
-    "ast_hash": "c9dbd65a9e48376f70c65c81149b4eda",
+    "mtime": 1780683283.8209317,
+    "ast_hash": "bb6d012fc9bac68549b68587420a7c9f",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/server/src/middleware/auth.ts": {
@@ -220,8 +220,8 @@
     "semantic_hash": "c94930be99446054f4a9ec84a9f2e7cf"
   },
   "/Users/michael/window-shopping/src/App.tsx": {
-    "mtime": 1780449679.2352226,
-    "ast_hash": "07aabf43f3b92e9ab01d7d093acef935",
+    "mtime": 1780680541.647657,
+    "ast_hash": "8f81217affe69395d41f03ee1dcf4b27",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/src/main.tsx": {
@@ -430,8 +430,8 @@
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/.claude/settings.local.json": {
-    "mtime": 1780286830.6427004,
-    "ast_hash": "70b82d568d9997a7f521eb6224f0d55e",
+    "mtime": 1780682212.9599655,
+    "ast_hash": "a9c29ee4d3f5784e22c875b262105155",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/shared/types.ts": {
@@ -440,8 +440,8 @@
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/.releaserc.json": {
-    "mtime": 1779679307.6768875,
-    "ast_hash": "99e4bdb3839be63b40ec7d19933380e4",
+    "mtime": 1780683303.720677,
+    "ast_hash": "fb2daa9930a41fee071def678cfbf62f",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/commitlint.config.js": {
@@ -500,8 +500,8 @@
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/CHANGELOG.md": {
-    "mtime": 1780363007.1762025,
-    "ast_hash": "2db994ed1fd3e1886d19d779c25197eb",
+    "mtime": 1780679473.172179,
+    "ast_hash": "0904e3a5ac0f1c73db4bd9be85f291f7",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/server/test-parser-temp.ts": {
@@ -535,8 +535,8 @@
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/docs/todos.md": {
-    "mtime": 1780449812.5617056,
-    "ast_hash": "eafcffeed0f59aac276f9c3fc9f4b803",
+    "mtime": 1780456837.0770419,
+    "ast_hash": "b9da5c9fd17e6d47e73c5dd91106f8e4",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/src/components/account/AccountSettingsModal.tsx": {
@@ -607,6 +607,246 @@
   "/Users/michael/window-shopping/server/src/services/email-log.ts": {
     "mtime": 1780456281.4716284,
     "ast_hash": "d537ea1e9ca5cd47fef734a7c49d9d85",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/skills-lock.json": {
+    "mtime": 1780680058.68749,
+    "ast_hash": "15f6029d9a985267f376efa17cb080b3",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/ads/evals/evals.json": {
+    "mtime": 1780680058.6320786,
+    "ast_hash": "57d2a1f5276227b8b51312daff491756",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/cold-email/evals/evals.json": {
+    "mtime": 1780680058.6819265,
+    "ast_hash": "1f87554b8c2d7bebd59a245c6fc41cc6",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/ad-creative/evals/evals.json": {
+    "mtime": 1780680058.6110754,
+    "ast_hash": "77c7904e3c3bf8d28e270b1c992862d3",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/ai-seo/evals/evals.json": {
+    "mtime": 1780680058.6475646,
+    "ast_hash": "a00f312c2a61a9ab938e3bbb4d472399",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/aso/evals/evals.json": {
+    "mtime": 1780680058.6652236,
+    "ast_hash": "d1652bb37519a8249f0c2564357c4bd8",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/src/pages/Landing.tsx": {
+    "mtime": 1780681858.1751318,
+    "ast_hash": "f1f457090b5f1e2540f6f0f42b2fb188",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/human-ai-copy.md": {
+    "mtime": 1780680314.2146592,
+    "ast_hash": "7442907812eef43489332637c7828996",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/ads/SKILL.md": {
+    "mtime": 1780680058.6318655,
+    "ast_hash": "6cf123ce893fdb425e5081d6f004e452",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/ads/references/platform-setup-checklists.md": {
+    "mtime": 1780680058.6323,
+    "ast_hash": "a2dd6ce65dd56d15db30ab3e32a15940",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/ads/references/audience-targeting.md": {
+    "mtime": 1780680058.6322901,
+    "ast_hash": "76976fd32b0b96b89729f3fa28fdce76",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/ads/references/conversion-tracking.md": {
+    "mtime": 1780680058.632371,
+    "ast_hash": "d3cbfc92a3dcbee176f5f99d7e5cee88",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/ads/references/ad-copy-templates.md": {
+    "mtime": 1780680058.6323717,
+    "ast_hash": "b35a771ee8a25e85e550ff0c5ccc4b73",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/cold-email/SKILL.md": {
+    "mtime": 1780680058.6814802,
+    "ast_hash": "3759ab6416c403baa4bf0159acb145f9",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/cold-email/references/personalization.md": {
+    "mtime": 1780680058.6820908,
+    "ast_hash": "cc061d98e50cfcc6d41e016f110c71fa",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/cold-email/references/frameworks.md": {
+    "mtime": 1780680058.682017,
+    "ast_hash": "8a23ca021858a687d75d7fe0c399f3dd",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/cold-email/references/benchmarks.md": {
+    "mtime": 1780680058.6819289,
+    "ast_hash": "d29eb7d2b9f1617c530c9d5337fa564e",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/cold-email/references/subject-lines.md": {
+    "mtime": 1780680058.6820629,
+    "ast_hash": "1b1ac097e89041bf61982edc2ebaeb83",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/cold-email/references/follow-up-sequences.md": {
+    "mtime": 1780680058.6819673,
+    "ast_hash": "094a123fed30df546abc3a80363945b6",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/ad-creative/SKILL.md": {
+    "mtime": 1780680058.6107876,
+    "ast_hash": "8e6372a1dab0903f822e1092e122de26",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/ad-creative/references/platform-specs.md": {
+    "mtime": 1780680058.6111584,
+    "ast_hash": "029ff4d6ecf6dd26a3cb86754db8b646",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/ad-creative/references/generative-tools.md": {
+    "mtime": 1780680058.61116,
+    "ast_hash": "148e0f9ea84190a145791f79b9dd965f",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/ai-seo/SKILL.md": {
+    "mtime": 1780680058.6473072,
+    "ast_hash": "1f19048039349f107f3bad5a6f1f282c",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/ai-seo/references/content-types.md": {
+    "mtime": 1780680058.647656,
+    "ast_hash": "efdf8b0bce7f7a6322a542af370082cd",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/ai-seo/references/content-patterns.md": {
+    "mtime": 1780680058.6476164,
+    "ast_hash": "45f5425f963e54e06d52017ff15d07d5",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/ai-seo/references/platform-ranking-factors.md": {
+    "mtime": 1780680058.6476555,
+    "ast_hash": "fc6091f69af69605cf4512bdf87aaceb",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/aso/SKILL.md": {
+    "mtime": 1780680058.6646328,
+    "ast_hash": "abefc1858bef243c32e2d3d7aae66c79",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/aso/references/scoring-criteria.md": {
+    "mtime": 1780680058.6652248,
+    "ast_hash": "1193ec01e7e99c3ecc91f48948c8ffb1",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/aso/references/benchmarks.md": {
+    "mtime": 1780680058.6650465,
+    "ast_hash": "505615473edbf9988722550d5f00e476",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/aso/references/google-play-specs.md": {
+    "mtime": 1780680058.6650484,
+    "ast_hash": "b7a8fa7c3edb145c26c82d4bfa3005fe",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/aso/references/report-template.md": {
+    "mtime": 1780680058.6650815,
+    "ast_hash": "a588db70e0b4ce290b187d7238e85d1f",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.agents/skills/aso/references/apple-specs.md": {
+    "mtime": 1780680058.6650858,
+    "ast_hash": "d02912cdbbfc84c08c4086d5acd6658b",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.husky/_/pre-rebase": {
+    "mtime": 1780683422.3930328,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.husky/_/pre-applypatch": {
+    "mtime": 1780683422.392902,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.husky/_/husky.sh": {
+    "mtime": 1780683422.3932903,
+    "ast_hash": "13871d2ab13e8423790ecb2c01c78c18",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.husky/_/pre-auto-gc": {
+    "mtime": 1780683422.3932538,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.husky/_/pre-merge-commit": {
+    "mtime": 1780683422.3926244,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.husky/_/post-commit": {
+    "mtime": 1780683422.3927875,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.husky/_/applypatch-msg": {
+    "mtime": 1780683422.3928409,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.husky/_/prepare-commit-msg": {
+    "mtime": 1780683422.3926914,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.husky/_/h": {
+    "mtime": 1780683422.392374,
+    "ast_hash": "15239a01c5554e56ff745570fb583a91",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.husky/_/post-checkout": {
+    "mtime": 1780683422.3931296,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.husky/_/post-applypatch": {
+    "mtime": 1780683422.3929632,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.husky/_/post-rewrite": {
+    "mtime": 1780683422.3930814,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.husky/_/commit-msg": {
+    "mtime": 1780683422.392745,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.husky/_/pre-push": {
+    "mtime": 1780683422.3932154,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.husky/_/post-merge": {
+    "mtime": 1780683422.393171,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/.husky/_/pre-commit": {
+    "mtime": 1780683422.3925436,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
     "semantic_hash": ""
   }
 }

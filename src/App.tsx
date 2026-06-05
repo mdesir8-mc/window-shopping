@@ -1,10 +1,11 @@
-import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuthStore } from "./store/auth";
 import { useAuth } from "./hooks/useAuth";
 import AppShell from "./components/layout/AppShell";
 import Home from "./pages/Home";
 import ClosetDetail from "./pages/ClosetDetail";
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -44,17 +45,6 @@ function AuthBootstrap() {
   return <Outlet />;
 }
 
-function ProtectedRoute() {
-  const user = useAuthStore((state) => state.user);
-  const location = useLocation();
-
-  if (!user) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
-  }
-
-  return <Outlet />;
-}
-
 function PublicOnlyRoute() {
   const user = useAuthStore((state) => state.user);
 
@@ -66,6 +56,8 @@ function PublicOnlyRoute() {
 }
 
 export default function App() {
+  const user = useAuthStore((state) => state.user);
+
   return (
     <Routes>
       <Route element={<AuthBootstrap />}>
@@ -77,12 +69,18 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        <Route element={<ProtectedRoute />}>
+        {user ? (
           <Route element={<AppShell />}>
             <Route path="/" element={<Home />} />
             <Route path="/closets/:id" element={<ClosetDetail />} />
           </Route>
-        </Route>
+        ) : (
+          <>
+            <Route path="/" element={<Landing />} />
+            {/* deep-linked protected route still bounces to login */}
+            <Route path="/closets/:id" element={<Navigate to="/login" replace />} />
+          </>
+        )}
 
         <Route path="*" element={<NotFound />} />
       </Route>
