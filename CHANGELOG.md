@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/mdesir8-mc/window-shopping/compare/v1.4.0...v1.5.0) (2026-06-05)
+
+
+### Features
+
+* add landing page and report real app version ([#41](https://github.com/mdesir8-mc/window-shopping/issues/41)) ([d57d9e5](https://github.com/mdesir8-mc/window-shopping/commit/d57d9e5c4ee2482a6354b9a1c72f0e12957afcc9))
+
 # [1.4.0](https://github.com/mdesir8-mc/window-shopping/compare/v1.3.0...v1.4.0) (2026-06-03)
 
 
