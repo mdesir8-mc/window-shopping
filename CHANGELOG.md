@@ -1,3 +1,10 @@
+## [1.5.2](https://github.com/mdesir8-mc/window-shopping/compare/v1.5.1...v1.5.2) (2026-06-06)
+
+
+### Bug Fixes
+
+* always toast refresh-stale run summary ([#43](https://github.com/mdesir8-mc/window-shopping/issues/43)) ([c0657a2](https://github.com/mdesir8-mc/window-shopping/commit/c0657a29ca7ad4b025d7a6a5a3a5419b61abaca4))
+
 ## [1.5.1](https://github.com/mdesir8-mc/window-shopping/compare/v1.5.0...v1.5.1) (2026-06-06)
 
 
