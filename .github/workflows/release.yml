@@ -58,25 +58,24 @@ jobs:
         if: steps.release.outputs.released == 'true'
         run: npm install -g @railway/cli
 
+      # RAILWAY_TOKEN must be a Railway *project* token (Project -> Settings -> Tokens),
+      # scoped to the production environment. Project tokens are long-lived and already
+      # carry the project + environment, so no `railway link` (an account-level action that
+      # needs RAILWAY_API_TOKEN) is required — that mismatch is what forced a fresh token
+      # every release. We only target the service with --service.
       - name: Set Railway release variables
         if: steps.release.outputs.released == 'true'
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
           RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
-          RAILWAY_ENVIRONMENT: ${{ secrets.RAILWAY_ENVIRONMENT }}
           APP_VERSION: ${{ steps.release.outputs.version }}
           GIT_SHA: ${{ steps.release.outputs.sha }}
           RELEASE_DATE: ${{ steps.release.outputs.release_date }}
-        run: |
-          railway link --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_SERVICE_ID"
-          railway variables --set "APP_VERSION=$APP_VERSION" --set "GIT_SHA=$GIT_SHA" --set "RELEASE_DATE=$RELEASE_DATE" --skip-deploys
+        run: railway variables --service "$RAILWAY_SERVICE_ID" --set "APP_VERSION=$APP_VERSION" --set "GIT_SHA=$GIT_SHA" --set "RELEASE_DATE=$RELEASE_DATE" --skip-deploys
 
       - name: Deploy to Railway
         if: steps.release.outputs.released == 'true'
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
           RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
-          RAILWAY_ENVIRONMENT: ${{ secrets.RAILWAY_ENVIRONMENT }}
-        run: railway up --ci
+        run: railway up --ci --service "$RAILWAY_SERVICE_ID"
