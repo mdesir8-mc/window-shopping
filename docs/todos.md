@@ -5,10 +5,15 @@ bottom of each section; check things off as they ship.
 
 ## Fixes
 
-- [ ] **Refresh-stale button not updating item cards in prod** — clicking "Refresh
-  stale" in the sidebar doesn't update the time-indicator on item cards; investigate
-  whether the mutation response is invalidating the right query keys or if the
-  card's `lastCheckedAt` display isn't re-rendering.
+- [x] **Refresh-stale button not updating item cards in prod** — debugged: query-key
+  invalidation was a red herring (`["items"]` prefix-matches the grid query, refetch
+  fires correctly). Real cause: `ItemCard` shows `formatRelativeDate(item.addedAt)` —
+  the add date, which never moves on refresh; only the stale dot ● reflects
+  `lastCheckedAt`, and it only clears when the server actually re-parses (prod parse
+  failures legitimately leave it). Decision: keep the card text as `addedAt`, dot is
+  the refresh signal. Fix: sidebar now always toasts a run summary
+  (`Checked N · …price drops · …couldn't be reached`) so a working refresh gives
+  feedback. Server-side parse reliability for prod retailer pages left as a separate gap.
 
 - [x] **Item refresh tests failing** — mocked the SSRF guard in tests so refresh
   assertions pass without live DNS. Fix on `claude/fix-refresh-tests`.
