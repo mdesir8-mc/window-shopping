@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/mdesir8-mc/window-shopping/compare/v1.5.0...v1.5.1) (2026-06-06)
+
+
+### Bug Fixes
+
+* use Railway project token for release deploy ([#42](https://github.com/mdesir8-mc/window-shopping/issues/42)) ([1366844](https://github.com/mdesir8-mc/window-shopping/commit/1366844bd521e9af0f51f3aab9ff9ae4b57b196b))
+
 # [1.5.0](https://github.com/mdesir8-mc/window-shopping/compare/v1.4.0...v1.5.0) (2026-06-05)
 
 
