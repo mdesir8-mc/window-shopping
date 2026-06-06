@@ -132,16 +132,19 @@ export default function Sidebar({
             void refreshStale
               .mutateAsync()
               .then((result) => {
-                const parts: string[] = [];
+                const parts: string[] = [
+                  `Checked ${result.checked} item${result.checked === 1 ? "" : "s"}`
+                ];
                 if (result.priceDrops > 0) {
                   parts.push(`${result.priceDrops} price drop${result.priceDrops === 1 ? "" : "s"}`);
                 }
                 if (result.outOfStock > 0) {
                   parts.push(`${result.outOfStock} now out of stock`);
                 }
-                if (parts.length) {
-                  showToast(parts.join(" · "));
+                if (result.failed > 0) {
+                  parts.push(`${result.failed} couldn't be reached`);
                 }
+                showToast(parts.join(" · "));
               })
               .catch(() => {});
           }}
