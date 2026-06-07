@@ -5,6 +5,9 @@ bottom of each section; check things off as they ship.
 
 ## Fixes
 
+- [ ] **Daily refresh email cron not firing on Railway** — the Railway Cron job
+  running `npm run job:refresh` isn't triggering reliably; investigate Railway Cron
+  config, job logs, and whether the service is being reached correctly.
 - [x] **Refresh-stale button not updating item cards in prod** — debugged: query-key
   invalidation was a red herring (`["items"]` prefix-matches the grid query, refetch
   fires correctly). Real cause: `ItemCard` shows `formatRelativeDate(item.addedAt)` —
@@ -46,9 +49,9 @@ bottom of each section; check things off as they ship.
   `POST /api/auth/reset-password`; `/forgot-password` + `/reset-password` pages and
   a "Forgot password?" link on Login. Google accounts can set a password without
   breaking either login method. Existing JWTs still survive a reset (noted).
-- [ ] **Mobile / responsive layout** — AppShell is a fixed 232px sidebar + 1fr
-  grid with no media queries; needs a hamburger/drawer pattern so the app is
-  usable on small screens.
+- [x] **Mobile / responsive layout** — added a matchMedia-driven responsive
+  layer with a stacked top sidebar strip, wrapped top bar, stacked page grids,
+  denser cards, and mobile-friendly modals/drawers.
 - [ ] **(add your next idea here)**
 
 ## Ideas / Maybe
