@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
+import { useIsMobile } from "../../hooks/useMediaQuery";
 
 interface DisplayProps {
   children: ReactNode;
@@ -16,16 +17,18 @@ export default function Display({
   as = "h1"
 }: DisplayProps) {
   const Component = as;
+  const isMobile = useIsMobile();
+  const displaySize = isMobile ? Math.max(28, size > 40 ? Math.round(size * 0.5) : size) : size;
 
   return (
     <Component
       style={{
         margin: 0,
         fontFamily: "var(--ws-display)",
-        fontSize: size,
+        fontSize: displaySize,
         fontWeight: weight,
         lineHeight: 1.02,
-        letterSpacing: `${-0.02 * size}px`,
+        letterSpacing: 0,
         color: "var(--ws-ink)",
         ...style
       }}

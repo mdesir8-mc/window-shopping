@@ -14,6 +14,7 @@ import ItemFormModal from "../items/ItemFormModal";
 import AccountSettingsModal from "../account/AccountSettingsModal";
 import { DEFAULT_THEME, type ThemeName } from "../../constants";
 import { useAuth } from "../../hooks/useAuth";
+import { useIsMobile } from "../../hooks/useMediaQuery";
 
 interface AppShellContextValue {
   openAddItem: () => void;
@@ -39,6 +40,7 @@ export function useAppShell() {
 }
 
 export default function AppShell() {
+  const isMobile = useIsMobile();
   const closetsQuery = useClosets();
   const itemsQuery = useItems();
   const user = useAuthStore((state) => state.user);
@@ -94,10 +96,11 @@ export default function AppShell() {
     <AppShellContext.Provider value={value}>
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "232px 1fr",
-          height: "100vh",
-          overflow: "hidden",
+          display: isMobile ? "block" : "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "232px 1fr",
+          minHeight: "100vh",
+          height: isMobile ? "auto" : "100vh",
+          overflow: isMobile ? "visible" : "hidden",
           background: "var(--ws-paper)",
           color: "var(--ws-ink)"
         }}
@@ -110,8 +113,13 @@ export default function AppShell() {
           onOpenAccount={() => setAccountOpen(true)}
         />
 
-        <main style={{ overflow: "auto", position: "relative" }}>
-          <TopBar onOpenTags={() => setIsTagsOpen(true)} onOpenAddItem={() => setIsAddOpen(true)} />
+        <main style={{ overflow: isMobile ? "visible" : "auto", position: "relative" }}>
+          <TopBar
+            user={user}
+            onOpenAccount={() => setAccountOpen(true)}
+            onOpenTags={() => setIsTagsOpen(true)}
+            onOpenAddItem={() => setIsAddOpen(true)}
+          />
           <Outlet />
         </main>
       </div>

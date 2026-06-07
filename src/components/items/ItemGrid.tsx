@@ -1,5 +1,6 @@
 import type { Item } from "../../types";
 import ItemCard from "./ItemCard";
+import { useIsMobile } from "../../hooks/useMediaQuery";
 
 export default function ItemGrid({
   items,
@@ -10,12 +11,14 @@ export default function ItemGrid({
   onOpen: (item: Item) => void;
   onEdit?: (item: Item) => void;
 }) {
+  const isMobile = useIsMobile();
+
   return (
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(180px, 260px))",
-        gap: 20
+        gridTemplateColumns: isMobile ? "repeat(auto-fill, minmax(140px, 1fr))" : "repeat(auto-fill, minmax(180px, 260px))",
+        gap: isMobile ? 14 : 20
       }}
     >
       {items.map((item) => (

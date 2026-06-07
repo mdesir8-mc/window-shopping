@@ -11,8 +11,10 @@ import { useTags } from "../hooks/useTags";
 import { formatCompactCurrency, parsePriceToNumber } from "../lib/format";
 import { useAppShell } from "../components/layout/AppShell";
 import { useAuthStore } from "../store/auth";
+import { useIsMobile } from "../hooks/useMediaQuery";
 
 export default function Home() {
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { openItemDrawer, openClosetForm } = useAppShell();
@@ -55,7 +57,7 @@ export default function Home() {
       : "Everything";
 
     return (
-      <div style={{ padding: "32px 40px 60px" }}>
+      <div style={{ padding: isMobile ? "20px 16px 40px" : "32px 40px 60px" }}>
         <Link
           to="/"
           style={{
@@ -69,7 +71,7 @@ export default function Home() {
         >
           ← All closets
         </Link>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 20, marginBottom: 28 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 20, marginBottom: 28, flexWrap: isMobile ? "wrap" : "nowrap" }}>
           <div>
             <Eyebrow>{searchParams.get("season") ?? "All seasons"} · {viewLabel}</Eyebrow>
             <Display as="h2" size={48} style={{ marginTop: 8 }}>
@@ -94,8 +96,8 @@ export default function Home() {
 
   if (!closets.length) {
     return (
-      <div style={{ padding: "60px 40px", maxWidth: 720, margin: "40px auto", textAlign: "center" }}>
-        <div style={{ padding: "80px 40px", border: "1px dashed var(--ws-hairline)" }}>
+      <div style={{ padding: isMobile ? "32px 16px" : "60px 40px", maxWidth: 720, margin: isMobile ? "16px auto" : "40px auto", textAlign: "center" }}>
+        <div style={{ padding: isMobile ? "44px 20px" : "80px 40px", border: "1px dashed var(--ws-hairline)" }}>
           <Eyebrow>Empty wardrobe</Eyebrow>
           <Display size={48} style={{ marginTop: 16, marginBottom: 10 }}>
             Nothing saved,
@@ -126,15 +128,15 @@ export default function Home() {
   }
 
   return (
-    <div style={{ padding: "32px 40px 60px" }}>
+    <div style={{ padding: isMobile ? "20px 16px 40px" : "32px 40px 60px" }}>
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "minmax(0, 1.4fr) minmax(280px, 1fr)",
-          gap: 40,
-          paddingBottom: 40,
+          gridTemplateColumns: isMobile ? "1fr" : "minmax(0, 1.4fr) minmax(280px, 1fr)",
+          gap: isMobile ? 24 : 40,
+          paddingBottom: isMobile ? 28 : 40,
           borderBottom: "1px solid var(--ws-hairline)",
-          marginBottom: 40
+          marginBottom: isMobile ? 28 : 40
         }}
       >
         <div>
@@ -151,7 +153,7 @@ export default function Home() {
             This is your live wardrobe now: real data, searchable inventory, and recent saves pulled straight from the API.
           </div>
 
-          <div style={{ display: "flex", gap: 28, flexWrap: "wrap", marginTop: 28 }}>
+          <div style={{ display: "flex", gap: isMobile ? 16 : 28, flexWrap: "wrap", marginTop: 28 }}>
             {[
               { value: items.length, label: "items saved" },
               { value: closets.length, label: "closets" },
@@ -168,7 +170,7 @@ export default function Home() {
 
         <div
           style={{
-            padding: 24,
+            padding: isMobile ? 18 : 24,
             border: "1px solid var(--ws-hairline)",
             background: "linear-gradient(135deg, rgba(255,255,255,0.18), transparent)"
           }}
@@ -194,7 +196,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 20, marginBottom: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 20, marginBottom: 20, flexWrap: isMobile ? "wrap" : "nowrap" }}>
         <Display as="h2" size={28}>
           Your closets
         </Display>
@@ -202,13 +204,13 @@ export default function Home() {
 
       <ClosetGrid closets={closets} onOpen={(closet) => navigate(`/closets/${closet.id}`)} onCreate={() => openClosetForm(null)} />
 
-      <Hairline style={{ margin: "48px 0 24px" }} />
+      <Hairline style={{ margin: isMobile ? "36px 0 20px" : "48px 0 24px" }} />
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 20, marginBottom: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 20, marginBottom: 20, flexWrap: isMobile ? "wrap" : "nowrap" }}>
         <Display as="h2" size={28}>
           Recent arrivals
         </Display>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: isMobile ? "wrap" : "nowrap" }}>
           <Eyebrow>{allItems.length} total items</Eyebrow>
           {allItems.length > 8 ? (
             <Link

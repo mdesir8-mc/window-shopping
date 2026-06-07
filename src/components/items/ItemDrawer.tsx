@@ -19,6 +19,7 @@ import {
   useRefreshItem
 } from "../../hooks/useItems";
 import { useTags } from "../../hooks/useTags";
+import { useIsMobile } from "../../hooks/useMediaQuery";
 
 function hasRefreshableUrl(url: string | null) {
   return Boolean(url && /^https?:\/\//i.test(url));
@@ -35,6 +36,7 @@ export default function ItemDrawer({
   itemId: string | null;
   onClose: () => void;
 }) {
+  const isMobile = useIsMobile();
   const itemQuery = useItem(itemId ?? undefined);
   const closetsQuery = useClosets();
   const tagsQuery = useTags();
@@ -67,7 +69,7 @@ export default function ItemDrawer({
   }
 
   return (
-    <Modal open={Boolean(itemId)} onClose={onClose} width={580} align="right" panelStyle={{ height: "100vh" }}>
+    <Modal open={Boolean(itemId)} onClose={onClose} width={580} align="right" panelStyle={isMobile ? undefined : { height: "100vh" }}>
       {!item ? (
         <div style={{ padding: 32, color: "var(--ws-muted)" }}>Loading item...</div>
       ) : (
@@ -99,7 +101,7 @@ export default function ItemDrawer({
             </button>
           </div>
 
-          <div style={{ padding: "28px 32px 40px" }}>
+          <div style={{ padding: isMobile ? "24px 20px 32px" : "28px 32px 40px" }}>
             <Eyebrow>
               {item.closet?.name ?? "Closet"} {item.section?.name ? `· ${item.section.name}` : ""}
             </Eyebrow>

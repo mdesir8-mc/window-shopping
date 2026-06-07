@@ -9,6 +9,7 @@ import Tag from "../ui/Tag";
 import { useCreateCloset, useDeleteCloset, usePatchCloset } from "../../hooks/useClosets";
 import { useTags } from "../../hooks/useTags";
 import { SEASONS } from "../../constants";
+import { useIsMobile } from "../../hooks/useMediaQuery";
 
 interface ClosetFormModalProps {
   open: boolean;
@@ -28,6 +29,7 @@ function normalizeTags(raw: string) {
 }
 
 export default function ClosetFormModal({ open, closet, onClose }: ClosetFormModalProps) {
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const tagsQuery = useTags();
   const createMutation = useCreateCloset();
@@ -85,7 +87,7 @@ export default function ClosetFormModal({ open, closet, onClose }: ClosetFormMod
 
   return (
     <Modal open={open} onClose={onClose} width={640}>
-      <form onSubmit={handleSubmit} style={{ padding: 28 }}>
+      <form onSubmit={handleSubmit} style={{ padding: isMobile ? 20 : 28 }}>
         <Eyebrow>{closet ? "Edit closet" : "New closet"}</Eyebrow>
         <Display size={36} style={{ marginTop: 10 }}>
           {closet ? closet.name : "Create a new closet"}
@@ -125,7 +127,7 @@ export default function ClosetFormModal({ open, closet, onClose }: ClosetFormMod
 
           <label style={{ display: "grid", gap: 8 }}>
             <Eyebrow>Accent</Eyebrow>
-            <div style={{ display: "flex", gap: 12 }}>
+            <div style={{ display: "flex", gap: 12, flexWrap: isMobile ? "wrap" : "nowrap" }}>
               <input
                 type="color"
                 value={accent || "#8A6B4F"}
@@ -144,6 +146,7 @@ export default function ClosetFormModal({ open, closet, onClose }: ClosetFormMod
                 placeholder="#8A6B4F"
                 style={{
                   flex: 1,
+                  minWidth: isMobile ? 180 : undefined,
                   border: "1px solid var(--ws-hairline)",
                   background: "var(--ws-surface)",
                   color: "var(--ws-ink)",
@@ -235,7 +238,7 @@ export default function ClosetFormModal({ open, closet, onClose }: ClosetFormMod
             ) : null}
           </div>
 
-          <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ display: "flex", gap: 10, flexWrap: isMobile ? "wrap" : "nowrap" }}>
             <button
               type="button"
               onClick={onClose}

@@ -8,6 +8,7 @@ import Tag from "../ui/Tag";
 import { usePatchItem } from "../../hooks/useItems";
 import { useTags } from "../../hooks/useTags";
 import { useSections } from "../../hooks/useClosets";
+import { useIsMobile } from "../../hooks/useMediaQuery";
 
 interface ItemFormModalProps {
   open: boolean;
@@ -27,6 +28,7 @@ function normalizeTags(raw: string) {
 }
 
 export default function ItemFormModal({ open, item, onClose }: ItemFormModalProps) {
+  const isMobile = useIsMobile();
   const tagsQuery = useTags();
   const sectionsQuery = useSections(item?.closetId);
   const patchMutation = usePatchItem();
@@ -65,7 +67,7 @@ export default function ItemFormModal({ open, item, onClose }: ItemFormModalProp
 
   return (
     <Modal open={open} onClose={onClose} width={640}>
-      <form onSubmit={handleSubmit} style={{ padding: 28 }}>
+      <form onSubmit={handleSubmit} style={{ padding: isMobile ? 20 : 28 }}>
         <Eyebrow>Edit item</Eyebrow>
         <Display size={36} style={{ marginTop: 10 }}>
           {item?.name ?? ""}
@@ -185,7 +187,7 @@ export default function ItemFormModal({ open, item, onClose }: ItemFormModalProp
           </>
         ) : null}
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 28 }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 28, flexWrap: isMobile ? "wrap" : "nowrap" }}>
           <button
             type="button"
             onClick={onClose}

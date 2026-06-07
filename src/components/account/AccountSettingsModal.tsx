@@ -4,6 +4,7 @@ import { THEME_OPTIONS, type ThemeName } from "../../constants";
 import { useAuth } from "../../hooks/useAuth";
 import Modal from "../ui/Modal";
 import Eyebrow from "../ui/Eyebrow";
+import { useIsMobile } from "../../hooks/useMediaQuery";
 
 type Tab = "general" | "profile";
 
@@ -28,6 +29,7 @@ export default function AccountSettingsModal({
   onToggleDark,
   onSignOut
 }: AccountSettingsModalProps) {
+  const isMobile = useIsMobile();
   const [tab, setTab] = useState<Tab>("general");
   const [name, setName] = useState(user?.name ?? "");
   const { updateProfileMutation } = useAuth();
@@ -49,7 +51,7 @@ export default function AccountSettingsModal({
 
   return (
     <Modal open={open} onClose={onClose} width={460}>
-      <div style={{ padding: 24 }}>
+      <div style={{ padding: isMobile ? 20 : 24 }}>
         <div style={{ fontFamily: "var(--ws-display)", fontSize: 24, fontWeight: 300 }}>Account settings</div>
 
         <div style={{ display: "flex", gap: 4, marginTop: 18, borderBottom: "1px solid var(--ws-hairline)" }}>
@@ -84,7 +86,7 @@ export default function AccountSettingsModal({
             <div style={{ fontSize: 9, letterSpacing: 1.2, textTransform: "uppercase", color: "var(--ws-muted)", marginBottom: 6 }}>
               Theme
             </div>
-            <div style={{ display: "flex", gap: 4 }}>
+            <div style={{ display: "flex", gap: 4, flexWrap: isMobile ? "wrap" : "nowrap" }}>
               {THEME_OPTIONS.map((option) => (
                 <button
                   key={option.value}
