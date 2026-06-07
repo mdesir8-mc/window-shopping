@@ -1,6 +1,10 @@
 import * as cheerio from "cheerio";
 import type { ParsedProduct } from "../../../shared/types";
 import { fetchRenderedHtml } from "./browser";
+import { extractUniqloProduct } from "./parsers/uniqlo";
+import { extractAmazonProduct } from "./parsers/amazon";
+import { extractCarharttProduct } from "./parsers/carhartt";
+import { fetchShopifyProduct } from "./parsers/shopify";
 
 export class ParserFetchError extends Error {}
 export type HtmlFetcher = (url: string) => Promise<string>;
@@ -48,6 +52,10 @@ const OUT_OF_STOCK_AVAILABILITY = new Set([
   "outofstock",
   "soldout"
 ]);
+
+const RAW_FETCH_TIMEOUT_MS = 12_000;
+const BROWSER_USER_AGENT =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
 
 function normalizeUrl(rawUrl: string) {
   const url = new URL(rawUrl);
@@ -341,18 +349,80 @@ function extractTitleFallback(title: string | null) {
 }
 
 async function fetchRawHtml(url: string): Promise<string> {
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent": "WindowShoppingBot/1.0 (+https://window-shopping.local)"
-    },
-    redirect: "follow"
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), RAW_FETCH_TIMEOUT_MS);
+  let response: Response;
+
+  try {
+    response = await fetch(url, {
+      headers: {
+        "User-Agent": BROWSER_USER_AGENT,
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9"
+      },
+      redirect: "follow",
+      signal: controller.signal
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(`Request timed out after ${RAW_FETCH_TIMEOUT_MS}ms`);
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
     throw new Error(`Request failed with status ${response.status}`);
   }
 
   return response.text();
+}
+
+// Amazon is awkward to scrape without JS:
+//   1. It intermittently answers with a "Continue shopping" anti-bot interstitial
+//      (HTTP 200, title "Amazon.com", no product markup).
+//   2. Even on a real PDP it A/B-serves two variants — one with the price inlined
+//      server-side, one where the price block is hydrated client-side (no price in
+//      the HTML at all).
+// Both are random per request, so retry until we get a PDP that actually contains a
+// price (falling back to the first usable PDP) instead of dropping to the AI enricher.
+const AMAZON_MAX_ATTEMPTS = 8;
+const AMAZON_RETRY_DELAY_MS = 400;
+
+function isAmazonPdp(html: string): boolean {
+  return html.includes('id="productTitle"');
+}
+
+function amazonHtmlHasPrice(html: string): boolean {
+  return /class="a-offscreen">\s*[^<]*\d/.test(html);
+}
+
+async function fetchAmazonHtml(url: string): Promise<string> {
+  let last = "";
+  let firstPdp = "";
+
+  for (let attempt = 0; attempt < AMAZON_MAX_ATTEMPTS; attempt += 1) {
+    last = await fetchRawHtml(url);
+
+    if (isAmazonPdp(last)) {
+      if (amazonHtmlHasPrice(last)) {
+        return last;
+      }
+      if (!firstPdp) {
+        firstPdp = last;
+      }
+    }
+
+    if (attempt < AMAZON_MAX_ATTEMPTS - 1) {
+      // Linear backoff to let Amazon's short-term burst throttle clear.
+      await new Promise((resolve) => setTimeout(resolve, AMAZON_RETRY_DELAY_MS * (attempt + 1)));
+    }
+  }
+
+  return firstPdp || last;
 }
 
 function isComplete(result: ParsedProduct): boolean {
@@ -456,10 +526,25 @@ export async function parseProductPage(
   const url = normalizeUrl(rawUrl);
   let html: string;
 
+  // Shopify storefronts expose product JSON at /products/<handle>.js — use it and
+  // skip HTML scraping + AI fallback entirely when the URL resolves to one.
+  const shopify = options?.fetcher ? null : await fetchShopifyProduct(url).catch(() => null);
+
   try {
     const fetcher = options?.fetcher;
     if (fetcher) {
       html = await fetcher(url.toString());
+    } else if (shopify) {
+      html = "";
+    } else if (/(^|\.)amazon\.[a-z.]+$/i.test(url.hostname)) {
+      // Amazon serves headless browsers a "Continue shopping" anti-bot
+      // interstitial, so a plain request with browser-like headers (which
+      // returns the real PDP) is preferred over the rendered fetch here.
+      try {
+        html = await fetchAmazonHtml(url.toString());
+      } catch {
+        html = await fetchRenderedHtml(url.toString());
+      }
     } else {
       try {
         html = await fetchRenderedHtml(url.toString());
@@ -500,24 +585,33 @@ export async function parseProductPage(
   const product = products[0] ?? {};
   const offers = product.offers;
   const titleFallback = extractTitleFallback(ogTitle ?? title);
+  const siteProduct: Partial<ParsedProduct> = {
+    ...extractUniqloProduct(html, url),
+    ...extractAmazonProduct(html, url),
+    ...extractCarharttProduct(html, url),
+    ...(shopify ?? {})
+  };
 
-  const brand = extractBrand(product) ?? titleFallback.brand;
-  const name = asText(product.name) ?? ogTitle ?? titleFallback.name;
-  const description = asText(product.description) ?? ogDescription;
-  const price = extractOfferField(offers, "price") ?? ogPrice;
-  const originalPrice = extractOriginalPrice(offers);
-  const currency = extractOfferField(offers, "priceCurrency") ?? ogCurrency;
+  const brand = siteProduct.brand ?? extractBrand(product) ?? titleFallback.brand;
+  const name = siteProduct.name ?? asText(product.name) ?? ogTitle ?? titleFallback.name;
+  const description = siteProduct.description ?? asText(product.description) ?? ogDescription;
+  const price = siteProduct.price ?? extractOfferField(offers, "price") ?? ogPrice;
+  const originalPrice = siteProduct.originalPrice ?? extractOriginalPrice(offers);
+  const currency = siteProduct.currency ?? extractOfferField(offers, "priceCurrency") ?? ogCurrency;
   const bodyText = extractBodyText(html, 5_000);
   const inStock =
+    siteProduct.inStock ??
     extractStockFromOffers(offers) ??
     stockFromOgAvailability(ogAvailability) ??
     stockFromBodyText(bodyText);
   const imageUrl =
+    siteProduct.imageUrl ??
     firstText([
       Array.isArray(product.image) ? product.image[0] : product.image,
       ogImage
-    ]) ?? null;
-  const colors = extractColors(product.color);
+    ]) ??
+    null;
+  const colors = siteProduct.colors?.length ? siteProduct.colors : extractColors(product.color);
   const textForInference = [brand, name, description].filter(Boolean).join(" ");
 
   let result: ParsedProduct = {

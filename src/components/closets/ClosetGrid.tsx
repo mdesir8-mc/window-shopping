@@ -1,5 +1,6 @@
 import type { Closet } from "../../types";
 import ClosetCard from "./ClosetCard";
+import { useIsMobile } from "../../hooks/useMediaQuery";
 
 interface ClosetGridProps {
   closets: Closet[];
@@ -8,12 +9,14 @@ interface ClosetGridProps {
 }
 
 export default function ClosetGrid({ closets, onOpen, onCreate }: ClosetGridProps) {
+  const isMobile = useIsMobile();
+
   return (
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(220px, 300px))",
-        gap: 20
+        gridTemplateColumns: isMobile ? "repeat(auto-fill, minmax(150px, 1fr))" : "repeat(auto-fill, minmax(220px, 300px))",
+        gap: isMobile ? 14 : 20
       }}
     >
       {closets.map((closet) => (

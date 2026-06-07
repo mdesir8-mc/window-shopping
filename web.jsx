@@ -145,7 +145,7 @@ function WebDashboard({ theme, initialCloset, showEmpty }) {
             fontFamily: 'var(--ws-ui)', fontSize: 11, letterSpacing: 1.5,
             textTransform: 'uppercase', borderRadius: 2,
             whiteSpace: 'nowrap', flexShrink: 0,
-          }}>+ Paste link</button>
+          }}>+ New item</button>
         </div>
 
         {route.view === 'home' && !showEmpty && <WebHome onOpenCloset={id => setRoute({ view: 'closet', id })} onOpenItem={setSelectedItem} />}

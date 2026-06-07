@@ -9,9 +9,11 @@ import Modal from "../components/ui/Modal";
 import { useAppShell } from "../components/layout/AppShell";
 import { useCloset, useCreateSection, useDeleteSection, usePatchSection } from "../hooks/useClosets";
 import { useItems } from "../hooks/useItems";
+import { useIsMobile } from "../hooks/useMediaQuery";
 import { formatCompactCurrency, hashTone, lightenHex, parsePriceToNumber } from "../lib/format";
 
 export default function ClosetDetail() {
+  const isMobile = useIsMobile();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const { openItemDrawer, openClosetForm, openItemForm, openAddItem } = useAppShell();
@@ -38,7 +40,7 @@ export default function ClosetDetail() {
   );
 
   if (!closet) {
-    return <div style={{ padding: 40, color: "var(--ws-muted)" }}>Loading closet...</div>;
+    return <div style={{ padding: isMobile ? 20 : 40, color: "var(--ws-muted)" }}>Loading closet...</div>;
   }
 
   const closetId = closet.id;
@@ -64,7 +66,7 @@ export default function ClosetDetail() {
   }
 
   return (
-    <div style={{ padding: "32px 40px 60px" }}>
+    <div style={{ padding: isMobile ? "20px 16px 40px" : "32px 40px 60px" }}>
       <Link
         to="/"
         style={{
@@ -82,11 +84,11 @@ export default function ClosetDetail() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "minmax(0, 1fr) 320px",
-          gap: 40,
-          paddingBottom: 32,
+          gridTemplateColumns: isMobile ? "1fr" : "minmax(0, 1fr) 320px",
+          gap: isMobile ? 24 : 40,
+          paddingBottom: isMobile ? 24 : 32,
           borderBottom: "1px solid var(--ws-hairline)",
-          marginBottom: 32
+          marginBottom: isMobile ? 24 : 32
         }}
       >
         <div>
@@ -98,7 +100,7 @@ export default function ClosetDetail() {
             {closet.subtitle ?? "An evolving, tag-indexed edit of the pieces you return to."}
           </div>
 
-          <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginTop: 24 }}>
+          <div style={{ display: "flex", gap: isMobile ? 16 : 24, flexWrap: "wrap", marginTop: 24 }}>
             {[
               { value: closet.itemCount, label: "items" },
               { value: closet.sections.length, label: "sections" },
@@ -121,7 +123,7 @@ export default function ClosetDetail() {
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+          <div style={{ display: "flex", gap: 10, marginTop: 20, flexWrap: isMobile ? "wrap" : "nowrap" }}>
             <button
               type="button"
               onClick={() => openClosetForm(closet)}
@@ -193,16 +195,18 @@ export default function ClosetDetail() {
           </div>
         </div>
 
-        <div style={{ position: "relative", height: 280 }}>
+        <div style={{ position: "relative", height: isMobile ? "auto" : 280, display: isMobile ? "flex" : "block", gap: isMobile ? 10 : undefined }}>
           {[0, 1, 2].map((index) => (
             <div
               key={index}
               style={{
-                position: "absolute",
-                top: index * 30,
-                left: 40 + index * 70,
-                width: index === 0 ? 180 : index === 1 ? 100 : 110,
-                height: index === 0 ? 220 : index === 1 ? 130 : 90
+                position: isMobile ? "relative" : "absolute",
+                top: isMobile ? undefined : index * 30,
+                left: isMobile ? undefined : 40 + index * 70,
+                width: isMobile ? "33%" : index === 0 ? 180 : index === 1 ? 100 : 110,
+                height: isMobile ? undefined : index === 0 ? 220 : index === 1 ? 130 : 90,
+                aspectRatio: isMobile ? "3 / 4" : undefined,
+                flex: isMobile ? 1 : undefined
               }}
             >
               <ProductTile
@@ -292,8 +296,8 @@ export default function ClosetDetail() {
             Nothing in “{activeSectionObject.name}” yet.
           </div>
         ) : (
-          <div style={{ padding: "60px 40px", maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
-            <div style={{ padding: "60px 40px", border: "1px dashed var(--ws-hairline)" }}>
+          <div style={{ padding: isMobile ? "32px 0" : "60px 40px", maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
+            <div style={{ padding: isMobile ? "44px 20px" : "60px 40px", border: "1px dashed var(--ws-hairline)" }}>
               <Eyebrow>Empty closet</Eyebrow>
               <Display size={40} style={{ marginTop: 16, marginBottom: 10 }}>
                 Nothing here

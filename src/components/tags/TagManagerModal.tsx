@@ -4,6 +4,7 @@ import Display from "../ui/Display";
 import Eyebrow from "../ui/Eyebrow";
 import Hairline from "../ui/Hairline";
 import { useCreateTag, useDeleteTag, usePatchTag, useTags } from "../../hooks/useTags";
+import { useIsMobile } from "../../hooks/useMediaQuery";
 
 export default function TagManagerModal({
   open,
@@ -12,6 +13,7 @@ export default function TagManagerModal({
   open: boolean;
   onClose: () => void;
 }) {
+  const isMobile = useIsMobile();
   const tagsQuery = useTags();
   const createMutation = useCreateTag();
   const patchMutation = usePatchTag();
@@ -27,7 +29,7 @@ export default function TagManagerModal({
 
   return (
     <Modal open={open} onClose={onClose} width={760}>
-      <div style={{ padding: 28 }}>
+      <div style={{ padding: isMobile ? 20 : 28 }}>
         <button
           type="button"
           onClick={onClose}
@@ -52,7 +54,7 @@ export default function TagManagerModal({
           Manage your tag library
         </Display>
 
-        <form onSubmit={handleCreate} style={{ display: "grid", gridTemplateColumns: "1fr 80px auto", gap: 12, marginTop: 24 }}>
+        <form onSubmit={handleCreate} style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 80px auto", gap: 12, marginTop: 24 }}>
           <input
             required
             value={name}
@@ -71,6 +73,7 @@ export default function TagManagerModal({
             onChange={(event) => setColor(event.target.value)}
             style={{
               width: "100%",
+              height: isMobile ? 44 : undefined,
               border: "1px solid var(--ws-hairline)",
               background: "var(--ws-surface)",
               padding: 4
@@ -101,9 +104,9 @@ export default function TagManagerModal({
               key={tag.id}
               style={{
                 display: "grid",
-                gridTemplateColumns: "1.2fr 120px 100px auto",
+                gridTemplateColumns: isMobile ? "1fr" : "1.2fr 120px 100px auto",
                 gap: 12,
-                alignItems: "center",
+                alignItems: isMobile ? "stretch" : "center",
                 padding: "14px 16px",
                 border: "1px solid var(--ws-hairline)",
                 background: "var(--ws-overlay-paper)"
@@ -141,7 +144,7 @@ export default function TagManagerModal({
                   }
                 }}
                 style={{
-                  justifySelf: "end",
+                  justifySelf: isMobile ? "stretch" : "end",
                   padding: "10px 12px",
                   border: "1px solid var(--ws-hairline)",
                   background: "var(--ws-hover-bg, transparent)",

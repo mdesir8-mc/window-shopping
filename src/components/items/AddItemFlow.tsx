@@ -10,6 +10,7 @@ import { useTags } from "../../hooks/useTags";
 import { SEASONS } from "../../constants";
 import { hashTone } from "../../lib/format";
 import type { ParsedProduct } from "../../types";
+import { useIsMobile } from "../../hooks/useMediaQuery";
 
 type Step = "paste" | "parsing" | "preview" | "manual";
 
@@ -20,6 +21,7 @@ export default function AddItemFlow({
   open: boolean;
   onClose: () => void;
 }) {
+  const isMobile = useIsMobile();
   const closetsQuery = useClosets();
   const tagsQuery = useTags();
   const parseMutation = useParseUrl();
@@ -154,7 +156,7 @@ export default function AddItemFlow({
 
   return (
     <Modal open={open} onClose={onClose} width={680}>
-      <div style={{ padding: 28 }}>
+      <div style={{ padding: isMobile ? 20 : 28 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
           <Eyebrow>Add item</Eyebrow>
           <button
@@ -212,7 +214,7 @@ export default function AddItemFlow({
           </div>
 
           {step === "paste" ? (
-            <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+            <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: isMobile ? "wrap" : "nowrap" }}>
               <button
                 type="button"
                 onClick={() => void handleClipboardPaste()}
@@ -226,12 +228,13 @@ export default function AddItemFlow({
                   letterSpacing: 1.5
                 }}
               >
-                Paste link
+                New item
               </button>
               <button
                 type="submit"
                 style={{
                   flex: 1,
+                  minWidth: isMobile ? 180 : undefined,
                   padding: "14px 16px",
                   border: "none",
                   background: "var(--ws-ink)",
@@ -325,7 +328,7 @@ export default function AddItemFlow({
                 </label>
               </div>
 
-              <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
+              <div style={{ display: "flex", gap: 10, marginTop: 24, flexWrap: isMobile ? "wrap" : "nowrap" }}>
                 <button
                   type="button"
                   onClick={() => setStep("paste")}
@@ -345,6 +348,7 @@ export default function AddItemFlow({
                   type="submit"
                   style={{
                     flex: 1,
+                    minWidth: isMobile ? 180 : undefined,
                     padding: "14px 16px",
                     border: "none",
                     background: "var(--ws-ink)",
@@ -417,11 +421,11 @@ export default function AddItemFlow({
               ✓ PARSED
             </div>
 
-            <div style={{ display: "flex", gap: 14, padding: 12, border: "1px solid var(--ws-hairline)" }}>
+            <div style={{ display: "flex", gap: 14, padding: 12, border: "1px solid var(--ws-hairline)", alignItems: "flex-start" }}>
               <ProductTile
                 tone={hashTone(url)}
                 imageUrl={parsed.imageUrl}
-                size={88}
+                size={isMobile ? 72 : 88}
                 rounded={2}
               />
               <div style={{ flex: 1 }}>
