@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import type { Closet, Item, User } from "../../types";
 import ProductTile from "../ui/ProductTile";
@@ -23,6 +23,7 @@ interface SidebarProps {
   user: User | null;
   onOpenNewCloset: () => void;
   onOpenAccount: () => void;
+  onOpenTags: () => void;
 }
 
 export default function Sidebar({
@@ -30,13 +31,17 @@ export default function Sidebar({
   items,
   user,
   onOpenNewCloset,
-  onOpenAccount
+  onOpenAccount,
+  onOpenTags
 }: SidebarProps) {
   const isMobile = useIsMobile();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mobileShelf, setMobileShelf] = useState<"closets" | "seasons">("closets");
   const [isAvatarHovered, setIsAvatarHovered] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const activeSeason = searchParams.get("season");
   const activeTags = (searchParams.get("tags") ?? "").split(",").filter(Boolean);
   const tagsQuery = useTags();
@@ -48,6 +53,32 @@ export default function Sidebar({
     acc[item.season] = (acc[item.season] ?? 0) + 1;
     return acc;
   }, {});
+  const libraryEntries = [
+    {
+      label: "All closets",
+      count: closets.length,
+      to: "/",
+      active: location.pathname === "/" && !searchParams.get("view") && !searchParams.get("priceDrops")
+    },
+    {
+      label: "Everything",
+      count: items.length,
+      to: "/?view=all",
+      active: searchParams.get("view") === "all"
+    },
+    {
+      label: "Recently added",
+      count: Math.min(items.length, 12),
+      to: "/?sort=newest",
+      active: location.pathname === "/" && searchParams.get("sort") === "newest" && !searchParams.get("view") && !searchParams.get("priceDrops")
+    },
+    {
+      label: "Price drops",
+      count: items.filter((item) => item.originalPrice).length,
+      to: "/?priceDrops=true",
+      active: searchParams.get("priceDrops") === "true"
+    }
+  ];
   const mobileRowStyle = isMobile
     ? {
         display: "flex",
@@ -66,16 +97,35 @@ export default function Sidebar({
         minHeight: 40
       }
     : undefined;
-  const inlineLabelStyle = {
+  const mobileShelfButtonStyle = (active: boolean) => ({
+    ...mobileChipStyle,
+    border: "1px solid var(--ws-hairline)",
+    borderRadius: 2,
+    background: active ? "var(--ws-ink)" : "var(--ws-hover-bg, transparent)",
+    color: active ? "var(--ws-paper)" : "var(--ws-ink)",
+    cursor: "pointer",
     fontFamily: "var(--ws-mono)",
     fontSize: 10,
     letterSpacing: 1.2,
-    textTransform: "uppercase" as const,
-    color: "var(--ws-muted)",
-    flexShrink: 0,
-    alignSelf: "center" as const,
-    paddingRight: 2
-  };
+    textTransform: "uppercase" as const
+  });
+
+  useEffect(() => {
+    setSearch(searchParams.get("search") ?? "");
+  }, [searchParams]);
+
+  function updateSearch(value: string) {
+    setSearch(value);
+    const next = new URLSearchParams(searchParams);
+
+    if (value.trim()) {
+      next.set("search", value);
+    } else {
+      next.delete("search");
+    }
+
+    navigate(`${location.pathname}?${next.toString()}`);
+  }
 
   const renderClosetButton = (closet: Closet) => {
     const active = location.pathname === `/closets/${closet.id}`;
@@ -83,7 +133,10 @@ export default function Sidebar({
       <button
         key={closet.id}
         type="button"
-        onClick={() => navigate(`/closets/${closet.id}`)}
+        onClick={() => {
+          setIsMobileMenuOpen(false);
+          navigate(`/closets/${closet.id}`);
+        }}
         style={{
           width: "100%",
           display: "flex",
@@ -106,6 +159,29 @@ export default function Sidebar({
     );
   };
 
+  const renderLibraryEntry = (entry: (typeof libraryEntries)[number]) => (
+    <Link
+      key={entry.label}
+      to={entry.to}
+      onClick={() => setIsMobileMenuOpen(false)}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        padding: "7px 10px",
+        marginBottom: 2,
+        background: entry.active ? "var(--ws-surface)" : "var(--ws-hover-bg, transparent)",
+        fontFamily: "var(--ws-ui)",
+        fontSize: 13,
+        borderRadius: 2,
+        ...mobileChipStyle
+      }}
+    >
+      <span style={{ flex: 1 }}>{entry.label}</span>
+      <span style={{ fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-muted)" }}>{entry.count}</span>
+    </Link>
+  );
+
   const renderSeasonButton = ([season, count]: [string, number]) => (
     <button
       key={season}
@@ -117,6 +193,7 @@ export default function Sidebar({
         } else {
           next.set("season", season);
         }
+        setIsMobileMenuOpen(false);
         navigate(`${location.pathname}?${next.toString()}`);
       }}
       style={{
@@ -175,57 +252,250 @@ export default function Sidebar({
             {user?.name?.toUpperCase() ?? "WARDROBE"} · MVP
           </div>
         </div>
+        {isMobile ? (
+          <button
+            type="button"
+            onClick={onOpenAccount}
+            aria-label="Account"
+            style={{
+              width: 36,
+              height: 36,
+              flexShrink: 0,
+              borderRadius: 36,
+              border: "1px solid var(--ws-hairline)",
+              background: "var(--ws-hover-bg, transparent)",
+              cursor: "pointer",
+              padding: 3,
+              display: "grid",
+              placeItems: "center"
+            }}
+          >
+            {user?.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt={user.name ?? "Account"}
+                referrerPolicy="no-referrer"
+                style={{ width: 28, height: 28, borderRadius: 28, objectFit: "cover" }}
+              />
+            ) : (
+              <span
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 28,
+                  display: "grid",
+                  placeItems: "center",
+                  background: "var(--ws-accent)",
+                  color: "var(--ws-paper)",
+                  fontFamily: "var(--ws-display)",
+                  fontSize: 13
+                }}
+              >
+                {user?.name?.[0] ?? "W"}
+              </span>
+            )}
+          </button>
+        ) : null}
       </div>
 
+      {isMobile ? (
+        <>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              border: "1px solid var(--ws-hairline)",
+              padding: "10px 12px",
+              background: "var(--ws-surface)"
+            }}
+          >
+            <span style={{ fontFamily: "var(--ws-mono)", fontSize: 11, color: "var(--ws-muted)" }}>⌕</span>
+            <input
+              value={search}
+              onChange={(event) => updateSearch(event.target.value)}
+              placeholder="Search items, brands, tags..."
+              style={{
+                flex: 1,
+                minWidth: 0,
+                border: "none",
+                background: "transparent",
+                color: "var(--ws-ink)"
+              }}
+            />
+          </div>
+
+          <div style={{ position: "relative" }}>
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen((current) => !current)}
+              aria-expanded={isMobileMenuOpen}
+              style={{
+                width: "100%",
+                minHeight: 40,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                padding: "9px 12px",
+                border: "1px solid var(--ws-hairline)",
+                borderRadius: 2,
+                background: "var(--ws-hover-bg, transparent)",
+                cursor: "pointer",
+                fontFamily: "var(--ws-mono)",
+                fontSize: 10,
+                letterSpacing: 1.2,
+                textTransform: "uppercase"
+              }}
+            >
+              <span>Browse wardrobe</span>
+              <span aria-hidden="true">{isMobileMenuOpen ? "^" : "v"}</span>
+            </button>
+
+            {isMobileMenuOpen ? (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 8px)",
+                  left: 0,
+                  right: 0,
+                  zIndex: 12,
+                  display: "grid",
+                  gap: 14,
+                  maxHeight: "min(62vh, 520px)",
+                  overflowY: "auto",
+                  padding: 14,
+                  border: "1px solid var(--ws-hairline)",
+                  background: "var(--ws-paper)",
+                  boxShadow: "0 20px 40px rgba(0,0,0,0.12)"
+                }}
+              >
+                <div>
+                  <Eyebrow style={{ marginBottom: 8 }}>Library</Eyebrow>
+                  <div className="ws-scrollbar" style={mobileRowStyle}>
+                    {libraryEntries.map(renderLibraryEntry)}
+                    <button
+                      type="button"
+                      disabled={refreshStale.isPending || (staleCount === 0 && !summary)}
+                      onClick={() => {
+                        void refreshStale
+                          .mutateAsync()
+                          .then((result) => {
+                            const parts: string[] = [
+                              `Checked ${result.checked} item${result.checked === 1 ? "" : "s"}`
+                            ];
+                            if (result.priceDrops > 0) {
+                              parts.push(`${result.priceDrops} price drop${result.priceDrops === 1 ? "" : "s"}`);
+                            }
+                            if (result.outOfStock > 0) {
+                              parts.push(`${result.outOfStock} now out of stock`);
+                            }
+                            if (result.failed > 0) {
+                              parts.push(`${result.failed} couldn't be reached`);
+                            }
+                            showToast(parts.join(" · "));
+                          })
+                          .catch(() => {});
+                      }}
+                      style={{
+                        width: "auto",
+                        minWidth: "max-content",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "8px 10px",
+                        minHeight: 40,
+                        border: "1px solid var(--ws-hairline)",
+                        borderRadius: 2,
+                        background: "var(--ws-hover-bg, transparent)",
+                        fontFamily: "var(--ws-ui)",
+                        fontSize: 13,
+                        cursor: refreshStale.isPending || staleCount === 0 ? "default" : "pointer",
+                        opacity: refreshStale.isPending || (staleCount === 0 && !summary) ? 0.55 : 1,
+                        textAlign: "left"
+                      }}
+                    >
+                      <span style={{ flex: 1 }}>{refreshStale.isPending ? "Refreshing..." : "Refresh stale"}</span>
+                      <span style={{ fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-muted)" }}>{staleCount}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        onOpenTags();
+                      }}
+                      style={{
+                        ...mobileChipStyle,
+                        border: "1px solid var(--ws-hairline)",
+                        borderRadius: 2,
+                        background: "var(--ws-hover-bg, transparent)",
+                        cursor: "pointer",
+                        fontFamily: "var(--ws-ui)",
+                        fontSize: 13
+                      }}
+                    >
+                      Manage tags
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="ws-scrollbar" style={mobileRowStyle}>
+                    <button
+                      type="button"
+                      onClick={() => setMobileShelf("closets")}
+                      style={mobileShelfButtonStyle(mobileShelf === "closets")}
+                    >
+                      Closets
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMobileShelf("seasons")}
+                      style={mobileShelfButtonStyle(mobileShelf === "seasons")}
+                    >
+                      Seasons
+                    </button>
+                    {mobileShelf === "closets" ? (
+                      <>
+                        {closets.map(renderClosetButton)}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsMobileMenuOpen(false);
+                            onOpenNewCloset();
+                          }}
+                          aria-label="New closet"
+                          style={{
+                            ...mobileChipStyle,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            border: "1px solid var(--ws-hairline)",
+                            borderRadius: 2,
+                            background: "var(--ws-hover-bg, transparent)",
+                            cursor: "pointer",
+                            fontSize: 13
+                          }}
+                        >
+                          + New
+                        </button>
+                      </>
+                    ) : (
+                      Object.entries(seasonCounts).map(renderSeasonButton)
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </>
+      ) : null}
+
+      {!isMobile ? (
       <nav>
         <Eyebrow style={{ marginBottom: 8 }}>Library</Eyebrow>
         <div className={isMobile ? "ws-scrollbar" : undefined} style={mobileRowStyle}>
-          {[
-            {
-              label: "All closets",
-              count: closets.length,
-              to: "/",
-              active: location.pathname === "/" && !searchParams.get("view") && !searchParams.get("priceDrops")
-            },
-            {
-              label: "Everything",
-              count: items.length,
-              to: "/?view=all",
-              active: searchParams.get("view") === "all"
-            },
-            {
-              label: "Recently added",
-              count: Math.min(items.length, 12),
-              to: "/?sort=newest",
-              active: location.pathname === "/" && searchParams.get("sort") === "newest" && !searchParams.get("view") && !searchParams.get("priceDrops")
-            },
-            {
-              label: "Price drops",
-              count: items.filter((item) => item.originalPrice).length,
-              to: "/?priceDrops=true",
-              active: searchParams.get("priceDrops") === "true"
-            }
-          ].map((entry) => (
-            <Link
-              key={entry.label}
-              to={entry.to}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "7px 10px",
-                marginBottom: 2,
-                background: entry.active ? "var(--ws-surface)" : "var(--ws-hover-bg, transparent)",
-                fontFamily: "var(--ws-ui)",
-                fontSize: 13,
-                borderRadius: 2,
-                ...mobileChipStyle
-              }}
-            >
-              <span style={{ flex: 1 }}>{entry.label}</span>
-              <span style={{ fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-muted)" }}>{entry.count}</span>
-            </Link>
-          ))}
+          {libraryEntries.map(renderLibraryEntry)}
           <button
             type="button"
             disabled={refreshStale.isPending || (staleCount === 0 && !summary)}
@@ -286,34 +556,9 @@ export default function Sidebar({
           </div>
         ) : null}
       </nav>
+      ) : null}
 
-      {isMobile ? (
-        <div className="ws-scrollbar" style={mobileRowStyle}>
-          <span style={inlineLabelStyle}>Closets</span>
-          {closets.map(renderClosetButton)}
-          <button
-            type="button"
-            onClick={onOpenNewCloset}
-            aria-label="New closet"
-            style={{
-              ...mobileChipStyle,
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              border: "1px solid var(--ws-hairline)",
-              borderRadius: 2,
-              background: "var(--ws-hover-bg, transparent)",
-              cursor: "pointer",
-              fontSize: 13
-            }}
-          >
-            + New
-          </button>
-          <span style={{ width: 1, alignSelf: "stretch", background: "var(--ws-hairline)", flexShrink: 0, margin: "0 2px" }} />
-          <span style={inlineLabelStyle}>Seasons</span>
-          {Object.entries(seasonCounts).map(renderSeasonButton)}
-        </div>
-      ) : (
+      {isMobile ? null : (
         <>
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
@@ -336,7 +581,7 @@ export default function Sidebar({
         </>
       )}
 
-      {(tagsQuery.data ?? []).length > 0 ? (
+      {!isMobile && (tagsQuery.data ?? []).length > 0 ? (
         <div>
           <Eyebrow style={{ marginBottom: 8 }}>Tags</Eyebrow>
           <div className={isMobile ? "ws-scrollbar" : undefined} style={mobileRowStyle}>

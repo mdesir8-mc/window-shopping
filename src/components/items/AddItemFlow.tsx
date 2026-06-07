@@ -228,7 +228,7 @@ export default function AddItemFlow({
                   letterSpacing: 1.5
                 }}
               >
-                Paste link
+                New item
               </button>
               <button
                 type="submit"

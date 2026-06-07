@@ -111,12 +111,11 @@ export default function AppShell() {
           user={user}
           onOpenNewCloset={() => setClosetFormTarget(null)}
           onOpenAccount={() => setAccountOpen(true)}
+          onOpenTags={() => setIsTagsOpen(true)}
         />
 
         <main style={{ overflow: isMobile ? "visible" : "auto", position: "relative" }}>
           <TopBar
-            user={user}
-            onOpenAccount={() => setAccountOpen(true)}
             onOpenTags={() => setIsTagsOpen(true)}
             onOpenAddItem={() => setIsAddOpen(true)}
           />

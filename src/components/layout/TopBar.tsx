@@ -1,16 +1,13 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import type { User } from "../../types";
 import { useIsMobile } from "../../hooks/useMediaQuery";
 
 interface TopBarProps {
-  user: User | null;
-  onOpenAccount: () => void;
   onOpenTags: () => void;
   onOpenAddItem: () => void;
 }
 
-export default function TopBar({ user, onOpenAccount, onOpenTags, onOpenAddItem }: TopBarProps) {
+export default function TopBar({ onOpenTags, onOpenAddItem }: TopBarProps) {
   const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -33,6 +30,8 @@ export default function TopBar({ user, onOpenAccount, onOpenTags, onOpenAddItem 
 
     navigate(`${location.pathname}?${next.toString()}`);
   }
+
+  const sortValue = searchParams.get("sort") === "oldest" ? "oldest" : "newest";
 
   const searchBox = (
     <div
@@ -66,7 +65,7 @@ export default function TopBar({ user, onOpenAccount, onOpenTags, onOpenAddItem 
 
   const sortSelect = (
     <select
-      value={searchParams.get("sort") ?? "newest"}
+      value={sortValue}
       onChange={(event) => {
         const next = new URLSearchParams(searchParams);
         next.set("sort", event.target.value);
@@ -77,6 +76,7 @@ export default function TopBar({ user, onOpenAccount, onOpenTags, onOpenAddItem 
         background: "var(--ws-surface)",
         color: "var(--ws-ink)",
         padding: "8px 12px",
+        width: isMobile ? 94 : 112,
         minHeight: isMobile ? 40 : undefined,
         fontSize: 11,
         letterSpacing: 1.2,
@@ -86,7 +86,6 @@ export default function TopBar({ user, onOpenAccount, onOpenTags, onOpenAddItem 
     >
       <option value="newest">Newest</option>
       <option value="oldest">Oldest</option>
-      <option value="updated">Recently updated</option>
     </select>
   );
 
@@ -126,72 +125,7 @@ export default function TopBar({ user, onOpenAccount, onOpenTags, onOpenAddItem 
         borderRadius: 2
       }}
     >
-      + Paste link
-    </button>
-  );
-
-  const accountButton = (
-    <button
-      type="button"
-      onClick={onOpenAccount}
-      aria-label="Account"
-      style={{
-        flexShrink: 0,
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        maxWidth: 160,
-        padding: "4px 6px",
-        border: "none",
-        background: "transparent",
-        cursor: "pointer",
-        textAlign: "left",
-        borderRadius: 4,
-        minHeight: 40
-      }}
-    >
-      {user?.avatarUrl ? (
-        <img
-          src={user.avatarUrl}
-          alt={user.name ?? "Account"}
-          referrerPolicy="no-referrer"
-          style={{ width: 28, height: 28, borderRadius: 28, objectFit: "cover", flexShrink: 0 }}
-        />
-      ) : (
-        <div
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: 28,
-            display: "grid",
-            placeItems: "center",
-            background: "var(--ws-accent)",
-            color: "var(--ws-paper)",
-            fontFamily: "var(--ws-display)",
-            fontSize: 13,
-            flexShrink: 0
-          }}
-        >
-          {user?.name?.[0] ?? "W"}
-        </div>
-      )}
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 12, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-          {user?.name ?? "Window Shopping"}
-        </div>
-        <div
-          style={{
-            fontFamily: "var(--ws-mono)",
-            fontSize: 9,
-            color: "var(--ws-muted)",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis"
-          }}
-        >
-          {user?.plan ?? "free"} plan
-        </div>
-      </div>
+      + New item
     </button>
   );
 
@@ -205,17 +139,10 @@ export default function TopBar({ user, onOpenAccount, onOpenTags, onOpenAddItem 
 
   if (isMobile) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "14px 16px", ...stickyHeader }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {searchBox}
-          {accountButton}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {sortSelect}
-          <div style={{ flex: 1 }} />
-          {tagsButton}
-          {addButton}
-        </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", ...stickyHeader }}>
+        {sortSelect}
+        <div style={{ flex: 1 }} />
+        {addButton}
       </div>
     );
   }
