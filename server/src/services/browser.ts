@@ -50,8 +50,8 @@ export async function fetchRenderedHtml(url: string): Promise<string> {
     });
 
     await page.goto(url, {
-      waitUntil: "networkidle",
-      timeout: 20_000
+      waitUntil: "domcontentloaded",
+      timeout: 12_000
     });
 
     return await page.content();

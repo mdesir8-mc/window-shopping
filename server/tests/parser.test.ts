@@ -88,6 +88,73 @@ describe("parseProductPage", () => {
     expect(product.suggestedTags).toEqual(expect.arrayContaining(["cashmere", "oversized", "layering"]));
   });
 
+  it("extracts Uniqlo product fields from preloaded PDP state", async () => {
+    const aiEnricher: AiEnricher = vi.fn().mockResolvedValue({});
+    const state = {
+      pdp: {
+        product: "E482303-000-00"
+      },
+      entity: {
+        pdpEntity: {
+          "E482303-000-00": {
+            product: {
+              colors: [
+                { displayCode: "58", name: "DARK GREEN" },
+                { displayCode: "00", name: "WHITE" }
+              ],
+              images: {
+                main: {
+                  "58": {
+                    image: "https://image.uniqlo.com/UQ/ST3/us/imagesgoods/482303/item/usgoods_58_482303_3x4.jpg"
+                  }
+                }
+              },
+              longDescription: "<p>Regular fit cotton pique shirt for warm weather.</p>",
+              name: "AIRism Cotton Pique Full Open Polo Shirt",
+              prices: {
+                base: {
+                  currency: { code: "USD", symbol: "$" },
+                  value: 29.9
+                },
+                promo: null
+              },
+              representative: {
+                color: { displayCode: "58" },
+                sales: true
+              }
+            }
+          }
+        }
+      }
+    };
+
+    const product = await parseProductPage("https://www.uniqlo.com/us/en/products/E482303-000/", {
+      fetcher: htmlFetcher(`
+        <html>
+          <head>
+            <title>Unisex AIRism Cotton Pique Full Open Polo Shirt | UNIQLO US</title>
+            <meta property="og:title" content="Unisex AIRism Cotton Pique Full Open Polo Shirt | UNIQLO US" />
+          </head>
+          <body>
+            <script>window.__PRELOADED_STATE__ = ${JSON.stringify(state)};</script>
+          </body>
+        </html>
+      `),
+      aiEnricher
+    });
+
+    expect(product.brand).toBe("UNIQLO");
+    expect(product.name).toBe("AIRism Cotton Pique Full Open Polo Shirt");
+    expect(product.price).toBe("29.9");
+    expect(product.currency).toBe("USD");
+    expect(product.imageUrl).toBe("https://image.uniqlo.com/UQ/ST3/us/imagesgoods/482303/item/usgoods_58_482303_3x4.jpg");
+    expect(product.colors).toEqual(["DARK GREEN", "WHITE"]);
+    expect(product.inStock).toBe(true);
+    expect(product.suggestedTags).toContain("cotton");
+    expect(product.suggestedSeason).toBe("Summer");
+    expect(aiEnricher).not.toHaveBeenCalled();
+  });
+
   it("extracts stock from JSON-LD offer availability", async () => {
     const product = await parseProductPage("https://shop.example.com/preorder", {
       fetcher: htmlFetcher(`
