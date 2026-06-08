@@ -36,7 +36,8 @@ export function createApp() {
         "script-src": ["'self'", "https://accounts.google.com/gsi/client"],
         "frame-src": ["https://accounts.google.com/gsi/"],
         "connect-src": ["'self'", "https://accounts.google.com/gsi/"],
-        "style-src": ["'self'", "'unsafe-inline'", "https://accounts.google.com/gsi/style"]
+        "style-src": ["'self'", "'unsafe-inline'", "https://accounts.google.com/gsi/style", "https://fonts.googleapis.com"],
+        "font-src": ["'self'", "https://fonts.gstatic.com", "data:"]
       }
     },
     crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
