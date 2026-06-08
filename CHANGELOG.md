@@ -1,3 +1,17 @@
+## [2.0.0](https://github.com/mdesir8-mc/window-shopping/compare/v1.5.2...v2.0.0) (2026-06-08)
+
+### ⚠ BREAKING CHANGES
+
+* new mobile layout and special parsers (#44)
+
+### Features
+
+* new mobile layout and special parsers ([#44](https://github.com/mdesir8-mc/window-shopping/issues/44)) ([e35927b](https://github.com/mdesir8-mc/window-shopping/commit/e35927b7a5a62b238e8d3bbca306acdb25aee0c1))
+
+### Bug Fixes
+
+* parse feat! release commits via conventionalcommits preset ([#45](https://github.com/mdesir8-mc/window-shopping/issues/45)) ([9c38607](https://github.com/mdesir8-mc/window-shopping/commit/9c38607f8b398de4cafc3115de635f8356a677cd))
+
 ## [1.5.2](https://github.com/mdesir8-mc/window-shopping/compare/v1.5.1...v1.5.2) (2026-06-06)
 
 
