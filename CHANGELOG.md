@@ -1,3 +1,9 @@
+## [2.0.1](https://github.com/mdesir8-mc/window-shopping/compare/v2.0.0...v2.0.1) (2026-06-08)
+
+### Bug Fixes
+
+* load Google Fonts in prod (CSP) and prevent theme font flash ([#46](https://github.com/mdesir8-mc/window-shopping/issues/46)) ([9d871bc](https://github.com/mdesir8-mc/window-shopping/commit/9d871bc92ac459d47714e6f15dc6d6cce13c2b9c))
+
 ## [2.0.0](https://github.com/mdesir8-mc/window-shopping/compare/v1.5.2...v2.0.0) (2026-06-08)
 
 ### ⚠ BREAKING CHANGES
