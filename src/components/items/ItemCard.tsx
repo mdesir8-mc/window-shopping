@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import type { Item } from "../../types";
 import ProductTile from "../ui/ProductTile";
 import Tag from "../ui/Tag";
@@ -26,6 +27,7 @@ export default function ItemCard({
   onEdit?: () => void;
 }) {
   const stale = isStale(item);
+  const navigate = useNavigate();
 
   return (
     <div
@@ -142,7 +144,14 @@ export default function ItemCard({
       >
         <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
           {item.tags.slice(0, 2).map((tag) => (
-            <Tag key={tag} size="sm">
+            <Tag
+              key={tag}
+              size="sm"
+              onClick={(e) => {
+                e?.stopPropagation();
+                navigate(`/?tags=${encodeURIComponent(tag)}`);
+              }}
+            >
               {tag}
             </Tag>
           ))}

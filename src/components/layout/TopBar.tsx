@@ -31,7 +31,8 @@ export default function TopBar({ onOpenTags, onOpenAddItem }: TopBarProps) {
     navigate(`${location.pathname}?${next.toString()}`);
   }
 
-  const sortValue = searchParams.get("sort") === "oldest" ? "oldest" : "newest";
+  const sortParam = searchParams.get("sort");
+  const sortValue = sortParam === "oldest" || sortParam === "updated" ? sortParam : "newest";
 
   const searchBox = (
     <div
@@ -86,6 +87,7 @@ export default function TopBar({ onOpenTags, onOpenAddItem }: TopBarProps) {
     >
       <option value="newest">Newest</option>
       <option value="oldest">Oldest</option>
+      <option value="updated">Updated</option>
     </select>
   );
 

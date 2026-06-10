@@ -44,6 +44,36 @@ export default function ClosetDetail() {
   }
 
   const closetId = closet.id;
+  const sections = closet.sections;
+  const sectionIndex = activeSectionObject
+    ? sections.findIndex((section) => section.id === activeSectionObject.id)
+    : -1;
+  const canMoveEarlier = sectionIndex > 0;
+  const canMoveLater = sectionIndex >= 0 && sectionIndex < sections.length - 1;
+
+  async function moveSection(direction: -1 | 1) {
+    if (!activeSectionObject || sectionIndex < 0) {
+      return;
+    }
+
+    const target = sections[sectionIndex + direction];
+    if (!target) {
+      return;
+    }
+
+    await Promise.all([
+      patchSectionMutation.mutateAsync({
+        closetId,
+        sectionId: activeSectionObject.id,
+        payload: { order: sectionIndex + direction }
+      }),
+      patchSectionMutation.mutateAsync({
+        closetId,
+        sectionId: target.id,
+        payload: { order: sectionIndex }
+      })
+    ]);
+  }
 
   async function handleSectionSave(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -141,6 +171,40 @@ export default function ClosetDetail() {
             </button>
             {activeSectionObject ? (
               <>
+                <button
+                  type="button"
+                  disabled={!canMoveEarlier || patchSectionMutation.isPending}
+                  onClick={() => void moveSection(-1)}
+                  style={{
+                    padding: "10px 14px",
+                    border: "1px solid var(--ws-hairline)",
+                    background: "var(--ws-hover-bg, transparent)",
+                    cursor: !canMoveEarlier || patchSectionMutation.isPending ? "default" : "pointer",
+                    opacity: canMoveEarlier ? 1 : 0.4,
+                    fontSize: 11,
+                    letterSpacing: 1.5,
+                    textTransform: "uppercase"
+                  }}
+                >
+                  ◀ Move
+                </button>
+                <button
+                  type="button"
+                  disabled={!canMoveLater || patchSectionMutation.isPending}
+                  onClick={() => void moveSection(1)}
+                  style={{
+                    padding: "10px 14px",
+                    border: "1px solid var(--ws-hairline)",
+                    background: "var(--ws-hover-bg, transparent)",
+                    cursor: !canMoveLater || patchSectionMutation.isPending ? "default" : "pointer",
+                    opacity: canMoveLater ? 1 : 0.4,
+                    fontSize: 11,
+                    letterSpacing: 1.5,
+                    textTransform: "uppercase"
+                  }}
+                >
+                  Move ▶
+                </button>
                 <button
                   type="button"
                   onClick={() => {

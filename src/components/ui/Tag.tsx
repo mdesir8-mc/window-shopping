@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, MouseEvent, ReactNode } from "react";
 
 interface TagProps {
   children: ReactNode;
@@ -6,7 +6,7 @@ interface TagProps {
   filled?: boolean;
   removable?: boolean;
   onRemove?: () => void;
-  onClick?: () => void;
+  onClick?: (e?: MouseEvent) => void;
   size?: "sm" | "md";
   style?: CSSProperties;
   color?: string | null;
