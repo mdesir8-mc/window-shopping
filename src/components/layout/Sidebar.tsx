@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import type { Closet, Item, User } from "../../types";
+import type { Closet, Item, Tag, User } from "../../types";
 import ProductTile from "../ui/ProductTile";
 import Eyebrow from "../ui/Eyebrow";
 import { hashTone } from "../../lib/format";
@@ -36,7 +36,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const isMobile = useIsMobile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [mobileShelf, setMobileShelf] = useState<"closets" | "seasons">("closets");
+  const [mobileShelf, setMobileShelf] = useState<"closets" | "seasons" | "tags">("closets");
   const [isAvatarHovered, setIsAvatarHovered] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -45,6 +45,7 @@ export default function Sidebar({
   const activeSeason = searchParams.get("season");
   const activeTags = (searchParams.get("tags") ?? "").split(",").filter(Boolean);
   const tagsQuery = useTags();
+  const sidebarTags = tagsQuery.data ?? [];
   const { showToast } = useAppShell();
   const refreshStale = useRefreshStaleItems();
   const staleCount = items.filter(isStaleItem).length;
@@ -214,6 +215,55 @@ export default function Sidebar({
       <span style={{ fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-muted)" }}>{count}</span>
     </button>
   );
+
+  const renderTagButton = (tag: Tag) => {
+    const isActive = activeTags.includes(tag.name);
+    return (
+      <button
+        key={tag.id}
+        type="button"
+        onClick={() => {
+          const next = new URLSearchParams(searchParams);
+          if (isActive) {
+            const remaining = activeTags.filter((t) => t !== tag.name);
+            if (remaining.length) {
+              next.set("tags", remaining.join(","));
+            } else {
+              next.delete("tags");
+            }
+          } else {
+            next.set("tags", [...activeTags, tag.name].join(","));
+          }
+          setIsMobileMenuOpen(false);
+          navigate(`/?${next.toString()}`);
+        }}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "7px 10px",
+          border: "none",
+          background: isActive ? "var(--ws-surface)" : "var(--ws-hover-bg, transparent)",
+          cursor: "pointer",
+          textAlign: "left",
+          ...mobileChipStyle
+        }}
+      >
+        <span
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: 6,
+            background: tag.color ?? "var(--ws-muted)",
+            flexShrink: 0
+          }}
+        />
+        <span style={{ flex: 1, fontSize: 12, color: "var(--ws-muted)" }}>{tag.name}</span>
+        <span style={{ fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-muted)" }}>{tag.itemCount}</span>
+      </button>
+    );
+  };
 
   return (
     <aside
@@ -455,6 +505,15 @@ export default function Sidebar({
                     >
                       Seasons
                     </button>
+                    {sidebarTags.length > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => setMobileShelf("tags")}
+                        style={mobileShelfButtonStyle(mobileShelf === "tags")}
+                      >
+                        Tags
+                      </button>
+                    ) : null}
                     {mobileShelf === "closets" ? (
                       <>
                         {closets.map(renderClosetButton)}
@@ -480,6 +539,8 @@ export default function Sidebar({
                           + New
                         </button>
                       </>
+                    ) : mobileShelf === "tags" ? (
+                      sidebarTags.map(renderTagButton)
                     ) : (
                       Object.entries(seasonCounts).map(renderSeasonButton)
                     )}
@@ -581,58 +642,10 @@ export default function Sidebar({
         </>
       )}
 
-      {!isMobile && (tagsQuery.data ?? []).length > 0 ? (
+      {!isMobile && sidebarTags.length > 0 ? (
         <div>
           <Eyebrow style={{ marginBottom: 8 }}>Tags</Eyebrow>
-          <div className={isMobile ? "ws-scrollbar" : undefined} style={mobileRowStyle}>
-            {(tagsQuery.data ?? []).map((tag) => {
-              const isActive = activeTags.includes(tag.name);
-              return (
-                <button
-                  key={tag.id}
-                  type="button"
-                  onClick={() => {
-                    const next = new URLSearchParams(searchParams);
-                    if (isActive) {
-                      const remaining = activeTags.filter((t) => t !== tag.name);
-                      if (remaining.length) {
-                        next.set("tags", remaining.join(","));
-                      } else {
-                        next.delete("tags");
-                      }
-                    } else {
-                      next.set("tags", [...activeTags, tag.name].join(","));
-                    }
-                    navigate(`/?${next.toString()}`);
-                  }}
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "7px 10px",
-                    border: "none",
-                    background: isActive ? "var(--ws-surface)" : "var(--ws-hover-bg, transparent)",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    ...mobileChipStyle
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: 6,
-                      background: tag.color ?? "var(--ws-muted)",
-                      flexShrink: 0
-                    }}
-                  />
-                  <span style={{ flex: 1, fontSize: 12, color: "var(--ws-muted)" }}>{tag.name}</span>
-                  <span style={{ fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-muted)" }}>{tag.itemCount}</span>
-                </button>
-              );
-            })}
-          </div>
+          <div style={mobileRowStyle}>{sidebarTags.map(renderTagButton)}</div>
         </div>
       ) : null}
 

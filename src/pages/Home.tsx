@@ -8,7 +8,7 @@ import VersionTag from "../components/ui/VersionTag";
 import { useClosets } from "../hooks/useClosets";
 import { useItems } from "../hooks/useItems";
 import { useTags } from "../hooks/useTags";
-import { formatCompactCurrency, parsePriceToNumber } from "../lib/format";
+import { formatCompactCurrency, greetingForHour, parsePriceToNumber } from "../lib/format";
 import { useAppShell } from "../components/layout/AppShell";
 import { useAuthStore } from "../store/auth";
 import { useIsMobile } from "../hooks/useMediaQuery";
@@ -142,7 +142,7 @@ export default function Home() {
         <div>
           <Eyebrow>{searchParams.get("season") ?? "All seasons"} · Dashboard</Eyebrow>
           <Display size={80} style={{ marginTop: 16, lineHeight: 0.95 }}>
-            Good evening,
+            {greetingForHour()},
             <br />
             <em style={{ fontStyle: "italic", fontWeight: 300, color: "var(--ws-accent)" }}>
               {user?.name ?? "there"}

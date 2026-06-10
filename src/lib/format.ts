@@ -35,6 +35,17 @@ export function formatRelativeDate(isoDate: string) {
   });
 }
 
+export function greetingForHour(date: Date = new Date()) {
+  const hour = date.getHours();
+  if (hour < 12) {
+    return "Good morning";
+  }
+  if (hour < 18) {
+    return "Good afternoon";
+  }
+  return "Good evening";
+}
+
 export function parsePriceToNumber(value?: string | null) {
   if (!value) {
     return 0;
