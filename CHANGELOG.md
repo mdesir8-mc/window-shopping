@@ -1,3 +1,9 @@
+## [2.1.0](https://github.com/mdesir8-mc/window-shopping/compare/v2.0.1...v2.1.0) (2026-06-10)
+
+### Features
+
+* section reorder, mobile tag filter, updated-sort, clickable tags ([#47](https://github.com/mdesir8-mc/window-shopping/issues/47)) ([37f0be4](https://github.com/mdesir8-mc/window-shopping/commit/37f0be4480b9b59ad4d067d316e639ccb19643c0))
+
 ## [2.0.1](https://github.com/mdesir8-mc/window-shopping/compare/v2.0.0...v2.0.1) (2026-06-08)
 
 ### Bug Fixes
