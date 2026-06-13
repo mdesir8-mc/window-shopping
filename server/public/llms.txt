@@ -1,0 +1,27 @@
+# Window Shopping
+
+> Window Shopping is a personal clothing catalog — part wishlist, part wardrobe organizer. Save pieces you want (or already own) from any online store by pasting a product URL; the app parses the page — pulling brand, name, price, images, and colors — then uses AI to suggest tags and a season. Items live in closets, divided into sections, so you can browse what you have, plan what's next, and decide what to buy, all in one place.
+
+## What it does
+
+- **URL-based item capture**: paste any product link; the parser fetches the rendered page and extracts structured product data via Open Graph, JSON-LD, and heuristics, with a Claude AI fallback for hard-to-parse pages.
+- **Closets & sections**: organize items into named closets (each with a custom accent color and default season), subdivided into ordered sections.
+- **Seasonal tagging**: every item is tagged Spring, Summer, Fall, or Winter; a closet's default season pre-fills the field when adding new items.
+- **Tag system**: user-defined tags with optional colors; the parser suggests material, fit, and style tags from product copy.
+- **Favorites**: mark items to surface them later.
+
+## How it works
+
+A user adds an item by pasting a product URL. The backend fetches the page (Cheerio for static HTML, Playwright for JavaScript-rendered pages) and extracts product data, falling back to the Claude API when structured metadata is missing or incomplete. Items are stored per user and organized into closets and sections.
+
+## Stack
+
+- Frontend: React + TypeScript (Vite)
+- Backend: Node.js + Express + TypeScript
+- Database: PostgreSQL via Prisma
+- Parsing: Cheerio + Playwright (browser rendering) + Claude API
+
+## Notes
+
+- The app is authentication-gated; each user's items and closets are private.
+- Live app: https://app.window-shopping.app
