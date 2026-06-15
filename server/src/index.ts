@@ -46,7 +46,8 @@ export function createApp() {
   app.use(
     cors({
       origin: isProduction ? process.env.FRONTEND_ORIGIN ?? false : true,
-      credentials: true
+      credentials: true,
+      exposedHeaders: ["X-Refreshed-Token"]
     })
   );
   app.use(cookieParser());
