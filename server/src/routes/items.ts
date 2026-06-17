@@ -163,7 +163,8 @@ router.post(
       res.json(parsed);
     } catch (error) {
       if (error instanceof ParserFetchError) {
-        throw new HttpError(502, error.message);
+        console.error("[items] product fetch failed:", error.message);
+        throw new HttpError(502, "Could not fetch the product page.");
       }
 
       throw error;
@@ -339,7 +340,8 @@ router.post(
       res.json(serializeItem(updated));
     } catch (error) {
       if (error instanceof ParserFetchError) {
-        throw new HttpError(502, error.message);
+        console.error("[items] product fetch failed:", error.message);
+        throw new HttpError(502, "Could not fetch the product page.");
       }
 
       throw error;

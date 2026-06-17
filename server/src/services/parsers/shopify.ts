@@ -1,4 +1,5 @@
 import type { ParsedProduct } from "../../../../shared/types";
+import { safeFetch } from "../../utils/safeFetch";
 
 // Any Shopify storefront exposes a product as JSON at `/products/<handle>.js`
 // (prices in cents, no auth, no anti-bot). This lets us skip HTML scraping and the
@@ -63,17 +64,16 @@ async function fetchJson(url: string): Promise<unknown | null> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
-    const response = await fetch(url, {
+    const result = await safeFetch(url, {
       headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
-      redirect: "follow",
       signal: controller.signal
     });
-    if (!response.ok) {
+    if (!result.ok) {
       return null;
     }
     // Shopify serves /products/<handle>.js as `text/javascript`, so don't gate on
     // content-type — parse the body and let shape validation reject non-JSON.
-    return JSON.parse(await response.text());
+    return JSON.parse(result.text);
   } catch {
     return null;
   } finally {
