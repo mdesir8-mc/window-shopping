@@ -5,6 +5,7 @@ import { extractUniqloProduct } from "./parsers/uniqlo";
 import { extractAmazonProduct } from "./parsers/amazon";
 import { extractCarharttProduct } from "./parsers/carhartt";
 import { fetchShopifyProduct } from "./parsers/shopify";
+import { safeFetch } from "../utils/safeFetch";
 
 export class ParserFetchError extends Error {}
 export type HtmlFetcher = (url: string) => Promise<string>;
@@ -351,19 +352,22 @@ function extractTitleFallback(title: string | null) {
 async function fetchRawHtml(url: string): Promise<string> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), RAW_FETCH_TIMEOUT_MS);
-  let response: Response;
-
   try {
-    response = await fetch(url, {
+    const result = await safeFetch(url, {
       headers: {
         "User-Agent": BROWSER_USER_AGENT,
         Accept:
           "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.9"
       },
-      redirect: "follow",
       signal: controller.signal
     });
+
+    if (!result.ok) {
+      throw new Error(`Request failed with status ${result.status}`);
+    }
+
+    return result.text;
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
       throw new Error(`Request timed out after ${RAW_FETCH_TIMEOUT_MS}ms`);
@@ -373,12 +377,6 @@ async function fetchRawHtml(url: string): Promise<string> {
   } finally {
     clearTimeout(timeout);
   }
-
-  if (!response.ok) {
-    throw new Error(`Request failed with status ${response.status}`);
-  }
-
-  return response.text();
 }
 
 // Amazon is awkward to scrape without JS:

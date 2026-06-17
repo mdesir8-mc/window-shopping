@@ -1,4 +1,5 @@
 import { chromium, type Browser } from "playwright";
+import { validateSsrfSafeUrl } from "../utils/ssrf";
 
 let browser: Browser | null = null;
 let browserPromise: Promise<Browser> | null = null;
@@ -39,9 +40,19 @@ export async function fetchRenderedHtml(url: string): Promise<string> {
   const page = await instance.newPage();
 
   try {
-    await page.route("**/*", (route) => {
-      const type = route.request().resourceType();
-      if (["image", "font", "media", "stylesheet"].includes(type)) {
+    await page.route("**/*", async (route) => {
+      const request = route.request();
+      if (["image", "font", "media", "stylesheet"].includes(request.resourceType())) {
+        void route.abort();
+        return;
+      }
+
+      // Re-validate every request host (initial document, redirects, subresources)
+      // right before Chromium connects, so a redirect to an internal address can't
+      // slip past the one-time check on the original URL.
+      try {
+        await validateSsrfSafeUrl(request.url());
+      } catch {
         void route.abort();
         return;
       }
