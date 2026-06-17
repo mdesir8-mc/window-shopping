@@ -1,20 +1,21 @@
-import { Router, type Response } from "express";
+import { Router } from "express";
 import bcrypt from "bcrypt";
 import rateLimit from "express-rate-limit";
 import { OAuth2Client } from "google-auth-library";
 import { prisma } from "../lib/prisma";
 import { asyncHandler, HttpError } from "../utils/http";
 import { signAuthToken } from "../utils/jwt";
+import { setAuthCookie, clearAuthCookie } from "../utils/authCookie";
 import { serializeAuthUser } from "../utils/serializers";
 import { requireString } from "../utils/validation";
 import { generateResetToken, hashResetToken } from "../utils/passwordReset";
 import { sendEmail, getAppBaseUrl, EmailSendError } from "../services/email";
 import { passwordResetEmail } from "../services/email-templates";
+import { requireAuth } from "../middleware/auth";
+import type { AuthenticatedRequest } from "../types";
 
 const router = Router();
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-const AUTH_COOKIE_NAME = "auth_token";
-const AUTH_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000;
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -26,23 +27,6 @@ const authLimiter = rateLimit({
   // single per-IP budget (which makes test outcomes order-dependent).
   skip: () => process.env.NODE_ENV === "test"
 });
-
-function setAuthCookie(res: Response, token: string) {
-  res.cookie(AUTH_COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: AUTH_COOKIE_MAX_AGE
-  });
-}
-
-function clearAuthCookie(res: Response) {
-  res.clearCookie(AUTH_COOKIE_NAME, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict"
-  });
-}
 
 router.post(
   "/register",
@@ -132,7 +116,7 @@ router.post(
     try {
       const ticket = await googleClient.verifyIdToken({
         idToken: credential,
-        audience: process.env.GOOGLE_CLIENT_ID
+        audience: [process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_IOS_CLIENT_ID].filter(Boolean) as string[]
       });
       payload = ticket.getPayload();
     } catch {
@@ -255,5 +239,21 @@ router.post("/logout", (_req, res) => {
   clearAuthCookie(res);
   res.json({ ok: true });
 });
+
+// Global sign-out: bump sessionsValidAfter so every token issued before now (on any
+// device, including this one) is rejected by requireAuth on its next request.
+router.post(
+  "/logout-all",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const { user } = req as AuthenticatedRequest;
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { sessionsValidAfter: new Date() }
+    });
+    clearAuthCookie(res);
+    res.json({ ok: true });
+  })
+);
 
 export default router;

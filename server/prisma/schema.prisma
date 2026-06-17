@@ -17,6 +17,7 @@ model User {
   avatarUrl String?
   plan      String   @default("free")
   emailNotifications Boolean @default(true)
+  sessionsValidAfter DateTime?
   createdAt DateTime @default(now())
   closets   Closet[]
   tags      Tag[]
