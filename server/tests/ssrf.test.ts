@@ -43,6 +43,13 @@ describe("resolveSafeUrl", () => {
     await expect(resolveSafeUrl("https://evil.test/")).rejects.toThrow(/disallowed/i);
   });
 
+  it("blocks IPv6 unspecified (::) and expanded loopback (0:0:0:0:0:0:0:1)", async () => {
+    resolvesTo("::", 6);
+    await expect(resolveSafeUrl("https://evil.test/")).rejects.toThrow(/disallowed/i);
+    resolvesTo("0:0:0:0:0:0:0:1", 6);
+    await expect(resolveSafeUrl("https://evil.test/")).rejects.toThrow(/disallowed/i);
+  });
+
   it("rejects non-http(s) schemes without resolving", async () => {
     await expect(resolveSafeUrl("file:///etc/passwd")).rejects.toThrow();
     await expect(resolveSafeUrl("gopher://x/")).rejects.toThrow();
