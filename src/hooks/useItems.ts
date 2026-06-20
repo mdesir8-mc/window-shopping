@@ -26,6 +26,14 @@ function itemMatchesFilters(item: Item, filters: ItemFilters) {
     return false;
   }
 
+  if (filters.onSale !== undefined && item.onSale !== filters.onSale) {
+    return false;
+  }
+
+  if (filters.inStock !== undefined && item.inStock !== filters.inStock) {
+    return false;
+  }
+
   if (filters.search) {
     const haystack = [item.brand, item.name, item.description ?? "", item.tags.join(" ")]
       .join(" ")

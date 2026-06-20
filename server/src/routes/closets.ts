@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from "../lib/prisma";
 import type { AuthenticatedRequest } from "../types";
 import { asyncHandler, HttpError } from "../utils/http";
+import { parseExportFormat, sendItemsExport } from "../utils/itemExport";
 import { serializeCloset, serializeSection } from "../utils/serializers";
 import { optionalInteger, optionalString, optionalStringArray, requireString } from "../utils/validation";
 
@@ -109,6 +110,48 @@ router.post(
     });
 
     res.status(201).json(serializeCloset(closet));
+  })
+);
+
+router.get(
+  "/:id/export",
+  asyncHandler(async (req, res) => {
+    const request = req as AuthenticatedRequest;
+    const closetId = requireString(req.params.id, "id");
+    const format = parseExportFormat(req.query.format);
+    const closet = await findOwnedCloset(request.user.id, closetId);
+
+    if (!closet) {
+      throw new HttpError(404, "Closet not found.");
+    }
+
+    const items = await prisma.item.findMany({
+      where: {
+        closetId: closet.id,
+        closet: {
+          userId: request.user.id
+        }
+      },
+      include: {
+        closet: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        section: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      },
+      orderBy: {
+        addedAt: "desc"
+      }
+    });
+
+    sendItemsExport(res, items, format, closet.name);
   })
 );
 

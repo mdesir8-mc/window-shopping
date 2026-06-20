@@ -24,6 +24,14 @@ function toSearchParams(filters: ItemFilters) {
     params.set("sort", filters.sort);
   }
 
+  if (filters.onSale !== undefined) {
+    params.set("onSale", String(filters.onSale));
+  }
+
+  if (filters.inStock !== undefined) {
+    params.set("inStock", String(filters.inStock));
+  }
+
   if (filters.tags?.length) {
     params.set("tags", filters.tags.join(","));
   }
