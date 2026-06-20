@@ -159,6 +159,30 @@ export default function ItemDrawer({
               </div>
             ) : null}
 
+            {item.note ? (
+              <div
+                style={{
+                  marginTop: 18,
+                  padding: "14px 0",
+                  borderTop: "1px solid var(--ws-hairline)",
+                  borderBottom: "1px solid var(--ws-hairline)"
+                }}
+              >
+                <Eyebrow style={{ marginBottom: 8 }}>Note</Eyebrow>
+                <div
+                  style={{
+                    fontFamily: "var(--ws-ui)",
+                    fontSize: 14,
+                    lineHeight: 1.6,
+                    color: "var(--ws-muted)",
+                    whiteSpace: "pre-wrap"
+                  }}
+                >
+                  {item.note}
+                </div>
+              </div>
+            ) : null}
+
             {refreshableUrl ? (
               <div
                 style={{

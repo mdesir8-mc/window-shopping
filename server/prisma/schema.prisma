@@ -100,6 +100,7 @@ model Item {
   tags          String[]
   colors        String[]
   description   String?
+  note          String?
   imageUrl      String?
   favorited     Boolean  @default(false)
   lastCheckedAt DateTime?

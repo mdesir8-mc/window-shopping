@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma";
 import { parseProductPage, ParserFetchError } from "../services/parser";
 import type { AuthenticatedRequest } from "../types";
 import { asyncHandler, HttpError } from "../utils/http";
+import { parseExportFormat, sendItemsExport } from "../utils/itemExport";
 import { serializeItem } from "../utils/serializers";
 import { validateSsrfSafeUrl } from "../utils/ssrf";
 import { refreshItemRecord, refreshStaleItemsForUser } from "../services/refresh";
@@ -35,6 +36,36 @@ const bulkRefreshLimiter = rateLimit({
   // per-IP budget (which makes test outcomes order-dependent).
   skip: () => process.env.NODE_ENV === "test"
 });
+
+const exportLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many exports. Try again in a few minutes." },
+  skip: () => process.env.NODE_ENV === "test"
+});
+
+function optionalQueryBoolean(value: unknown) {
+  if (value === "true") {
+    return true;
+  }
+
+  if (value === "false") {
+    return false;
+  }
+
+  return undefined;
+}
+
+function parsePriceToNumber(value?: string | null) {
+  if (!value) {
+    return 0;
+  }
+
+  const numeric = Number(value.replace(/[^0-9.]/g, ""));
+  return Number.isFinite(numeric) ? numeric : 0;
+}
 
 async function findOwnedItem(userId: string, itemId: string) {
   return prisma.item.findFirst({
@@ -100,10 +131,13 @@ router.get(
     const season = typeof req.query.season === "string" ? req.query.season : undefined;
     const search = typeof req.query.search === "string" ? req.query.search.trim().toLowerCase() : "";
     const sort = typeof req.query.sort === "string" ? req.query.sort : "newest";
+    const onSale = optionalQueryBoolean(req.query.onSale);
+    const inStock = optionalQueryBoolean(req.query.inStock);
     const tags =
       typeof req.query.tags === "string"
         ? req.query.tags.split(",").map((entry) => entry.trim()).filter(Boolean)
         : [];
+    const priceSort = sort === "price-asc" || sort === "price-desc";
 
     const items = await prisma.item.findMany({
       where: {
@@ -113,6 +147,8 @@ router.get(
         ...(closetId ? { closetId } : {}),
         ...(sectionId ? { sectionId } : {}),
         ...(season ? { season } : {}),
+        ...(onSale !== undefined ? { onSale } : {}),
+        ...(inStock !== undefined ? { inStock } : {}),
         ...(tags.length > 0 ? { tags: { hasSome: tags } } : {}),
         ...(search
           ? {
@@ -140,14 +176,28 @@ router.get(
         }
       },
       orderBy:
-        sort === "oldest"
+        priceSort
+          ? { addedAt: "desc" }
+          : sort === "oldest"
           ? { addedAt: "asc" }
           : sort === "updated"
             ? { updatedAt: "desc" }
             : { addedAt: "desc" }
     });
 
-    res.json(items.map(serializeItem));
+    const sortedItems = priceSort
+      ? items.slice().sort((left, right) => {
+          const delta = parsePriceToNumber(left.price) - parsePriceToNumber(right.price);
+
+          if (delta === 0) {
+            return right.addedAt.getTime() - left.addedAt.getTime();
+          }
+
+          return sort === "price-asc" ? delta : -delta;
+        })
+      : items;
+
+    res.json(sortedItems.map(serializeItem));
   })
 );
 
@@ -200,6 +250,7 @@ router.post(
         tags: optionalStringArray(req.body?.tags, "tags") ?? [],
         colors: optionalStringArray(req.body?.colors, "colors") ?? [],
         description: optionalString(req.body?.description),
+        note: optionalString(req.body?.note),
         imageUrl: optionalString(req.body?.imageUrl),
         favorited: optionalBoolean(req.body?.favorited, "favorited") ?? false,
         lastCheckedAt: optionalString(req.body?.url) ? new Date() : null,
@@ -222,6 +273,41 @@ router.post(
     });
 
     res.status(201).json(serializeItem(item));
+  })
+);
+
+router.get(
+  "/export",
+  exportLimiter,
+  asyncHandler(async (req, res) => {
+    const request = req as AuthenticatedRequest;
+    const format = parseExportFormat(req.query.format);
+    const items = await prisma.item.findMany({
+      where: {
+        closet: {
+          userId: request.user.id
+        }
+      },
+      include: {
+        closet: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        section: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      },
+      orderBy: {
+        addedAt: "desc"
+      }
+    });
+
+    sendItemsExport(res, items, format, "wishlist");
   })
 );
 
@@ -278,6 +364,7 @@ router.patch(
         ...(req.body?.tags !== undefined ? { tags: optionalStringArray(req.body.tags, "tags") ?? [] } : {}),
         ...(req.body?.colors !== undefined ? { colors: optionalStringArray(req.body.colors, "colors") ?? [] } : {}),
         ...(req.body?.description !== undefined ? { description: optionalString(req.body.description) } : {}),
+        ...(req.body?.note !== undefined ? { note: optionalString(req.body.note) } : {}),
         ...(req.body?.imageUrl !== undefined ? { imageUrl: optionalString(req.body.imageUrl) } : {}),
         ...(req.body?.favorited !== undefined ? { favorited: optionalBoolean(req.body.favorited, "favorited") } : {}),
         ...(req.body?.inStock !== undefined ? { inStock: optionalNullableBoolean(req.body.inStock, "inStock") } : {})

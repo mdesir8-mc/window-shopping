@@ -63,6 +63,26 @@ describe("ssrfProxy", () => {
     expect(mockedResolve).not.toHaveBeenCalled(); // literal path must not hit DNS
   });
 
+  it("parses a bracketed IPv6 literal CONNECT and vets it directly (no DNS)", async () => {
+    mockedAssert.mockImplementation(() => {
+      throw new Error("disallowed");
+    });
+    const { status } = await connectVia("[2001:db8::1]:443");
+    expect(status).toBe(403);
+    expect(mockedAssert).toHaveBeenCalledWith("2001:db8::1", 6); // bracket stripped, port split off
+    expect(mockedResolve).not.toHaveBeenCalled();
+  });
+
+  it("handles a bracketed IPv6 literal with no port", async () => {
+    mockedAssert.mockImplementation(() => {
+      throw new Error("disallowed");
+    });
+    const { status } = await connectVia("[::1]");
+    expect(status).toBe(403);
+    expect(mockedAssert).toHaveBeenCalledWith("::1", 6);
+    expect(mockedResolve).not.toHaveBeenCalled();
+  });
+
   it("pins an allowed CONNECT to the vetted IP returned by resolveSafeHost", async () => {
     // Stand up a throwaway upstream on loopback and have the (mocked) resolver point at it,
     // so we can confirm the proxy dials the address it was told to — not the hostname.

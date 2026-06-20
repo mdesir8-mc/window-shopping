@@ -79,6 +79,7 @@ export interface Item {
   tags: string[];
   colors: string[];
   description: string | null;
+  note: string | null;
   imageUrl: string | null;
   favorited: boolean;
   lastCheckedAt: string | null;
@@ -104,7 +105,9 @@ export interface ItemFilters {
   sectionId?: string | null;
   season?: string | null;
   search?: string;
-  sort?: "newest" | "oldest" | "updated";
+  sort?: "newest" | "oldest" | "updated" | "price-asc" | "price-desc";
+  onSale?: boolean;
+  inStock?: boolean;
   tags?: string[];
 }
 
@@ -144,6 +147,7 @@ export interface ItemPayload {
   tags?: string[];
   colors?: string[];
   description?: string | null;
+  note?: string | null;
   imageUrl?: string | null;
   favorited?: boolean;
   inStock?: boolean | null;
