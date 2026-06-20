@@ -1,4 +1,5 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { prisma } from "../lib/prisma";
 import type { AuthenticatedRequest } from "../types";
 import { asyncHandler, HttpError } from "../utils/http";
@@ -7,6 +8,15 @@ import { serializeCloset, serializeSection } from "../utils/serializers";
 import { optionalInteger, optionalString, optionalStringArray, requireString } from "../utils/validation";
 
 const router = Router();
+
+const exportLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many exports. Try again in a few minutes." },
+  skip: () => process.env.NODE_ENV === "test"
+});
 
 async function findOwnedCloset(userId: string, closetId: string) {
   return prisma.closet.findFirst({
@@ -115,6 +125,7 @@ router.post(
 
 router.get(
   "/:id/export",
+  exportLimiter,
   asyncHandler(async (req, res) => {
     const request = req as AuthenticatedRequest;
     const closetId = requireString(req.params.id, "id");

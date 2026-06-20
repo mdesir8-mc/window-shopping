@@ -73,9 +73,13 @@ function toCsv(items: SerializedExportItem[]) {
   ].join("\n");
 }
 
-function csvCell(value: string | number | boolean | null | undefined) {
+export function csvCell(value: string | number | boolean | null | undefined) {
   const raw = value === null || value === undefined ? "" : String(value);
-  const escaped = raw.replace(/"/g, "\"\"");
+  // Neutralize CSV formula injection: a string field (e.g. a scraped product name) starting
+  // with a formula trigger is forced to text with a leading apostrophe. Numbers/booleans from
+  // the app are trusted and left untouched so legit values (negative prices) aren't mangled.
+  const guarded = typeof value === "string" && /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
+  const escaped = guarded.replace(/"/g, "\"\"");
 
   return /[",\n\r]/.test(escaped) ? `"${escaped}"` : escaped;
 }

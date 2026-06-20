@@ -25,7 +25,20 @@ async function vetTarget(host: string): Promise<{ address: string; family: 4 | 6
 }
 
 function handleConnect(req: http.IncomingMessage, clientSocket: net.Socket, head: Buffer): void {
-  const [host, portRaw] = (req.url ?? "").split(":");
+  // CONNECT target is host:port. Bracket-aware so IPv6 literals ([::1]:443) parse correctly
+  // instead of collapsing to a bogus host.
+  const raw = req.url ?? "";
+  let host: string;
+  let portRaw: string | undefined;
+  if (raw.startsWith("[")) {
+    const end = raw.indexOf("]");
+    host = raw.slice(1, end);
+    portRaw = raw.slice(end + 2); // skip "]:"
+  } else {
+    const idx = raw.lastIndexOf(":");
+    host = idx === -1 ? raw : raw.slice(0, idx);
+    portRaw = idx === -1 ? undefined : raw.slice(idx + 1);
+  }
   const port = Number(portRaw) || 443;
 
   void (async () => {

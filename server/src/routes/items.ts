@@ -37,6 +37,15 @@ const bulkRefreshLimiter = rateLimit({
   skip: () => process.env.NODE_ENV === "test"
 });
 
+const exportLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many exports. Try again in a few minutes." },
+  skip: () => process.env.NODE_ENV === "test"
+});
+
 function optionalQueryBoolean(value: unknown) {
   if (value === "true") {
     return true;
@@ -269,6 +278,7 @@ router.post(
 
 router.get(
   "/export",
+  exportLimiter,
   asyncHandler(async (req, res) => {
     const request = req as AuthenticatedRequest;
     const format = parseExportFormat(req.query.format);
