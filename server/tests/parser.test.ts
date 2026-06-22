@@ -295,6 +295,24 @@ describe("parseProductPage", () => {
     expect(product.name).toBe("Pleated Trouser");
     expect(product.price).toBe("850");
     expect(product.imageUrl).toBe("https://cdn.example.com/trouser.jpg");
+    expect(product.enrichmentSuccess).toBe(true);
+  });
+
+  it("flags enrichmentSuccess false when enrichment leaves a gap", async () => {
+    const aiEnricher: AiEnricher = vi.fn().mockResolvedValue({
+      name: "Pleated Trouser",
+      imageUrl: "https://cdn.example.com/trouser.jpg"
+      // no price → result stays incomplete
+    });
+
+    const product = await parseProductPage("https://shop.example.com/trouser", {
+      fetcher: htmlFetcher("<html><head></head><body></body></html>"),
+      aiEnricher
+    });
+
+    expect(aiEnricher).toHaveBeenCalledOnce();
+    expect(product.price).toBeNull();
+    expect(product.enrichmentSuccess).toBe(false);
   });
 
   it("skips AI enrichment when name, price, and image are all present", async () => {
@@ -317,6 +335,7 @@ describe("parseProductPage", () => {
 
     expect(aiEnricher).not.toHaveBeenCalled();
     expect(product.name).toBe("Leather Bag");
+    expect(product.enrichmentSuccess).toBeNull();
   });
 
   it("swallows AI enrichment failures and returns the cheerio result", async () => {
@@ -336,6 +355,7 @@ describe("parseProductPage", () => {
     expect(product.brand).toBe("Toteme");
     expect(product.name).toBe("Bias Cut Skirt");
     expect(product.price).toBeNull();
+    expect(product.enrichmentSuccess).toBe(false);
   });
 
   it("does not overwrite cheerio fields when AI fills remaining gaps", async () => {

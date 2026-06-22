@@ -627,6 +627,7 @@ describeDb("API integration", () => {
       colors: [],
       suggestedTags: [],
       suggestedSeason: null,
+      enrichmentSuccess: null,
       source: "shop.example.com"
     });
 
@@ -741,6 +742,7 @@ describeDb("API integration", () => {
       colors: [],
       suggestedTags: [],
       suggestedSeason: null,
+      enrichmentSuccess: null,
       source: "shop.example.com"
     });
 
@@ -801,6 +803,7 @@ describeDb("API integration", () => {
       colors: [],
       suggestedTags: [],
       suggestedSeason: null,
+      enrichmentSuccess: null,
       source: "shop.example.com"
     });
   }

@@ -117,7 +117,8 @@ export default function AddItemFlow({
       colors: [],
       suggestedTags: [],
       suggestedSeason: null,
-      source
+      source,
+      enrichmentSuccess: null
     });
     setSelectedTags([]);
     setSeason(selectedCloset?.season ?? "");
@@ -420,6 +421,22 @@ export default function AddItemFlow({
             >
               ✓ PARSED
             </div>
+
+            {parsed.enrichmentSuccess === false ? (
+              <div
+                style={{
+                  marginBottom: 12,
+                  padding: "10px 12px",
+                  border: "1px solid var(--ws-accent)",
+                  background: "var(--ws-surface)",
+                  fontFamily: "var(--ws-ui)",
+                  fontSize: 12,
+                  color: "var(--ws-accent)"
+                }}
+              >
+                We couldn&apos;t fully read this page — double-check the price and details below.
+              </div>
+            ) : null}
 
             <div style={{ display: "flex", gap: 14, padding: 12, border: "1px solid var(--ws-hairline)", alignItems: "flex-start" }}>
               <ProductTile
