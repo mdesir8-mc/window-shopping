@@ -513,7 +513,9 @@ function mergePartial(base: ParsedProduct, extra: Partial<ParsedProduct>): Parse
     colors: base.colors.length > 0 ? base.colors : extra.colors ?? [],
     suggestedTags: base.suggestedTags,
     suggestedSeason: base.suggestedSeason,
-    source: base.source
+    source: base.source,
+    // Pass through; parseProductPage overwrites this with the post-merge completeness.
+    enrichmentSuccess: base.enrichmentSuccess
   };
 }
 
@@ -624,7 +626,8 @@ export async function parseProductPage(
     colors,
     suggestedTags: inferTags(textForInference),
     suggestedSeason: inferSeason(textForInference),
-    source: url.hostname.replace(/^www\./, "")
+    source: url.hostname.replace(/^www\./, ""),
+    enrichmentSuccess: null
   };
 
   if (!isComplete(result)) {
@@ -632,10 +635,14 @@ export async function parseProductPage(
     try {
       const extra = await enricher(html, result);
       result = mergePartial(result, extra);
+      // The enricher (incl. claudeEnrich) swallows its own errors and returns {} on
+      // failure, so a still-incomplete result here means enrichment did not deliver.
+      result.enrichmentSuccess = isComplete(result);
     } catch {
-      // Swallow optional enrichment failures and return the parser result.
+      // Enricher threw outright: keep the parser result but flag the gap.
+      result.enrichmentSuccess = false;
     }
-  };
+  }
 
   return result;
 }

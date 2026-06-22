@@ -11,6 +11,10 @@ export interface ParsedProduct {
   suggestedTags: string[];
   suggestedSeason: string | null;
   source: string;
+  // null = enrichment not attempted (cheerio parse was already complete) or manual entry;
+  // true = AI enrichment ran and completed the result; false = enrichment ran but the
+  // result is still incomplete (missing name/price/image) or the enricher threw.
+  enrichmentSuccess: boolean | null;
 }
 
 export interface User {

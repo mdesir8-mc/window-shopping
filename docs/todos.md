@@ -5,6 +5,12 @@ bottom of each section; check things off as they ship.
 
 ## Fixes
 
+- [x] **Surface parser enrichment failures to frontend** — added tri-state
+  `enrichmentSuccess` (`boolean | null`) to `ParsedProduct`: `null` = parse complete /
+  manual entry, `true` = AI enrichment filled the gaps, `false` = enrichment ran but the
+  result is still incomplete or the enricher threw. Set in `parseProductPage`
+  (`server/src/services/parser.ts`), passed through `mergePartial`. AddItemFlow preview
+  shows a "couldn't fully read this page" warning when the flag is `false`.
 - [ ] **Daily refresh email cron not firing on Railway** — the Railway Cron job
   running `npm run job:refresh` isn't triggering reliably; investigate Railway Cron
   config, job logs, and whether the service is being reached correctly.
