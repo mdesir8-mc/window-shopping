@@ -28,6 +28,14 @@ bottom of each section; check things off as they ship.
   assertions pass without live DNS. Fix on `claude/fix-refresh-tests`.
 - [x] **Verify Google sign-in renders in production** — after the Dockerfile
   build-arg fix deploys, load `/login` on the live site and complete a sign-in.
+- [ ] **Clear residual `undici` HIGH advisory (dev/CI only)** — `npm audit` flags
+  `undici 6.26.0` (GHSA-vxpw-j846-p89q WebSocket-DoS + GHSA-p88m-4jfj-68fv header
+  injection) via `npm@11 → node-gyp@12 → undici`, bundled inside the npm CLI that
+  `@semantic-release/npm` vendors. Not runtime-exploitable (app runtime pins the safe
+  `undici@7.28`; the WS-DoS path isn't reached by node-gyp) and not `overrides`-fixable
+  (bundledDependencies). Clears when npm ships a node-gyp bundling `undici ≥6.27`; bump
+  npm/@semantic-release/npm then. Also tracking the related `esbuild` LOW (vite→esbuild,
+  Windows dev-server only). Watch item, not urgent.
 
 ## Features
 
