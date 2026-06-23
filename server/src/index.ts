@@ -29,6 +29,12 @@ export function createApp() {
   const isProduction = process.env.NODE_ENV === "production";
   const publicDir = path.resolve(__dirname, "../../../public");
 
+  // Railway (and most PaaS) front the app with a single reverse proxy. Without
+  // this, req.ip is the proxy address for every caller, so all clients collapse
+  // into one bucket and the per-IP rate limiters (auth, parse, demo) stop being
+  // per-IP. Trust exactly one hop so req.ip reflects the real client.
+  app.set("trust proxy", 1);
+
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {

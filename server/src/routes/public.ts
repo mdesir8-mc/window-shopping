@@ -51,6 +51,9 @@ router.post(
     }
 
     const rawUrl = requireString(req.body?.url, "url");
+    if (rawUrl.length > 2048) {
+      throw new HttpError(400, "That URL is too long.");
+    }
     const safeUrl = await validateSsrfSafeUrl(rawUrl);
 
     try {
