@@ -521,7 +521,7 @@ function mergePartial(base: ParsedProduct, extra: Partial<ParsedProduct>): Parse
 
 export async function parseProductPage(
   rawUrl: string,
-  options?: { fetcher?: HtmlFetcher; aiEnricher?: AiEnricher }
+  options?: { fetcher?: HtmlFetcher; aiEnricher?: AiEnricher; demoMode?: boolean }
 ): Promise<ParsedProduct> {
   const url = normalizeUrl(rawUrl);
   let html: string;
@@ -630,7 +630,10 @@ export async function parseProductPage(
     enrichmentSuccess: null
   };
 
-  if (!isComplete(result)) {
+  // demoMode (public landing-page preview) skips AI enrichment entirely so the
+  // unauthenticated path never spends Claude $; an incomplete cheerio result is
+  // returned as-is with enrichmentSuccess left null.
+  if (!isComplete(result) && !options?.demoMode) {
     const enricher = options?.aiEnricher ?? claudeEnrich;
     try {
       const extra = await enricher(html, result);

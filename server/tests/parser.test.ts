@@ -298,6 +298,22 @@ describe("parseProductPage", () => {
     expect(product.enrichmentSuccess).toBe(true);
   });
 
+  it("skips AI enrichment in demoMode even when the result is incomplete", async () => {
+    const aiEnricher: AiEnricher = vi.fn().mockResolvedValue({
+      name: "Should Not Be Used",
+      price: "999"
+    });
+
+    const product = await parseProductPage("https://shop.example.com/trouser", {
+      fetcher: htmlFetcher("<html><head></head><body></body></html>"),
+      aiEnricher,
+      demoMode: true
+    });
+
+    expect(aiEnricher).not.toHaveBeenCalled();
+    expect(product.enrichmentSuccess).toBeNull();
+  });
+
   it("flags enrichmentSuccess false when enrichment leaves a gap", async () => {
     const aiEnricher: AiEnricher = vi.fn().mockResolvedValue({
       name: "Pleated Trouser",

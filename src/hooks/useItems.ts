@@ -7,6 +7,7 @@ import {
   listItems,
   moveItem,
   parseUrl,
+  parseUrlPublic,
   patchItem,
   refreshItem,
   refreshStaleItems
@@ -83,6 +84,12 @@ export function useItem(id?: string) {
 export function useParseUrl() {
   return useMutation({
     mutationFn: parseUrl
+  });
+}
+
+export function useParseUrlPublic() {
+  return useMutation({
+    mutationFn: parseUrlPublic
   });
 }
 

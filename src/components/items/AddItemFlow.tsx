@@ -2,13 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import Modal from "../ui/Modal";
 import Eyebrow from "../ui/Eyebrow";
 import Display from "../ui/Display";
-import ProductTile from "../ui/ProductTile";
+import ProductPreviewCard from "./ProductPreviewCard";
 import Tag from "../ui/Tag";
 import { useClosets } from "../../hooks/useClosets";
 import { useCreateItem, useParseUrl } from "../../hooks/useItems";
 import { useTags } from "../../hooks/useTags";
 import { SEASONS } from "../../constants";
-import { hashTone } from "../../lib/format";
 import type { ParsedProduct } from "../../types";
 import { useIsMobile } from "../../hooks/useMediaQuery";
 
@@ -438,32 +437,7 @@ export default function AddItemFlow({
               </div>
             ) : null}
 
-            <div style={{ display: "flex", gap: 14, padding: 12, border: "1px solid var(--ws-hairline)", alignItems: "flex-start" }}>
-              <ProductTile
-                tone={hashTone(url)}
-                imageUrl={parsed.imageUrl}
-                size={isMobile ? 72 : 88}
-                rounded={2}
-              />
-              <div style={{ flex: 1 }}>
-                <div
-                  style={{
-                    fontFamily: "var(--ws-display)",
-                    fontSize: 12,
-                    fontStyle: "italic",
-                    color: "var(--ws-accent)"
-                  }}
-                >
-                  {parsed.brand ?? parsed.source}
-                </div>
-                <div style={{ marginTop: 2, fontFamily: "var(--ws-display)", fontSize: 18, fontWeight: 300 }}>
-                  {parsed.name ?? "Untitled product"}
-                </div>
-                <div style={{ marginTop: 6, fontFamily: "var(--ws-mono)", fontSize: 11 }}>
-                  {[parsed.price, parsed.currency].filter(Boolean).join(" ") || "Price unavailable"}
-                </div>
-              </div>
-            </div>
+            <ProductPreviewCard parsed={parsed} url={url} isMobile={isMobile} />
 
             <div style={{ display: "grid", gap: 18, marginTop: 22 }}>
               <label style={{ display: "grid", gap: 8 }}>

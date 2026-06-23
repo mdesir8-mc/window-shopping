@@ -10,6 +10,7 @@ import userRoutes from "./routes/user";
 import closetRoutes from "./routes/closets";
 import itemRoutes from "./routes/items";
 import tagRoutes from "./routes/tags";
+import publicRoutes from "./routes/public";
 import { closeBrowser, launchBrowser } from "./services/browser";
 import { errorHandler, HttpError } from "./utils/http";
 import { requireAuth } from "./middleware/auth";
@@ -66,6 +67,7 @@ export function createApp() {
   app.use("/api/closets", requireAuth, closetRoutes);
   app.use("/api/items", requireAuth, itemRoutes);
   app.use("/api/tags", requireAuth, tagRoutes);
+  app.use("/api/public", publicRoutes);
 
   app.use("/api", (_req, _res, next) => {
     next(new HttpError(404, "API route not found."));
