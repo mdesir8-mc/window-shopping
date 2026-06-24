@@ -98,6 +98,67 @@ bottom of each section; check things off as they ship.
   read-only. **Security surface — review carefully:** token must be unguessable, route
   must be rate-limited, and revoking the token must invalidate the link.
 
+- [ ] **Landing-page parse demo** — let visitors paste a URL and see it parsed before
+  signing up. Parse logic is already auth-independent: `parseProductPage` +
+  `validateSsrfSafeUrl` in `POST /api/items/parse-url` ([items.ts:204]), only blocked by
+  being mounted behind `requireAuth`. No model/migration/PII — read-only, nothing
+  persisted. **Security surface — review carefully:** unauth arbitrary-URL fetch open to
+  the internet (SSRF guard is the critical defense — reuse PR #53's hardened
+  `validateSsrfSafeUrl` + `safeFetch`, don't reimplement) and $ abuse (each parse runs a
+  headless browser + Claude enrichment). Mitigations baked into the plan below.
+
+  **Plan**
+
+  _Backend_
+  - `parseProductPage` ([server/src/services/parser.ts:522]) signature becomes
+    `options?: { fetcher?: HtmlFetcher; aiEnricher?: AiEnricher; demoMode?: boolean }`.
+    Gate the enrichment block by changing line 633 to `if (!isComplete(result) &&
+    !options?.demoMode)` — so in demo mode an *incomplete* cheerio result is returned as-is
+    with `enrichmentSuccess: null` and `claudeEnrich` is never reached. (Complete pages
+    already skip enrichment, so this only matters for incomplete ones.) No Claude call ⇒ no
+    $ on the public path. Authed `/api/items/parse-url` is unchanged (option absent).
+  - New router `server/src/routes/public.ts` with `POST /parse-url`: `requireString(url)`
+    → `validateSsrfSafeUrl(url)` → `parseProductPage(safe, { demoMode: true })`, same
+    `ParserFetchError → 502` mapping as the authed route. No auth, no DB.
+  - **SSRF (reuse, do not reimplement):** all three fetch paths inside `parseProductPage`
+    are already hardened by PR #53 — `fetchRawHtml`/`fetchAmazonHtml` go through `safeFetch`
+    (DNS-pinned to the vetted IP), and `fetchRenderedHtml` (Playwright) routes through the
+    localhost SSRF-pinning proxy + re-validates every redirect target
+    ([browser.ts:66]). The route just calls `validateSsrfSafeUrl` up front like the authed
+    route; no new guard code.
+  - **Stricter** rate limit: `demoParseLimiter` = `windowMs 60s, max 3` per IP (vs the
+    authed `parseLimiter` 10/min), `skip` under `NODE_ENV==="test"`. Plus a module-level
+    **global daily cap** (in-memory counter, resets on UTC day rollover) → `429` when
+    exceeded; covers the distributed-IP abuse the per-IP limiter misses. Threshold is a
+    module constant so tests can set it low — **caveat:** in-memory ⇒ per-process, resets on
+    restart and is not shared across instances; adequate for the current single-instance
+    Railway deploy, would need Redis if scaled horizontally.
+  - Mount in [server/src/index.ts:69] as `app.use("/api/public", publicRoutes)` —
+    **before** the `/api` 404 catch-all (line 70) and **outside** `requireAuth`.
+  - Tests (`server/tests/`, vitest, mirror `api.test.ts`): (a) public parse returns a
+    product via injected `fetcher` mock; (b) SSRF-blocked URL → rejected/4xx; (c) demoMode
+    skips enrichment — pass a spy `aiEnricher` and assert it is never called on an
+    incomplete page; (d) global daily cap → 429 by driving requests past a low injected
+    threshold (not the real default, to keep the test deterministic).
+
+  _Frontend (api + hook)_
+  - `src/api/items.ts`: add `parseUrlPublic(url)` → `POST /api/public/parse-url` (reuses
+    `apiClient`; works unauth). Hook `useParseUrlPublic()` in `src/hooks/useItems.ts`
+    mirroring `useParseUrl` (line 83).
+
+  _UI_
+  - Extract the preview card markup from `AddItemFlow` ([AddItemFlow.tsx:441]) into a
+    shared `src/components/items/ProductPreviewCard.tsx` (ProductTile + brand/name/price);
+    refactor `AddItemFlow` to consume it (surgical, no behavior change).
+  - New `src/components/items/LandingParseDemo.tsx`: URL input + "Try it" button →
+    `useParseUrlPublic` → states idle / loading / preview / error. Preview renders
+    `ProductPreviewCard` + a "Sign up to save this" CTA (`<Link to="/register">`). On fetch
+    failure show an inline "couldn't reach that page" message (no enrichment warning — demo
+    is always `enrichmentSuccess: null`). Carry over `AddItemFlow`'s `"Untitled product"`
+    name fallback ([AddItemFlow.tsx:460]) so a nameless parse still renders.
+  - Embed `LandingParseDemo` on `src/pages/Landing.tsx` (hero section, above "How it
+    works"). Login page reuse optional/skipped to keep scope tight.
+
 ## iOS App (Expo / React Native)
 
 Build the iOS app reusing the existing API + data layer. **Phases are ordered — do

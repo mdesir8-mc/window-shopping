@@ -55,6 +55,12 @@ export async function parseUrl(url: string) {
   return response.data;
 }
 
+// Unauthenticated landing-page demo parse — skips AI enrichment server-side.
+export async function parseUrlPublic(url: string) {
+  const response = await apiClient.post<ParsedProduct>("/api/public/parse-url", { url });
+  return response.data;
+}
+
 export async function createItem(payload: ItemPayload) {
   const response = await apiClient.post<Item>("/api/items", payload);
   return response.data;
