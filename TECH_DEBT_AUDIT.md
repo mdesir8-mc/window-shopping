@@ -1,5 +1,6 @@
 # Tech Debt Audit — window-shopping
-Generated: 2026-06-22 · Branch: claude/mobile-infra · ~11.3k LOC (src + server/src + shared)
+**First written:** 2026-06-22 · **Last updated:** 2026-06-27
+Branch: claude/mobile-infra · ~11.3k LOC (src + server/src + shared)
 Rerun: 2026-06-27 — re-verified; no code changed since first run. Owner decisions folded in: **keep committing `server/public/`** (fix staleness via `emptyOutDir: true`, not gitignore); F008 narrowed to pure-logic tests in the existing server harness. Remediation underway on `claude/tech-debt-cleanup`.
 
 ## Implementation update (2026-06-27, post-remediation)
