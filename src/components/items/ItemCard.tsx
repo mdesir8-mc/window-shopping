@@ -2,22 +2,10 @@ import { useNavigate } from "react-router-dom";
 import type { Item } from "../../types";
 import ProductTile from "../ui/ProductTile";
 import Tag from "../ui/Tag";
-import { FRESHNESS_THRESHOLD_MS } from "../../constants";
+import { hasRefreshableUrl, isStale } from "../../../shared/staleness";
 import { formatRelativeDate, hashTone } from "../../lib/format";
 import { useRefreshItem } from "../../hooks/useItems";
 import { useAppShell } from "../layout/AppShell";
-
-function hasRefreshableUrl(url: string | null) {
-  return Boolean(url && /^https?:\/\//i.test(url));
-}
-
-function isStale(item: Item) {
-  if (!hasRefreshableUrl(item.url)) {
-    return false;
-  }
-
-  return !item.lastCheckedAt || Date.now() - new Date(item.lastCheckedAt).getTime() > FRESHNESS_THRESHOLD_MS;
-}
 
 export default function ItemCard({
   item,
@@ -28,7 +16,7 @@ export default function ItemCard({
   onClick: () => void;
   onEdit?: () => void;
 }) {
-  const stale = isStale(item);
+  const stale = isStale(item.lastCheckedAt, item.url);
   const navigate = useNavigate();
   const refreshMutation = useRefreshItem();
   const { showToast } = useAppShell();

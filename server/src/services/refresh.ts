@@ -5,14 +5,10 @@ import { parseProductPage, ParserFetchError } from "./parser";
 import { EmailSendError, getAppBaseUrl, sendEmail, type SendEmailResult } from "./email";
 import { priceDropEmail, type OutOfStockEntry, type PriceDropEntry } from "./email-templates";
 import { recordEmailLog } from "./email-log";
+import { FRESHNESS_THRESHOLD_MS } from "../../../shared/staleness";
+import { parsePriceToNumber } from "../../../shared/price";
 
-const FRESHNESS_THRESHOLD_MS = 24 * 60 * 60 * 1000;
 const BULK_REFRESH_LIMIT = 25;
-
-export function parsePriceToNumber(value?: string | null) {
-  const n = Number((value ?? "").replace(/[^0-9.]/g, ""));
-  return Number.isFinite(n) && n > 0 ? n : 0;
-}
 
 async function requireRefreshableUrl(value: string | null) {
   if (!value) {

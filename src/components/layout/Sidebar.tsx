@@ -6,16 +6,9 @@ import Eyebrow from "../ui/Eyebrow";
 import { hashTone } from "../../lib/format";
 import { useTags } from "../../hooks/useTags";
 import { useRefreshStaleItems } from "../../hooks/useItems";
-import { FRESHNESS_THRESHOLD_MS } from "../../constants";
+import { isStale } from "../../../shared/staleness";
 import { useAppShell } from "./AppShell";
 import { useIsMobile } from "../../hooks/useMediaQuery";
-
-function isStaleItem(item: Item) {
-  if (!/^https?:\/\//i.test(item.url ?? "")) {
-    return false;
-  }
-  return !item.lastCheckedAt || Date.now() - new Date(item.lastCheckedAt).getTime() > FRESHNESS_THRESHOLD_MS;
-}
 
 interface SidebarProps {
   closets: Closet[];
@@ -48,7 +41,7 @@ export default function Sidebar({
   const sidebarTags = tagsQuery.data ?? [];
   const { showToast } = useAppShell();
   const refreshStale = useRefreshStaleItems();
-  const staleCount = items.filter(isStaleItem).length;
+  const staleCount = items.filter((item) => isStale(item.lastCheckedAt, item.url)).length;
   const summary = refreshStale.data;
   const seasonCounts = items.reduce<Record<string, number>>((acc, item) => {
     acc[item.season] = (acc[item.season] ?? 0) + 1;

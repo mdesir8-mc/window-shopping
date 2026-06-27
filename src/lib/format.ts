@@ -46,14 +46,8 @@ export function greetingForHour(date: Date = new Date()) {
   return "Good evening";
 }
 
-export function parsePriceToNumber(value?: string | null) {
-  if (!value) {
-    return 0;
-  }
-
-  const numeric = Number(value.replace(/[^0-9.]/g, ""));
-  return Number.isFinite(numeric) ? numeric : 0;
-}
+// Re-exported from shared so web and server compute prices identically.
+export { parsePriceToNumber } from "../../shared/price";
 
 export function formatCompactCurrency(value: number) {
   return new Intl.NumberFormat(undefined, {
