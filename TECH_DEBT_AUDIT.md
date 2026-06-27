@@ -2,6 +2,16 @@
 Generated: 2026-06-22 · Branch: claude/mobile-infra · ~11.3k LOC (src + server/src + shared)
 Rerun: 2026-06-27 — re-verified; no code changed since first run. Owner decisions folded in: **keep committing `server/public/`** (fix staleness via `emptyOutDir: true`, not gitignore); F008 narrowed to pure-logic tests in the existing server harness. Remediation underway on `claude/tech-debt-cleanup`.
 
+## Implementation update (2026-06-27, post-remediation)
+
+Shipped on `claude/tech-debt-cleanup`: **F005/F006/F007** consolidated into `shared/staleness.ts` + `shared/price.ts` (with server-harness tests, partial **F008**), **F013** email validation, and the 3 stale bundles removed (part of **F001**).
+
+Corrections — these findings were **wrong** and were NOT actioned:
+- **F003 / F012 / F014 (prototypes + `api.js` "dead"):** false. `server/tests/frontend-bootstrap.test.ts` executes `server/public/data.jsx` — the prototypes are test-guarded and served as standalone statics, not orphans. The original check only looked at `src/` imports. Kept all of them.
+- **F001 `emptyOutDir: true`:** reverted. `server/public/` is a *mixed* dir (vite build output + the hand-maintained prototype statics), so wiping it on build would delete the prototypes/`api.js`. Left `emptyOutDir: false` (commented). Only the manual stale-bundle removal stands; true auto-clean needs build output separated from the statics — deferred.
+
+Still deferred: **F004, F010, F011, F009**, and the real **F001/F002** fix (separate build output from prototype statics).
+
 ## Executive summary
 
 Ranked by impact:
