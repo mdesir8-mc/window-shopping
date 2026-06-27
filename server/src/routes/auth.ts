@@ -7,7 +7,7 @@ import { asyncHandler, HttpError } from "../utils/http";
 import { signAuthToken } from "../utils/jwt";
 import { setAuthCookie, clearAuthCookie } from "../utils/authCookie";
 import { serializeAuthUser } from "../utils/serializers";
-import { requireString } from "../utils/validation";
+import { requireEmail, requireString } from "../utils/validation";
 import { generateResetToken, hashResetToken } from "../utils/passwordReset";
 import { sendEmail, getAppBaseUrl, EmailSendError } from "../services/email";
 import { passwordResetEmail } from "../services/email-templates";
@@ -32,7 +32,7 @@ router.post(
   "/register",
   authLimiter,
   asyncHandler(async (req, res) => {
-    const email = requireString(req.body?.email, "email").toLowerCase();
+    const email = requireEmail(req.body?.email, "email").toLowerCase();
     const name = requireString(req.body?.name, "name");
     const password = requireString(req.body?.password, "password");
 

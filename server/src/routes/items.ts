@@ -7,6 +7,7 @@ import { asyncHandler, HttpError } from "../utils/http";
 import { parseExportFormat, sendItemsExport } from "../utils/itemExport";
 import { serializeItem } from "../utils/serializers";
 import { validateSsrfSafeUrl } from "../utils/ssrf";
+import { parsePriceToNumber } from "../../../shared/price";
 import { refreshItemRecord, refreshStaleItemsForUser } from "../services/refresh";
 import {
   optionalBoolean,
@@ -56,15 +57,6 @@ function optionalQueryBoolean(value: unknown) {
   }
 
   return undefined;
-}
-
-function parsePriceToNumber(value?: string | null) {
-  if (!value) {
-    return 0;
-  }
-
-  const numeric = Number(value.replace(/[^0-9.]/g, ""));
-  return Number.isFinite(numeric) ? numeric : 0;
 }
 
 async function findOwnedItem(userId: string, itemId: string) {

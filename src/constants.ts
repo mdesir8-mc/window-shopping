@@ -1,7 +1,5 @@
 export const SEASONS = ["Spring", "Summer", "Fall", "Winter", "F/W", "S/S"];
 
-export const FRESHNESS_THRESHOLD_MS = 24 * 60 * 60 * 1000;
-
 export const PLACEHOLDER_TONES: Array<[string, string]> = [
   ["#E8DDD0", "#C9B8A4"],
   ["#D9CFC0", "#A8957E"],
