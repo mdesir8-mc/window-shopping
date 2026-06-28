@@ -11,9 +11,16 @@ bottom of each section; check things off as they ship.
   result is still incomplete or the enricher threw. Set in `parseProductPage`
   (`server/src/services/parser.ts`), passed through `mergePartial`. AddItemFlow preview
   shows a "couldn't fully read this page" warning when the flag is `false`.
-- [ ] **Daily refresh email cron not firing on Railway** — the Railway Cron job
-  running `npm run job:refresh` isn't triggering reliably; investigate Railway Cron
-  config, job logs, and whether the service is being reached correctly.
+- [x] **Daily refresh email cron not firing on Railway** — the Railway Cron service
+  (`refresh-cron`) was crashing/stopped. Switched the trigger to a GitHub Action
+  (`.github/workflows/refresh-cron.yml`, daily 12:00 UTC / 7am EST + manual
+  `workflow_dispatch`) that POSTs to a new bearer-guarded `POST /api/cron/refresh` on the
+  web service. Endpoint (`server/src/routes/cron.ts`) runs the shared `refreshAllUsers`
+  (`server/src/services/refresh-all.ts`, extracted from `jobs/refresh-all.ts`) in the
+  live service env (Playwright + DB + Resend already there), responds 202 and runs
+  detached, with a 409 overlap guard and 503-when-unconfigured. Manual follow-ups: set
+  `CRON_SECRET` (web service var) + `APP_URL`/`CRON_SECRET` (GitHub secrets), verify via
+  `workflow_dispatch`, then delete the `refresh-cron` Railway service.
 - [x] **Refresh-stale button not updating item cards in prod** — debugged: query-key
   invalidation was a red herring (`["items"]` prefix-matches the grid query, refetch
   fires correctly). Real cause: `ItemCard` shows `formatRelativeDate(item.addedAt)` —
