@@ -51,6 +51,7 @@ function handleConnect(req: http.IncomingMessage, clientSocket: net.Socket, head
     }
 
     const upstream = net.connect({ host: target.address, port }, () => {
+      upstream.setTimeout(0); // connected — drop the connect deadline, let the tunnel run
       clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
       if (head.length) {
         upstream.write(head);
@@ -59,7 +60,18 @@ function handleConnect(req: http.IncomingMessage, clientSocket: net.Socket, head
       clientSocket.pipe(upstream);
     });
 
-    upstream.on("error", () => clientSocket.destroy());
+    // Fail fast if the upstream connect stalls (e.g. no egress to the pinned IP) instead of
+    // hanging until the caller's navigation timeout.
+    upstream.setTimeout(8000, () => {
+      console.error(`[ssrfProxy] CONNECT to ${host} (${target.address}:${port}) timed out`);
+      upstream.destroy();
+      clientSocket.destroy();
+    });
+
+    upstream.on("error", (err) => {
+      console.error(`[ssrfProxy] CONNECT to ${host} (${target.address}:${port}) failed:`, err.message);
+      clientSocket.destroy();
+    });
     clientSocket.on("error", () => upstream.destroy());
   })();
 }
