@@ -30,8 +30,13 @@ COPY shared/ ./shared/
 COPY server/package*.json ./server/
 RUN cd server && npm ci --omit=dev
 
-# Install Playwright's Chromium browser + system libraries
-RUN cd server && npx playwright install chromium --with-deps
+# Install Playwright's Chromium browser + system libraries into a shared path.
+# This runs as root, so without an explicit path the browser lands in root's
+# cache (~/.cache/ms-playwright) and the non-root appuser can't find it at
+# runtime. Pin it to a world-readable location both users resolve.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN cd server && npx playwright install chromium --with-deps \
+  && chmod -R a+rX /ms-playwright
 
 # Copy generated Prisma client from build stage
 COPY --from=server-build /app/server/node_modules/.prisma ./server/node_modules/.prisma
