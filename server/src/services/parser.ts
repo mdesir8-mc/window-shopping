@@ -542,13 +542,15 @@ export async function parseProductPage(
       // returns the real PDP) is preferred over the rendered fetch here.
       try {
         html = await fetchAmazonHtml(url.toString());
-      } catch {
+      } catch (renderError) {
+        console.error("[parser] Amazon fetch failed, falling back to rendered:", renderError);
         html = await fetchRenderedHtml(url.toString());
       }
     } else {
       try {
         html = await fetchRenderedHtml(url.toString());
-      } catch {
+      } catch (renderError) {
+        console.error("[parser] rendered fetch failed, falling back to raw:", renderError);
         html = await fetchRawHtml(url.toString());
       }
     }

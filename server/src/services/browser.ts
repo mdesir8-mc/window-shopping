@@ -19,6 +19,7 @@ async function ensureBrowser(): Promise<Browser> {
       try {
         const instance = await chromium.launch({
           headless: true,
+          args: ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
           proxy: { server: `http://127.0.0.1:${port}` }
         });
         browser = instance;
