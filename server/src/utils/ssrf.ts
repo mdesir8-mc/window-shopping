@@ -81,12 +81,7 @@ export async function resolveSafeHost(hostname: string): Promise<{ address: stri
     assertAllowedAddress(address, family);
   }
 
-  // Prefer an IPv4 address from the validated set. The proxy pins the connection to a
-  // single IP (no Happy-Eyeballs fallback), so if DNS returns AAAA first and the host
-  // container has no IPv6 egress, connecting to it hangs until the caller's timeout.
-  // Picking IPv4 when available matches undici's effective behavior; every address was
-  // already validated above, so this doesn't weaken the SSRF guard.
-  const target = resolved.find((entry) => entry.family === 4) ?? resolved[0];
+  const target = resolved[0];
   return { address: target.address, family: target.family === 6 ? 6 : 4 };
 }
 
