@@ -73,10 +73,17 @@ export async function fetchRenderedHtml(url: string): Promise<string> {
       void route.continue();
     });
 
+    // Wait only for the navigation to commit (server response received), not for
+    // DOMContentLoaded. Heavy retail SPAs (e.g. Farfetch) load a script that blocks
+    // the parser so DOMContentLoaded never fires within the timeout, yet the
+    // server-rendered HTML — title/OpenGraph/JSON-LD, all the parser reads — is already
+    // present at commit. Give the DOM a brief grace period for client-rendered pages,
+    // but never hang on the ones whose DOMContentLoaded never arrives.
     await page.goto(url, {
-      waitUntil: "domcontentloaded",
+      waitUntil: "commit",
       timeout: 12_000
     });
+    await page.waitForLoadState("domcontentloaded", { timeout: 3_000 }).catch(() => {});
 
     return await page.content();
   } finally {
