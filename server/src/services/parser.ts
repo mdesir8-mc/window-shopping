@@ -5,9 +5,21 @@ import { extractUniqloProduct } from "./parsers/uniqlo";
 import { extractAmazonProduct } from "./parsers/amazon";
 import { extractCarharttProduct } from "./parsers/carhartt";
 import { fetchShopifyProduct } from "./parsers/shopify";
+import { fetchWooCommerceProduct } from "./parsers/woocommerce";
+import { fetchSquarespaceProduct } from "./parsers/squarespace";
+import { fetchViaUnblocker } from "./unblocker";
 import { safeFetch } from "../utils/safeFetch";
 
 export class ParserFetchError extends Error {}
+
+// Hosts whose bot walls (PerimeterX, Akamai JS challenge) block both the headless
+// render and the plain raw fetch — the unblocker tier is required to get past them.
+const HARD_WALL_HOSTS = new Set(["therealreal.com", "nordstrom.com"]);
+
+function isHardWallHost(hostname: string): boolean {
+  const lower = hostname.toLowerCase();
+  return HARD_WALL_HOSTS.has(lower) || [...HARD_WALL_HOSTS].some((h) => lower.endsWith("." + h));
+}
 export type HtmlFetcher = (url: string) => Promise<string>;
 export type AiEnricher = (
   html: string,
@@ -526,15 +538,51 @@ export async function parseProductPage(
   const url = normalizeUrl(rawUrl);
   let html: string;
 
+  // Hard-wall hosts (PerimeterX / Akamai challenge) block both the Shopify/WooCommerce
+  // probes and the headless render — skip those probes to avoid an 8s timeout.
+  const hardWall = !options?.fetcher && isHardWallHost(url.hostname);
+
   // Shopify storefronts expose product JSON at /products/<handle>.js — use it and
   // skip HTML scraping + AI fallback entirely when the URL resolves to one.
-  const shopify = options?.fetcher ? null : await fetchShopifyProduct(url).catch(() => null);
+  const shopify =
+    options?.fetcher || hardWall ? null : await fetchShopifyProduct(url).catch(() => null);
+  // WooCommerce stores expose a Store API (/wp-json/wc/store/products) — gated on a
+  // product-permalink base segment so the probe stays off non-Woo URLs. Same win as
+  // Shopify: skip HTML scraping + AI when it resolves.
+  const woo =
+    options?.fetcher || shopify || hardWall
+      ? null
+      : await fetchWooCommerceProduct(url).catch(() => null);
+  // Squarespace Commerce exposes the store item at <path>?format=json — same win as
+  // Shopify/Woo: clean title, per-variant price/colors, skip HTML scraping + AI.
+  const squarespace =
+    options?.fetcher || shopify || woo || hardWall
+      ? null
+      : await fetchSquarespaceProduct(url).catch(() => null);
 
   try {
     const fetcher = options?.fetcher;
     if (fetcher) {
       html = await fetcher(url.toString());
-    } else if (shopify) {
+    } else if (shopify || woo || squarespace) {
+      html = "";
+    } else if (hardWall && !options?.demoMode) {
+      // Route through the unblocker tier (ScrapingBee or equivalent) for hosts whose
+      // bot walls are impenetrable by normal fetch/render.  demoMode (unauthenticated
+      // public path) never reaches here — it costs money and is an abuse vector.
+      const unblocked = await fetchViaUnblocker(url.toString());
+      if (unblocked === null) {
+        // Unblocker disabled (env unset) or daily cap exceeded.  The headless render
+        // and raw fetch are guaranteed to return the bot-wall interstitial for these
+        // hosts, so fail fast rather than wasting time on a known-bad path.
+        throw new ParserFetchError(
+          "Unblocker not configured or daily cap reached for this retailer."
+        );
+      }
+      html = unblocked;
+    } else if (hardWall && options?.demoMode) {
+      // demoMode on a hard-wall host: skip the render (it will only return the
+      // bot-wall interstitial) and return an empty-ish result rather than 502.
       html = "";
     } else if (/(^|\.)amazon\.[a-z.]+$/i.test(url.hostname)) {
       // Amazon serves headless browsers a "Continue shopping" anti-bot
@@ -542,13 +590,15 @@ export async function parseProductPage(
       // returns the real PDP) is preferred over the rendered fetch here.
       try {
         html = await fetchAmazonHtml(url.toString());
-      } catch {
+      } catch (renderError) {
+        console.error("[parser] Amazon fetch failed, falling back to rendered:", renderError);
         html = await fetchRenderedHtml(url.toString());
       }
     } else {
       try {
         html = await fetchRenderedHtml(url.toString());
-      } catch {
+      } catch (renderError) {
+        console.error("[parser] rendered fetch failed, falling back to raw:", renderError);
         html = await fetchRawHtml(url.toString());
       }
     }
@@ -589,7 +639,9 @@ export async function parseProductPage(
     ...extractUniqloProduct(html, url),
     ...extractAmazonProduct(html, url),
     ...extractCarharttProduct(html, url),
-    ...(shopify ?? {})
+    ...(shopify ?? {}),
+    ...(woo ?? {}),
+    ...(squarespace ?? {})
   };
 
   const brand = siteProduct.brand ?? extractBrand(product) ?? titleFallback.brand;

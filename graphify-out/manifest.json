@@ -50,9 +50,9 @@
     "semantic_hash": "4ae561aa5fb52a5d0722c45f7f359a66"
   },
   "/Users/michael/window-shopping/.claude/settings.json": {
-    "mtime": 1779559125.063742,
-    "ast_hash": "87f0d903477984d0587a02f8fe185263",
-    "semantic_hash": "87f0d903477984d0587a02f8fe185263"
+    "mtime": 1783137007.1483173,
+    "ast_hash": "e9240770e0de9556d7845eb58b576219",
+    "semantic_hash": ""
   },
   "/Users/michael/window-shopping/server/package.json": {
     "mtime": 1782100470.8153539,
@@ -140,7 +140,7 @@
     "semantic_hash": "4ae561aa5fb52a5d0722c45f7f359a66"
   },
   "/Users/michael/window-shopping/server/src/index.ts": {
-    "mtime": 1782679254.6573002,
+    "mtime": 1783184946.6074176,
     "ast_hash": "5840ab7b29b2a1368e6dc9f7e0202cd3",
     "semantic_hash": ""
   },
@@ -210,13 +210,13 @@
     "semantic_hash": "63ee6e9c73263817b7e4d8cf3b09fd62"
   },
   "/Users/michael/window-shopping/server/src/services/parser.ts": {
-    "mtime": 1782592640.0871885,
-    "ast_hash": "9f6b55d4838a9496a77a1101b8163099",
+    "mtime": 1783189561.2549827,
+    "ast_hash": "d7bd31e335f415814559baec6cadf4ea",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/server/src/services/browser.ts": {
-    "mtime": 1781989429.4255638,
-    "ast_hash": "120003591d8cb57588022a7019bbd54b",
+    "mtime": 1783189561.2538848,
+    "ast_hash": "fa6d9981351975b54002aa1d41958a42",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/src/App.tsx": {
@@ -430,8 +430,8 @@
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/.claude/settings.local.json": {
-    "mtime": 1782075284.555877,
-    "ast_hash": "0822633926bbdd8ba749e1e2835e5832",
+    "mtime": 1782696294.068254,
+    "ast_hash": "9d5d7430feed9fb5dc6f088bec552dc3",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/shared/types.ts": {
@@ -510,8 +510,8 @@
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/server/src/utils/ssrf.ts": {
-    "mtime": 1781989429.425894,
-    "ast_hash": "72d9d5bb4c121c3899e25e4830c426d4",
+    "mtime": 1783189561.2582583,
+    "ast_hash": "309f2e6f60b74790791c7cef7970f53c",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/server/prisma/migrations/20260530123247_add_google_auth/migration.sql": {
@@ -530,8 +530,8 @@
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/docs/todos.md": {
-    "mtime": 1782679345.1783648,
-    "ast_hash": "9c28d76a6cf53fc0fbbbee4c4822daab",
+    "mtime": 1783189561.2426786,
+    "ast_hash": "7485bd2197a5f6d1edab2ec4fe1aa693",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/src/components/account/AccountSettingsModal.tsx": {
@@ -580,7 +580,7 @@
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/server/src/jobs/refresh-all.ts": {
-    "mtime": 1782679235.5183918,
+    "mtime": 1783184946.6078842,
     "ast_hash": "2f261a5c8c071782749fef44a365586b",
     "semantic_hash": ""
   },
@@ -755,8 +755,8 @@
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/server/src/services/ssrfProxy.ts": {
-    "mtime": 1782100470.8172288,
-    "ast_hash": "085a70a5f0d2a183621e25c5f2e8c548",
+    "mtime": 1783189561.257089,
+    "ast_hash": "bb55a3f773ff9c52c3ffdb9fd1d3c895",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/src/api/export.ts": {
@@ -804,9 +804,9 @@
     "ast_hash": "96720a05c0a35f149414dc14e2609ace",
     "semantic_hash": ""
   },
-  "/Users/michael/window-shopping/server/tests/cron.test.ts": {
-    "mtime": 1782679306.4707837,
-    "ast_hash": "2cbbac24183fe19401588095c95fa4e2",
+  "/Users/michael/window-shopping/server/tests/browser.test.ts": {
+    "mtime": 1783189561.2583873,
+    "ast_hash": "e03765d56ca13394c2dd7bf78fcbc7fa",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/server/tests/price.test.ts": {
@@ -819,19 +819,19 @@
     "ast_hash": "96ccdc963fb8828478542accf136d16a",
     "semantic_hash": ""
   },
+  "/Users/michael/window-shopping/server/tests/woocommerce.test.ts": {
+    "mtime": 1783189561.2599561,
+    "ast_hash": "f085289253e5d4a630781dfe4634154b",
+    "semantic_hash": ""
+  },
   "/Users/michael/window-shopping/server/public/assets/index-DKsEoM_b.js": {
     "mtime": 1782679333.3891556,
     "ast_hash": "c6cdc0c486f922861df61762664541d7",
     "semantic_hash": ""
   },
-  "/Users/michael/window-shopping/server/src/routes/cron.ts": {
-    "mtime": 1782679247.667531,
-    "ast_hash": "47518b28fa18e2b9a4898c1c61a30d64",
-    "semantic_hash": ""
-  },
-  "/Users/michael/window-shopping/server/src/services/refresh-all.ts": {
-    "mtime": 1782679229.0512235,
-    "ast_hash": "5171e3049051fbf938b911965ae6cc9e",
+  "/Users/michael/window-shopping/server/src/services/parsers/woocommerce.ts": {
+    "mtime": 1783189561.2565992,
+    "ast_hash": "12cd63f569629e8c32f7793e987d0e4c",
     "semantic_hash": ""
   },
   "/Users/michael/window-shopping/shared/price.ts": {
@@ -844,8 +844,48 @@
     "ast_hash": "0780a3a57e04cc0c0be9b8ac5704ad2f",
     "semantic_hash": ""
   },
+  "/Users/michael/window-shopping/server/src/services/parsers/README.md": {
+    "mtime": 1783189561.2552347,
+    "ast_hash": "fb5f80e2561bb6e57ddb243324c0fffe",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/server/tests/unblocker.test.ts": {
+    "mtime": 1783189561.2598326,
+    "ast_hash": "3079bb1a889c4cb1e92b2752c677562e",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/server/src/services/unblocker.ts": {
+    "mtime": 1783189561.2581127,
+    "ast_hash": "719c12fd7e15dcb8435fcab1bcfac1fd",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/server/tests/squarespace.test.ts": {
+    "mtime": 1783189561.2590094,
+    "ast_hash": "63a5d297a92f0c1795aed77bac813cb7",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/server/src/services/parsers/squarespace.ts": {
+    "mtime": 1783189561.2562358,
+    "ast_hash": "18e6103b404742478953d813140a39a9",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/server/tests/cron.test.ts": {
+    "mtime": 1783184946.6107988,
+    "ast_hash": "2cbbac24183fe19401588095c95fa4e2",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/server/src/routes/cron.ts": {
+    "mtime": 1783184946.6081223,
+    "ast_hash": "47518b28fa18e2b9a4898c1c61a30d64",
+    "semantic_hash": ""
+  },
+  "/Users/michael/window-shopping/server/src/services/refresh-all.ts": {
+    "mtime": 1783184946.6093493,
+    "ast_hash": "5171e3049051fbf938b911965ae6cc9e",
+    "semantic_hash": ""
+  },
   "/Users/michael/window-shopping/.github/workflows/refresh-cron.yml": {
-    "mtime": 1782679293.559431,
+    "mtime": 1783184946.5878747,
     "ast_hash": "5a5f785a6fc722b55725ebee29cc871c",
     "semantic_hash": ""
   }
