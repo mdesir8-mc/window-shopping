@@ -45,6 +45,7 @@ type SerializedItemInput = {
   tags: string[];
   colors: string[];
   description: string | null;
+  note: string | null;
   imageUrl: string | null;
   favorited: boolean;
   lastCheckedAt: Date | null;
@@ -119,6 +120,7 @@ export function serializeItem(item: SerializedItemInput) {
     tags: item.tags,
     colors: item.colors,
     description: item.description,
+    note: item.note,
     imageUrl: item.imageUrl,
     favorited: item.favorited,
     lastCheckedAt: item.lastCheckedAt?.toISOString() ?? null,

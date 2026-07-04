@@ -24,6 +24,14 @@ function toSearchParams(filters: ItemFilters) {
     params.set("sort", filters.sort);
   }
 
+  if (filters.onSale !== undefined) {
+    params.set("onSale", String(filters.onSale));
+  }
+
+  if (filters.inStock !== undefined) {
+    params.set("inStock", String(filters.inStock));
+  }
+
   if (filters.tags?.length) {
     params.set("tags", filters.tags.join(","));
   }
@@ -44,6 +52,12 @@ export async function getItem(id: string) {
 
 export async function parseUrl(url: string) {
   const response = await apiClient.post<ParsedProduct>("/api/items/parse-url", { url });
+  return response.data;
+}
+
+// Unauthenticated landing-page demo parse — skips AI enrichment server-side.
+export async function parseUrlPublic(url: string) {
+  const response = await apiClient.post<ParsedProduct>("/api/public/parse-url", { url });
   return response.data;
 }
 

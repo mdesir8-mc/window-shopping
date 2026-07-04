@@ -7,6 +7,7 @@ import {
   listItems,
   moveItem,
   parseUrl,
+  parseUrlPublic,
   patchItem,
   refreshItem,
   refreshStaleItems
@@ -23,6 +24,14 @@ function itemMatchesFilters(item: Item, filters: ItemFilters) {
   }
 
   if (filters.season && item.season !== filters.season) {
+    return false;
+  }
+
+  if (filters.onSale !== undefined && item.onSale !== filters.onSale) {
+    return false;
+  }
+
+  if (filters.inStock !== undefined && item.inStock !== filters.inStock) {
     return false;
   }
 
@@ -75,6 +84,12 @@ export function useItem(id?: string) {
 export function useParseUrl() {
   return useMutation({
     mutationFn: parseUrl
+  });
+}
+
+export function useParseUrlPublic() {
+  return useMutation({
+    mutationFn: parseUrlPublic
   });
 }
 

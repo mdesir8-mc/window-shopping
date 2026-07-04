@@ -3,6 +3,7 @@ import Display from "../components/ui/Display";
 import Eyebrow from "../components/ui/Eyebrow";
 import Hairline from "../components/ui/Hairline";
 import VersionTag from "../components/ui/VersionTag";
+import LandingParseDemo from "../components/items/LandingParseDemo";
 
 const STEPS = [
   {
@@ -116,6 +117,8 @@ export default function Landing() {
               Log in
             </Link>
           </div>
+
+          <LandingParseDemo />
         </section>
 
         <Hairline style={{ margin: "64px 0 40px" }} />

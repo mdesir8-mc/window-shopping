@@ -10,6 +10,8 @@ import userRoutes from "./routes/user";
 import closetRoutes from "./routes/closets";
 import itemRoutes from "./routes/items";
 import tagRoutes from "./routes/tags";
+import publicRoutes from "./routes/public";
+import cronRoutes from "./routes/cron";
 import { closeBrowser, launchBrowser } from "./services/browser";
 import { errorHandler, HttpError } from "./utils/http";
 import { requireAuth } from "./middleware/auth";
@@ -27,6 +29,12 @@ export function createApp() {
   const app = express();
   const isProduction = process.env.NODE_ENV === "production";
   const publicDir = path.resolve(__dirname, "../../../public");
+
+  // Railway (and most PaaS) front the app with a single reverse proxy. Without
+  // this, req.ip is the proxy address for every caller, so all clients collapse
+  // into one bucket and the per-IP rate limiters (auth, parse, demo) stop being
+  // per-IP. Trust exactly one hop so req.ip reflects the real client.
+  app.set("trust proxy", 1);
 
   app.use(helmet({
     contentSecurityPolicy: {
@@ -46,7 +54,8 @@ export function createApp() {
   app.use(
     cors({
       origin: isProduction ? process.env.FRONTEND_ORIGIN ?? false : true,
-      credentials: true
+      credentials: true,
+      exposedHeaders: ["X-Refreshed-Token"]
     })
   );
   app.use(cookieParser());
@@ -65,6 +74,8 @@ export function createApp() {
   app.use("/api/closets", requireAuth, closetRoutes);
   app.use("/api/items", requireAuth, itemRoutes);
   app.use("/api/tags", requireAuth, tagRoutes);
+  app.use("/api/public", publicRoutes);
+  app.use("/api/cron", cronRoutes);
 
   app.use("/api", (_req, _res, next) => {
     next(new HttpError(404, "API route not found."));

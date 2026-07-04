@@ -11,6 +11,9 @@ export default defineConfig({
   },
   build: {
     outDir: "server/public",
+    // Must stay false: server/public also holds hand-maintained static files (the
+    // prototype *.jsx demos + api.js, one of which is exercised by
+    // server/tests/frontend-bootstrap.test.ts). emptyOutDir: true would wipe them.
     emptyOutDir: false
   }
 });

@@ -35,6 +35,7 @@ export default function ItemFormModal({ open, item, onClose }: ItemFormModalProp
   const [name, setName] = useState("");
   const [brand, setBrand] = useState("");
   const [price, setPrice] = useState("");
+  const [note, setNote] = useState("");
   const [tagText, setTagText] = useState("");
   const [sectionId, setSectionId] = useState("");
   const suggestedTags = useMemo(() => tagsQuery.data ?? [], [tagsQuery.data]);
@@ -45,6 +46,7 @@ export default function ItemFormModal({ open, item, onClose }: ItemFormModalProp
     setName(item?.name ?? "");
     setBrand(item?.brand ?? "");
     setPrice(item?.price ?? "");
+    setNote(item?.note ?? "");
     setTagText(item?.tags.join(", ") ?? "");
     setSectionId(item?.sectionId ?? "");
   }, [item, open]);
@@ -58,6 +60,7 @@ export default function ItemFormModal({ open, item, onClose }: ItemFormModalProp
         name,
         brand,
         price: price || null,
+        note: note || null,
         tags: normalizeTags(tagText),
         sectionId: sectionId || null
       }
@@ -116,6 +119,26 @@ export default function ItemFormModal({ open, item, onClose }: ItemFormModalProp
                 background: "var(--ws-surface)",
                 color: "var(--ws-ink)",
                 padding: "14px 16px"
+              }}
+            />
+          </label>
+
+          <label style={{ display: "grid", gap: 8 }}>
+            <Eyebrow>Note</Eyebrow>
+            <textarea
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              placeholder="Fit notes, sizing, styling ideas"
+              rows={4}
+              style={{
+                border: "1px solid var(--ws-hairline)",
+                background: "var(--ws-surface)",
+                color: "var(--ws-ink)",
+                padding: "14px 16px",
+                resize: "vertical",
+                fontFamily: "var(--ws-ui)",
+                fontSize: 13,
+                lineHeight: 1.5
               }}
             />
           </label>

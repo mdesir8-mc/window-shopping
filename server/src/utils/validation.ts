@@ -8,6 +8,20 @@ export function requireString(value: unknown, fieldName: string) {
   return value.trim();
 }
 
+// Minimal email shape check: a single @ with non-empty, dot-bearing domain. Not RFC-exact
+// (deliverability is verified out of band), just enough to reject obviously bad addresses.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export function requireEmail(value: unknown, fieldName: string) {
+  const email = requireString(value, fieldName);
+
+  if (!EMAIL_PATTERN.test(email)) {
+    throw new HttpError(400, `${fieldName} must be a valid email address.`);
+  }
+
+  return email;
+}
+
 export function optionalString(value: unknown) {
   if (value === undefined) {
     return undefined;

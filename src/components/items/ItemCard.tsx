@@ -2,20 +2,10 @@ import { useNavigate } from "react-router-dom";
 import type { Item } from "../../types";
 import ProductTile from "../ui/ProductTile";
 import Tag from "../ui/Tag";
-import { FRESHNESS_THRESHOLD_MS } from "../../constants";
+import { hasRefreshableUrl, isStale } from "../../../shared/staleness";
 import { formatRelativeDate, hashTone } from "../../lib/format";
-
-function hasRefreshableUrl(url: string | null) {
-  return Boolean(url && /^https?:\/\//i.test(url));
-}
-
-function isStale(item: Item) {
-  if (!hasRefreshableUrl(item.url)) {
-    return false;
-  }
-
-  return !item.lastCheckedAt || Date.now() - new Date(item.lastCheckedAt).getTime() > FRESHNESS_THRESHOLD_MS;
-}
+import { useRefreshItem } from "../../hooks/useItems";
+import { useAppShell } from "../layout/AppShell";
 
 export default function ItemCard({
   item,
@@ -26,8 +16,22 @@ export default function ItemCard({
   onClick: () => void;
   onEdit?: () => void;
 }) {
-  const stale = isStale(item);
+  const stale = isStale(item.lastCheckedAt, item.url);
   const navigate = useNavigate();
+  const refreshMutation = useRefreshItem();
+  const { showToast } = useAppShell();
+  const refreshable = hasRefreshableUrl(item.url);
+
+  async function handleRefresh(event: React.MouseEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+
+    try {
+      await refreshMutation.mutateAsync(item.id);
+      showToast("Item refreshed.");
+    } catch {
+      showToast("Couldn't refresh item. Try again shortly.");
+    }
+  }
 
   return (
     <div
@@ -88,6 +92,33 @@ export default function ItemCard({
             ON SALE
           </div>
         ) : null}
+        {refreshable ? (
+          <button
+            type="button"
+            aria-label={`Refresh ${item.name}`}
+            disabled={refreshMutation.isPending}
+            onClick={(event) => void handleRefresh(event)}
+            onKeyDown={(event) => event.stopPropagation()}
+            style={{
+              position: "absolute",
+              right: 10,
+              bottom: 10,
+              padding: "4px 8px",
+              border: "none",
+              background: "var(--ws-overlay-paper)",
+              backdropFilter: "blur(4px)",
+              fontFamily: "var(--ws-mono)",
+              fontSize: 9,
+              color: "var(--ws-ink)",
+              cursor: refreshMutation.isPending ? "default" : "pointer",
+              letterSpacing: 0.5,
+              opacity: refreshMutation.isPending ? 0.7 : 1,
+              textTransform: "uppercase"
+            }}
+          >
+            {refreshMutation.isPending ? "Refreshing" : "Refresh"}
+          </button>
+        ) : null}
         <div
           style={{
             position: "absolute",
@@ -130,7 +161,25 @@ export default function ItemCard({
             {item.name}
           </div>
         </div>
-        <div style={{ fontFamily: "var(--ws-mono)", fontSize: 11 }}>{item.price ?? "TBD"}</div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            justifyContent: "flex-end",
+            gap: 6,
+            flexWrap: "wrap",
+            flexShrink: 0,
+            fontFamily: "var(--ws-mono)",
+            fontSize: 11
+          }}
+        >
+          <span>{item.price ?? "TBD"}</span>
+          {item.onSale && item.originalPrice ? (
+            <span style={{ color: "var(--ws-muted)", textDecoration: "line-through" }}>
+              {item.originalPrice}
+            </span>
+          ) : null}
+        </div>
       </div>
 
       <div

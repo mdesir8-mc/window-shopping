@@ -6,7 +6,8 @@ import Display from "../ui/Display";
 import Hairline from "../ui/Hairline";
 import Tag from "../ui/Tag";
 import Meta from "../ui/Meta";
-import { FRESHNESS_THRESHOLD_MS, SEASONS } from "../../constants";
+import { SEASONS } from "../../constants";
+import { hasRefreshableUrl, isStale } from "../../../shared/staleness";
 import { formatRelativeDate, hashTone } from "../../lib/format";
 import { useClosets } from "../../hooks/useClosets";
 import {
@@ -20,14 +21,6 @@ import {
 } from "../../hooks/useItems";
 import { useTags } from "../../hooks/useTags";
 import { useIsMobile } from "../../hooks/useMediaQuery";
-
-function hasRefreshableUrl(url: string | null) {
-  return Boolean(url && /^https?:\/\//i.test(url));
-}
-
-function isFreshnessStale(lastCheckedAt: string | null) {
-  return !lastCheckedAt || Date.now() - new Date(lastCheckedAt).getTime() > FRESHNESS_THRESHOLD_MS;
-}
 
 export default function ItemDrawer({
   itemId,
@@ -55,7 +48,7 @@ export default function ItemDrawer({
   const availableSections = moveCloset?.sections ?? [];
   const suggestedTags = useMemo(() => tagsQuery.data ?? [], [tagsQuery.data]);
   const refreshableUrl = hasRefreshableUrl(item?.url ?? null);
-  const stale = item ? refreshableUrl && isFreshnessStale(item.lastCheckedAt) : false;
+  const stale = item ? isStale(item.lastCheckedAt, item.url) : false;
 
   useEffect(() => {
     if (item) {
@@ -156,6 +149,30 @@ export default function ItemDrawer({
                 }}
               >
                 {item.description}
+              </div>
+            ) : null}
+
+            {item.note ? (
+              <div
+                style={{
+                  marginTop: 18,
+                  padding: "14px 0",
+                  borderTop: "1px solid var(--ws-hairline)",
+                  borderBottom: "1px solid var(--ws-hairline)"
+                }}
+              >
+                <Eyebrow style={{ marginBottom: 8 }}>Note</Eyebrow>
+                <div
+                  style={{
+                    fontFamily: "var(--ws-ui)",
+                    fontSize: 14,
+                    lineHeight: 1.6,
+                    color: "var(--ws-muted)",
+                    whiteSpace: "pre-wrap"
+                  }}
+                >
+                  {item.note}
+                </div>
               </div>
             ) : null}
 
