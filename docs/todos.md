@@ -184,17 +184,22 @@ bottom of each section; check things off as they ship.
      URL. Verified live against goshopia/nordrepublic/akke. Note: `safeFetch`'s single-IP
      pinning is flaky against Cloudflare anycast hosts *from local dev* (falls back to the
      generic render path on failure) — see the separate safeFetch reliability item below.
-  2. **Squarespace Commerce** (platform) — **already works via the generic path** (JSON-LD
-     gives brand/name/price/currency/image/desc/stock; verified on aaksonline.com). Only
-     gaps: name gets a `— <StoreName>` suffix, no colors/originalPrice. A thin `?format=json`
-     parser could clean those but the essentials already land — **low priority.**
-  3. **The RealReal** — **blocked: PerimeterX bot wall**, not a markup issue. Headless render
-     *and* plain fetch both get a `403` `px-captcha` denial page; no JSON-LD reaches us. The
-     "solid JSON-LD, likely works" assumption was stale. Needs challenge-solving / residential
-     proxy before any parser matters — reclassified to README "Known broken".
-  4. **Nordstrom** — **blocked: Akamai-style JS anti-bot challenge** (257 KB `istlWasHere`
-     interstitial, empty title), not the product page. Same blocker class as The RealReal.
-     Reclassified to README "Known broken".
+  2. [x] **Squarespace Commerce** (platform) — **shipped** (`parsers/squarespace.ts`, wired
+     into `parser.ts` as a Shopify-style short-circuit; `tests/squarespace.test.ts`). Uses
+     the `<path>?format=json` store-item endpoint, gated on the `/p/<slug>` segment. Closes
+     the generic-path gaps: clean `item.title` (drops the `— <StoreName>` suffix), colors
+     from variant options, and `originalPrice` from `onSale`/`salePriceMoney`. Price/currency
+     come from `variants[0]` (item/structuredContent prices are `0.00` per-variant). Shape
+     verified live against aaksonline.com; color/sale paths covered by builder tests (AAKS
+     products are single-variant, so live color verification is pending a variant store).
+  3. [x] **The RealReal** — **addressed pending API key.** Unblocker tier shipped
+     (`server/src/services/unblocker.ts`): set `UNBLOCKER_API_URL` + `UNBLOCKER_API_KEY`
+     (ScrapingBee or equivalent) and The RealReal routes through it automatically. Clean
+     JSON-LD `Product` is expected once the PerimeterX wall is cleared. Documented in
+     README "Behind the unblocker tier". Live verification requires a real key.
+  4. [x] **Nordstrom** — **addressed pending API key.** Same unblocker tier as The RealReal
+     (Akamai JS challenge). Set the env vars and Nordstrom routes through automatically.
+     Documented in README "Behind the unblocker tier".
   5. **Grailed** — menswear resale, very on-brand. React SPA but embeds `__NEXT_DATA__` /
      JSON-LD; extract the Next.js data blob after render.
   6. **ASOS** — big catalog; structured data + internal `/api/product/`. Some bot
