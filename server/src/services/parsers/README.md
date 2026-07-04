@@ -48,13 +48,32 @@ then to Claude AI enrichment.
 Any retailer with clean JSON-LD `Product` or OpenGraph `product:*` meta generally
 parses through the generic path without a dedicated file.
 
+## Behind the unblocker tier
+
+These sites have clean JSON-LD once the bot wall is cleared, but both the headless render
+and a plain browser-UA fetch are blocked before any markup is reached. They route through
+the configurable unblocker provider (`server/src/services/unblocker.ts`) before the
+generic structured-data extractor runs.
+
+**Required env vars:**
+- `UNBLOCKER_API_URL` — provider endpoint (e.g. `https://app.scrapingbee.com/api/v1/`)
+- `UNBLOCKER_API_KEY` — your API key
+
+When either env var is unset the unblocker is disabled and requests to these hosts
+return a 502 immediately (falling through to the headless render would only waste time
+on a guaranteed bot-wall response). Live verification of name/price/image extraction
+requires a real API key.
+
+| Service | Bot wall | Notes |
+|---------|---------|-------|
+| **The RealReal** | PerimeterX `403` `px-captcha` (`_pxAppId 'PXev56mY37'`) | Both headless render and plain browser-UA fetch blocked. Expects clean JSON-LD `Product` once cleared. |
+| **Nordstrom** | Akamai JS challenge (`istlWasHere`, 257 KB interstitial, empty `<title>`) | Same class as The RealReal. Plain fetch returns the interstitial with HTTP 200. |
+
 ## Known broken
 
 | Service | Status |
 |---------|--------|
 | **SSENSE** | Previously worked, now fails for reasons unknown. Not yet diagnosed — likely a change to their markup or bot protection. Needs investigation. |
-| **The RealReal** | **Bot wall — not a markup problem.** Both the headless render and a plain browser-UA fetch get a PerimeterX `403` denial page (`_pxAppId 'PXev56mY37'`, `px-captcha`). No JSON-LD reaches us. A dedicated parser can't help until the fetch clears PerimeterX (challenge-solving / residential proxy) — out of scope for a structured-data parser. The earlier todo assumption ("solid JSON-LD, likely works") is stale. |
-| **Nordstrom** | **Bot wall — not a markup problem.** The render returns a 257 KB Akamai-style JS anti-bot challenge (`istlWasHere`, empty `<title>`, obfuscated script), not the product page; plain fetch returns the same interstitial with `200`. Same blocker class as The RealReal. |
 
 ## Adding a new parser
 

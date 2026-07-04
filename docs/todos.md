@@ -188,13 +188,14 @@ bottom of each section; check things off as they ship.
      gives brand/name/price/currency/image/desc/stock; verified on aaksonline.com). Only
      gaps: name gets a `— <StoreName>` suffix, no colors/originalPrice. A thin `?format=json`
      parser could clean those but the essentials already land — **low priority.**
-  3. **The RealReal** — **blocked: PerimeterX bot wall**, not a markup issue. Headless render
-     *and* plain fetch both get a `403` `px-captcha` denial page; no JSON-LD reaches us. The
-     "solid JSON-LD, likely works" assumption was stale. Needs challenge-solving / residential
-     proxy before any parser matters — reclassified to README "Known broken".
-  4. **Nordstrom** — **blocked: Akamai-style JS anti-bot challenge** (257 KB `istlWasHere`
-     interstitial, empty title), not the product page. Same blocker class as The RealReal.
-     Reclassified to README "Known broken".
+  3. [x] **The RealReal** — **addressed pending API key.** Unblocker tier shipped
+     (`server/src/services/unblocker.ts`): set `UNBLOCKER_API_URL` + `UNBLOCKER_API_KEY`
+     (ScrapingBee or equivalent) and The RealReal routes through it automatically. Clean
+     JSON-LD `Product` is expected once the PerimeterX wall is cleared. Documented in
+     README "Behind the unblocker tier". Live verification requires a real key.
+  4. [x] **Nordstrom** — **addressed pending API key.** Same unblocker tier as The RealReal
+     (Akamai JS challenge). Set the env vars and Nordstrom routes through automatically.
+     Documented in README "Behind the unblocker tier".
   5. **Grailed** — menswear resale, very on-brand. React SPA but embeds `__NEXT_DATA__` /
      JSON-LD; extract the Next.js data blob after render.
   6. **ASOS** — big catalog; structured data + internal `/api/product/`. Some bot
