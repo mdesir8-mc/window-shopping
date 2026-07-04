@@ -5,6 +5,7 @@ import { useAuth } from "../../hooks/useAuth";
 import Modal from "../ui/Modal";
 import Eyebrow from "../ui/Eyebrow";
 import { useIsMobile } from "../../hooks/useMediaQuery";
+import { downloadWishlistExport, type ExportFormat } from "../../api/export";
 
 type Tab = "general" | "profile";
 
@@ -32,6 +33,8 @@ export default function AccountSettingsModal({
   const isMobile = useIsMobile();
   const [tab, setTab] = useState<Tab>("general");
   const [name, setName] = useState(user?.name ?? "");
+  const [exportingFormat, setExportingFormat] = useState<ExportFormat | null>(null);
+  const [exportError, setExportError] = useState("");
   const { updateProfileMutation } = useAuth();
 
   // Reset the modal to a clean state each time it opens. Keyed on `open` only so a
@@ -40,6 +43,8 @@ export default function AccountSettingsModal({
     if (open) {
       setTab("general");
       setName(user?.name ?? "");
+      setExportError("");
+      setExportingFormat(null);
       updateProfileMutation.reset();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -48,6 +53,19 @@ export default function AccountSettingsModal({
   const trimmedName = name.trim();
   const nameUnchanged = trimmedName.length === 0 || trimmedName === (user?.name ?? "");
   const emailsOn = user?.emailNotifications ?? true;
+
+  async function handleExport(format: ExportFormat) {
+    setExportingFormat(format);
+    setExportError("");
+
+    try {
+      await downloadWishlistExport(format);
+    } catch {
+      setExportError("Couldn't export your wishlist. Try again shortly.");
+    } finally {
+      setExportingFormat(null);
+    }
+  }
 
   return (
     <Modal open={open} onClose={onClose} width={460}>
@@ -144,6 +162,36 @@ export default function AccountSettingsModal({
               <div style={{ marginTop: 6, fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-muted)", lineHeight: 1.5 }}>
                 Get an email when a refreshed item drops in price or goes out of stock.
               </div>
+            </div>
+
+            <div style={{ marginTop: 22 }}>
+              <Eyebrow style={{ marginBottom: 8 }}>Export</Eyebrow>
+              <div style={{ display: "flex", gap: 8 }}>
+                {(["csv", "json"] as const).map((format) => (
+                  <button
+                    key={format}
+                    type="button"
+                    disabled={exportingFormat !== null}
+                    onClick={() => void handleExport(format)}
+                    style={{
+                      flex: 1,
+                      padding: "10px 12px",
+                      border: "1px solid var(--ws-hairline)",
+                      background: "var(--ws-hover-bg, transparent)",
+                      cursor: exportingFormat !== null ? "default" : "pointer",
+                      color: "var(--ws-ink)",
+                      opacity: exportingFormat !== null && exportingFormat !== format ? 0.55 : 1
+                    }}
+                  >
+                    {exportingFormat === format ? "Exporting..." : format.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+              {exportError ? (
+                <div style={{ marginTop: 8, fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-accent)", lineHeight: 1.5 }}>
+                  {exportError}
+                </div>
+              ) : null}
             </div>
 
             <div style={{ marginTop: 22 }}>

@@ -486,6 +486,117 @@ describeDb("API integration", () => {
     expect(patched.body.inStock).toBeNull();
   });
 
+  it("filters, price-sorts, exports, and persists item notes", async () => {
+    const token = await registerUser("features@example.com");
+    const otherToken = await registerUser("features-other@example.com");
+    const closet = await createCloset(token, "Main Wardrobe");
+    const otherCloset = await createCloset(otherToken, "Other Wardrobe");
+
+    const saleItem = await request
+      .post("/api/items")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        closetId: closet.id,
+        brand: "Lemaire",
+        name: "Sale Tee",
+        season: "Summer",
+        price: "$9",
+        originalPrice: "$30",
+        inStock: true,
+        note: "Try with the linen trousers.",
+        tags: [],
+        colors: []
+      });
+    const fullPriceItem = await request
+      .post("/api/items")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        closetId: closet.id,
+        brand: "Khaite",
+        name: "Full Price Coat",
+        season: "Winter",
+        price: "$100",
+        inStock: false,
+        tags: [],
+        colors: []
+      });
+    await request
+      .post("/api/items")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        closetId: closet.id,
+        brand: "Toteme",
+        name: "Mid Skirt",
+        season: "Fall",
+        price: "$40",
+        inStock: true,
+        tags: [],
+        colors: []
+      });
+    await request
+      .post("/api/items")
+      .set("Authorization", `Bearer ${otherToken}`)
+      .send({
+        closetId: otherCloset.id,
+        brand: "Acne Studios",
+        name: "Other User Item",
+        season: "Spring",
+        price: "$1",
+        tags: [],
+        colors: []
+      });
+
+    await testPrisma!.item.update({
+      where: { id: saleItem.body.id },
+      data: { onSale: true }
+    });
+
+    expect(saleItem.body.note).toBe("Try with the linen trousers.");
+
+    const patched = await request
+      .patch(`/api/items/${saleItem.body.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ note: "Wait for an extra 10% off." });
+    expect(patched.body.note).toBe("Wait for an extra 10% off.");
+
+    const sorted = await request
+      .get(`/api/items?closet=${closet.id}&sort=price-asc`)
+      .set("Authorization", `Bearer ${token}`);
+    expect(sorted.body.map((item: { name: string }) => item.name)).toEqual([
+      "Sale Tee",
+      "Mid Skirt",
+      "Full Price Coat"
+    ]);
+
+    const saleFiltered = await request
+      .get(`/api/items?closet=${closet.id}&onSale=true`)
+      .set("Authorization", `Bearer ${token}`);
+    expect(saleFiltered.body.map((item: { id: string }) => item.id)).toEqual([saleItem.body.id]);
+
+    const stockFiltered = await request
+      .get(`/api/items?closet=${closet.id}&inStock=false`)
+      .set("Authorization", `Bearer ${token}`);
+    expect(stockFiltered.body.map((item: { id: string }) => item.id)).toEqual([fullPriceItem.body.id]);
+
+    const wishlistJson = await request
+      .get("/api/items/export?format=json")
+      .set("Authorization", `Bearer ${token}`);
+    expect(wishlistJson.status).toBe(200);
+    expect(wishlistJson.headers["content-disposition"]).toContain("wishlist.json");
+    const exportedNames = wishlistJson.body.map((item: { name: string }) => item.name);
+    expect(exportedNames).toEqual(expect.arrayContaining(["Sale Tee", "Mid Skirt", "Full Price Coat"]));
+    expect(exportedNames).not.toContain("Other User Item");
+
+    const closetCsv = await request
+      .get(`/api/closets/${closet.id}/export?format=csv`)
+      .set("Authorization", `Bearer ${token}`);
+    expect(closetCsv.status).toBe(200);
+    expect(closetCsv.headers["content-disposition"]).toContain("main-wardrobe.csv");
+    expect(closetCsv.text).toContain("note");
+    expect(closetCsv.text).toContain("Wait for an extra 10% off.");
+    expect(closetCsv.text).not.toContain("Other User Item");
+  });
+
   it("refreshes URL-backed items and marks sale drops", async () => {
     const token = await registerUser("refresh@example.com");
     const closet = await createCloset(token);

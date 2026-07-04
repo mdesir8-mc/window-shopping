@@ -11,12 +11,28 @@ import { useCloset, useCreateSection, useDeleteSection, usePatchSection } from "
 import { useItems } from "../hooks/useItems";
 import { useIsMobile } from "../hooks/useMediaQuery";
 import { formatCompactCurrency, hashTone, lightenHex, parsePriceToNumber } from "../lib/format";
+import { downloadClosetExport, type ExportFormat } from "../api/export";
+import type { ItemFilters } from "../types";
+
+const SORT_OPTIONS = [
+  { value: "newest", label: "Newest" },
+  { value: "oldest", label: "Oldest" },
+  { value: "updated", label: "Recently updated" },
+  { value: "price-asc", label: "Price ↑" },
+  { value: "price-desc", label: "Price ↓" }
+] as const;
+
+type ItemSort = (typeof SORT_OPTIONS)[number]["value"];
+
+function getSortParam(value: string | null): ItemSort {
+  return SORT_OPTIONS.some((option) => option.value === value) ? (value as ItemSort) : "newest";
+}
 
 export default function ClosetDetail() {
   const isMobile = useIsMobile();
   const { id } = useParams();
-  const [searchParams] = useSearchParams();
-  const { openItemDrawer, openClosetForm, openItemForm, openAddItem } = useAppShell();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { openItemDrawer, openClosetForm, openItemForm, openAddItem, showToast } = useAppShell();
   const closetQuery = useCloset(id);
   const createSectionMutation = useCreateSection();
   const patchSectionMutation = usePatchSection();
@@ -24,13 +40,21 @@ export default function ClosetDetail() {
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [sectionModalOpen, setSectionModalOpen] = useState(false);
   const [sectionName, setSectionName] = useState("");
+  const [exportingFormat, setExportingFormat] = useState<ExportFormat | null>(null);
   const closet = closetQuery.data;
+  const search = searchParams.get("search") ?? "";
+  const season = searchParams.get("season");
+  const sort = getSortParam(searchParams.get("sort"));
+  const onSaleFilter = searchParams.get("onSale") === "true";
+  const inStockFilter = searchParams.get("inStock") === "true";
   const itemsQuery = useItems({
     closetId: id,
     sectionId: activeSection,
-    search: searchParams.get("search") ?? "",
-    season: searchParams.get("season"),
-    sort: (searchParams.get("sort") as "newest" | "oldest" | "updated" | null) ?? "newest"
+    search,
+    season,
+    sort: sort as ItemFilters["sort"],
+    onSale: onSaleFilter ? true : undefined,
+    inStock: inStockFilter ? true : undefined
   });
   const items = itemsQuery.data ?? [];
   const activeSectionObject = closet?.sections.find((section) => section.id === activeSection) ?? null;
@@ -38,6 +62,48 @@ export default function ClosetDetail() {
     () => items.reduce((sum, item) => sum + parsePriceToNumber(item.price), 0),
     [items]
   );
+  const onSaleCount = useMemo(
+    () => items.filter((item) => item.onSale).length,
+    [items]
+  );
+  const outOfStockCount = useMemo(
+    () => items.filter((item) => item.inStock === false).length,
+    [items]
+  );
+  const hasActiveItemFilters = Boolean(search || season || onSaleFilter || inStockFilter);
+
+  function setUrlParam(key: string, value: string | null) {
+    const nextParams = new URLSearchParams(searchParams);
+
+    if (value) {
+      nextParams.set(key, value);
+    } else {
+      nextParams.delete(key);
+    }
+
+    setSearchParams(nextParams, { replace: true });
+  }
+
+  function handleSortChange(value: ItemSort) {
+    setUrlParam("sort", value === "newest" ? null : value);
+  }
+
+  async function handleClosetExport(format: ExportFormat) {
+    if (!closet) {
+      return;
+    }
+
+    setExportingFormat(format);
+
+    try {
+      await downloadClosetExport(closet.id, closet.name, format);
+      showToast(`${format.toUpperCase()} export started.`);
+    } catch {
+      showToast("Couldn't export this closet. Try again shortly.");
+    } finally {
+      setExportingFormat(null);
+    }
+  }
 
   if (!closet) {
     return <div style={{ padding: isMobile ? 20 : 40, color: "var(--ws-muted)" }}>Loading closet...</div>;
@@ -135,7 +201,9 @@ export default function ClosetDetail() {
               { value: closet.itemCount, label: "items" },
               { value: closet.sections.length, label: "sections" },
               { value: closet.tags.length, label: "tags" },
-              { value: formatCompactCurrency(totalValue), label: "value" }
+              { value: formatCompactCurrency(totalValue), label: "value" },
+              { value: onSaleCount, label: "on sale" },
+              { value: outOfStockCount, label: "out of stock" }
             ].map((entry) => (
               <div key={entry.label}>
                 <div style={{ fontFamily: "var(--ws-display)", fontSize: 22, fontWeight: 300 }}>{entry.value}</div>
@@ -169,6 +237,26 @@ export default function ClosetDetail() {
             >
               Edit closet
             </button>
+            {(["csv", "json"] as const).map((format) => (
+              <button
+                key={format}
+                type="button"
+                disabled={exportingFormat !== null}
+                onClick={() => void handleClosetExport(format)}
+                style={{
+                  padding: "10px 14px",
+                  border: "1px solid var(--ws-hairline)",
+                  background: "var(--ws-hover-bg, transparent)",
+                  cursor: exportingFormat !== null ? "default" : "pointer",
+                  opacity: exportingFormat !== null && exportingFormat !== format ? 0.55 : 1,
+                  fontSize: 11,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase"
+                }}
+              >
+                {exportingFormat === format ? "Exporting" : `Export ${format.toUpperCase()}`}
+              </button>
+            ))}
             {activeSectionObject ? (
               <>
                 <button
@@ -350,10 +438,95 @@ export default function ClosetDetail() {
         </button>
       </div>
 
+      <div
+        style={{
+          display: "flex",
+          alignItems: isMobile ? "stretch" : "center",
+          justifyContent: "space-between",
+          gap: 12,
+          marginBottom: 24,
+          flexDirection: isMobile ? "column" : "row"
+        }}
+      >
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontFamily: "var(--ws-mono)",
+            fontSize: 10,
+            letterSpacing: 1.2,
+            textTransform: "uppercase",
+            color: "var(--ws-muted)"
+          }}
+        >
+          Sort
+          <select
+            value={sort}
+            onChange={(event) => handleSortChange(event.target.value as ItemSort)}
+            style={{
+              minWidth: 168,
+              border: "1px solid var(--ws-hairline)",
+              background: "var(--ws-hover-bg, transparent)",
+              color: "var(--ws-ink)",
+              cursor: "pointer",
+              padding: "9px 12px",
+              fontFamily: "var(--ws-ui)",
+              fontSize: 12
+            }}
+          >
+            {SORT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button
+            type="button"
+            onClick={() => setUrlParam("onSale", onSaleFilter ? null : "true")}
+            style={{
+              padding: "9px 12px",
+              border: "1px solid var(--ws-hairline)",
+              background: onSaleFilter ? "var(--ws-ink)" : "var(--ws-hover-bg, transparent)",
+              color: onSaleFilter ? "var(--ws-paper)" : "var(--ws-ink)",
+              cursor: "pointer",
+              fontSize: 11,
+              letterSpacing: 1.5,
+              textTransform: "uppercase"
+            }}
+          >
+            On sale
+          </button>
+          <button
+            type="button"
+            onClick={() => setUrlParam("inStock", inStockFilter ? null : "true")}
+            style={{
+              padding: "9px 12px",
+              border: "1px solid var(--ws-hairline)",
+              background: inStockFilter ? "var(--ws-ink)" : "var(--ws-hover-bg, transparent)",
+              color: inStockFilter ? "var(--ws-paper)" : "var(--ws-ink)",
+              cursor: "pointer",
+              fontSize: 11,
+              letterSpacing: 1.5,
+              textTransform: "uppercase"
+            }}
+          >
+            In stock
+          </button>
+        </div>
+      </div>
+
       {items.length === 0 ? (
-        searchParams.get("search") ? (
+        search ? (
           <div style={{ padding: "60px 0", textAlign: "center", color: "var(--ws-muted)", fontSize: 14 }}>
             No items match your search.
+          </div>
+        ) : hasActiveItemFilters ? (
+          <div style={{ padding: "60px 0", textAlign: "center", color: "var(--ws-muted)", fontSize: 14 }}>
+            No items match these filters.
           </div>
         ) : activeSectionObject ? (
           <div style={{ padding: "60px 0", textAlign: "center", color: "var(--ws-muted)", fontSize: 14 }}>

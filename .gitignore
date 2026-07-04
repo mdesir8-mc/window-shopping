@@ -7,3 +7,5 @@ node_modules
 .clean-worktrees/
 .railway/
 vbsec-reports/
+docs/mobile-build.md
+docs/mobile-build.pdf
