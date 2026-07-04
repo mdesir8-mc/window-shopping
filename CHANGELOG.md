@@ -1,3 +1,9 @@
+## [2.2.1](https://github.com/mdesir8-mc/window-shopping/compare/v2.2.0...v2.2.1) (2026-07-04)
+
+### Bug Fixes
+
+* **security:** export injection rate limit ([#54](https://github.com/mdesir8-mc/window-shopping/issues/54)) ([d575e26](https://github.com/mdesir8-mc/window-shopping/commit/d575e263f5abc863dedf05904c72b4de02a1d251)), closes [#49](https://github.com/mdesir8-mc/window-shopping/issues/49) [#53](https://github.com/mdesir8-mc/window-shopping/issues/53)
+
 ## [2.2.0](https://github.com/mdesir8-mc/window-shopping/compare/v2.1.0...v2.2.0) (2026-06-17)
 
 ### Features
