@@ -15,14 +15,17 @@ then to Claude AI enrichment.
 2. **WooCommerce** — if the URL has a product-permalink base (`/product/<slug>` or a
    WPML locale variant) and the store exposes the no-auth Store API
    (`/wp-json/wc/store/products?slug=<slug>`), use that and skip HTML scraping + AI.
-3. **Amazon** — plain request with browser headers + anti-bot retry (the rendered
+3. **Squarespace Commerce** — if the URL has a `/p/<slug>` store-item segment and
+   `<path>?format=json` returns a `StoreItem` (`recordType 11`), use that and skip
+   HTML scraping + AI.
+4. **Amazon** — plain request with browser headers + anti-bot retry (the rendered
    fetch gets served the "Continue shopping" interstitial).
-4. **Rendered fetch** (headless Chromium) for everything else, falling back to a raw
+5. **Rendered fetch** (headless Chromium) for everything else, falling back to a raw
    fetch if the render fails.
-5. **Site-specific parsers** run against the fetched HTML (Uniqlo, Carhartt, …).
-6. **Generic structured data** — JSON-LD `Product`, OpenGraph/`product:*` meta,
+6. **Site-specific parsers** run against the fetched HTML (Uniqlo, Carhartt, …).
+7. **Generic structured data** — JSON-LD `Product`, OpenGraph/`product:*` meta,
    microdata, `<title>` fallback.
-7. **Claude enrichment** — only if the result is still incomplete (missing name,
+8. **Claude enrichment** — only if the result is still incomplete (missing name,
    price, or image) **and** not in `demoMode` (the public landing-page preview
    skips AI so the unauthenticated path never spends Claude $).
 
@@ -34,6 +37,7 @@ then to Claude AI enrichment.
 |---------|-----------|----------|-------|
 | **Shopify** (platform) | any store exposing `/products/<handle>.js` | product JSON endpoint | Covers the hundreds of DTC fashion brands on Shopify. One parser, many stores. |
 | **WooCommerce** (platform) | `/product/<slug>` (+ WPML bases `prodotto`/`producto`/`produkt`/`produit`/`produto`) exposing `/wp-json/wc/store/products` | no-auth Store API | Prices are minor-unit integer strings (`currency_minor_unit`); `regular_price` → `originalPrice` when `on_sale`; brand/color often unset on single-brand stores (fall through to generic/AI). Fetch via `safeFetch`; on failure falls back to the rendered generic path. |
+| **Squarespace Commerce** (platform) | `/p/<slug>` store-item path exposing `<path>?format=json` (`recordType 11` / `structuredContent._type === "StoreItem"`) | store-item JSON endpoint | Clean `item.title` (no `— <StoreName>` suffix); price/currency from `variants[0].priceMoney` (item/structuredContent prices are `0.00` when set per-variant); `onSale` splits `salePriceMoney` (live) vs `priceMoney` (`originalPrice`); colors from `variantOptionOrdering` + variant `optionValues`/`attributes`; image prefers direct CDN `item.items[]`; description from `item.excerpt`. Brand left unset (falls through to generic). Fetch via `safeFetch`; on failure falls back to the rendered generic path. |
 | **Amazon** | `amazon.*` (any TLD) | HTML DOM scrape + anti-bot retry | `#productTitle`, `.a-offscreen` price, strikethrough list price → `originalPrice`; currency from symbol/host; 8-attempt retry for the price-hydration A/B + robot-check interstitial. |
 | **Uniqlo** | `uniqlo.com` | `window.__PRELOADED_STATE__` JSON | Brand fixed to `UNIQLO`; `promo`/`base` prices → `price`/`originalPrice`; colors + stock from `representative`. |
 | **Carhartt** | `carhartt.com` | JSON-LD `Product` | Color pulled from main image `alt` (JSON-LD `color` is null pre-hydration); AggregateOffer low/high is a size range, not a markdown, so no `originalPrice`. |
@@ -43,7 +47,6 @@ then to Claude AI enrichment.
 | Service | Notes |
 |---------|-------|
 | **Farfetch** | Works via the rendered fetch + generic structured data. Requires the headless render to wait for navigation `commit` (heavy SPA); a plain fetch 502s. |
-| **Squarespace Commerce** (platform) | Works via the rendered fetch + generic JSON-LD (brand, name, price, currency, image, description, stock all resolve). Only gaps: the `<title>` fallback appends `— <StoreName>` to the name, and `colors`/`originalPrice` aren't captured. A thin `?format=json` parser could clean those up, but the generic path already covers the essentials — low priority. |
 
 Any retailer with clean JSON-LD `Product` or OpenGraph `product:*` meta generally
 parses through the generic path without a dedicated file.

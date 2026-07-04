@@ -6,6 +6,7 @@ import { extractAmazonProduct } from "./parsers/amazon";
 import { extractCarharttProduct } from "./parsers/carhartt";
 import { fetchShopifyProduct } from "./parsers/shopify";
 import { fetchWooCommerceProduct } from "./parsers/woocommerce";
+import { fetchSquarespaceProduct } from "./parsers/squarespace";
 import { fetchViaUnblocker } from "./unblocker";
 import { safeFetch } from "../utils/safeFetch";
 
@@ -552,12 +553,18 @@ export async function parseProductPage(
     options?.fetcher || shopify || hardWall
       ? null
       : await fetchWooCommerceProduct(url).catch(() => null);
+  // Squarespace Commerce exposes the store item at <path>?format=json — same win as
+  // Shopify/Woo: clean title, per-variant price/colors, skip HTML scraping + AI.
+  const squarespace =
+    options?.fetcher || shopify || woo || hardWall
+      ? null
+      : await fetchSquarespaceProduct(url).catch(() => null);
 
   try {
     const fetcher = options?.fetcher;
     if (fetcher) {
       html = await fetcher(url.toString());
-    } else if (shopify || woo) {
+    } else if (shopify || woo || squarespace) {
       html = "";
     } else if (hardWall && !options?.demoMode) {
       // Route through the unblocker tier (ScrapingBee or equivalent) for hosts whose
@@ -633,7 +640,8 @@ export async function parseProductPage(
     ...extractAmazonProduct(html, url),
     ...extractCarharttProduct(html, url),
     ...(shopify ?? {}),
-    ...(woo ?? {})
+    ...(woo ?? {}),
+    ...(squarespace ?? {})
   };
 
   const brand = siteProduct.brand ?? extractBrand(product) ?? titleFallback.brand;
