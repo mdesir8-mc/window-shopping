@@ -21,6 +21,19 @@ bottom of each section; check things off as they ship.
   detached, with a 409 overlap guard and 503-when-unconfigured. Manual follow-ups: set
   `CRON_SECRET` (web service var) + `APP_URL`/`CRON_SECRET` (GitHub secrets), verify via
   `workflow_dispatch`, then delete the `refresh-cron` Railway service.
+- [ ] **Activate the refresh-cron GitHub Action (blocked on main sync)** — the endpoint
+  is live in prod (Railway deploys from `claude/mobile-infra`; PR #67 merged, probe returns
+  401), but the workflow `.github/workflows/refresh-cron.yml` is only on `mobile-infra`, not
+  `main`. GitHub runs `schedule:` (and shows `workflow_dispatch`) **only from the default
+  branch** (`main`), so the daily cron is dormant. Don't just cherry-pick the workflow onto
+  `main` in isolation: the endpoint/route code (`server/src/routes/cron.ts`,
+  `services/refresh-all.ts`) plus other work it may lean on live on `mobile-infra` and aren't
+  on `main` yet — activating the schedule before that code reaches `main` risks the workflow
+  hitting a prod that later redeploys from `main` without the route. Proper fix: merge
+  `mobile-infra → main` (ships the cron code + workflow together), then confirm the workflow
+  registers and a scheduled/`workflow_dispatch` run returns 202 + email. Until then the daily
+  refresh does NOT run automatically — trigger manually with a `curl` to `/api/cron/refresh`
+  if needed.
 - [x] **Refresh-stale button not updating item cards in prod** — debugged: query-key
   invalidation was a red herring (`["items"]` prefix-matches the grid query, refetch
   fires correctly). Real cause: `ItemCard` shows `formatRelativeDate(item.addedAt)` —
