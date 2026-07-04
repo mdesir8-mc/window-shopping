@@ -5,6 +5,7 @@ import { extractUniqloProduct } from "./parsers/uniqlo";
 import { extractAmazonProduct } from "./parsers/amazon";
 import { extractCarharttProduct } from "./parsers/carhartt";
 import { fetchShopifyProduct } from "./parsers/shopify";
+import { fetchWooCommerceProduct } from "./parsers/woocommerce";
 import { safeFetch } from "../utils/safeFetch";
 
 export class ParserFetchError extends Error {}
@@ -529,12 +530,17 @@ export async function parseProductPage(
   // Shopify storefronts expose product JSON at /products/<handle>.js — use it and
   // skip HTML scraping + AI fallback entirely when the URL resolves to one.
   const shopify = options?.fetcher ? null : await fetchShopifyProduct(url).catch(() => null);
+  // WooCommerce stores expose a Store API (/wp-json/wc/store/products) — gated on a
+  // product-permalink base segment so the probe stays off non-Woo URLs. Same win as
+  // Shopify: skip HTML scraping + AI when it resolves.
+  const woo =
+    options?.fetcher || shopify ? null : await fetchWooCommerceProduct(url).catch(() => null);
 
   try {
     const fetcher = options?.fetcher;
     if (fetcher) {
       html = await fetcher(url.toString());
-    } else if (shopify) {
+    } else if (shopify || woo) {
       html = "";
     } else if (/(^|\.)amazon\.[a-z.]+$/i.test(url.hostname)) {
       // Amazon serves headless browsers a "Continue shopping" anti-bot
@@ -591,7 +597,8 @@ export async function parseProductPage(
     ...extractUniqloProduct(html, url),
     ...extractAmazonProduct(html, url),
     ...extractCarharttProduct(html, url),
-    ...(shopify ?? {})
+    ...(shopify ?? {}),
+    ...(woo ?? {})
   };
 
   const brand = siteProduct.brand ?? extractBrand(product) ?? titleFallback.brand;

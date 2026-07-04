@@ -37,6 +37,18 @@ bottom of each section; check things off as they ship.
   npm/@semantic-release/npm then. Also tracking the related `esbuild` LOW (vite→esbuild,
   Windows dev-server only). Watch item, not urgent.
 
+- [ ] **`safeFetch` single-IP pinning is fragile against Cloudflare anycast** — surfaced
+  while testing the WooCommerce Store API locally. `safeFetch` (server/src/utils/safeFetch.ts)
+  resolves one vetted IP and pins the undici connection to it (no Happy-Eyeballs), for SSRF
+  safety. Against Cloudflare-fronted hosts (which return several anycast IPs) the single
+  pinned IP is often unreachable *from local dev*, so the fetch intermittently throws
+  `fetch failed` / `ERR_INVALID_IP_ADDRESS`; plain happy-eyeballs undici was 100% reliable to
+  the same hosts. This affects **every** `safeFetch` caller (Shopify, WooCommerce, Amazon
+  raw), masked today by each parser's `.catch → generic-render` fallback. Unconfirmed whether
+  it also bites in prod (Railway may reach all anycast IPs). Investigate: does Railway see the
+  failures? If so, consider trying all vetted IPs (validate every address, then Happy-Eyeballs
+  across the vetted set) instead of pinning one.
+
 ## Features
 
 - [x] **Account menu / sign-out from the sidebar avatar** — clicking the
@@ -158,6 +170,41 @@ bottom of each section; check things off as they ship.
     name fallback ([AddItemFlow.tsx:460]) so a nameless parse still renders.
   - Embed `LandingParseDemo` on `src/pages/Landing.tsx` (hero section, above "How it
     works"). Login page reuse optional/skipped to keep scope tight.
+
+- [ ] **Expand parser coverage (new retailers)** — add dedicated/hardened parsers for
+  the sites below, ranked by ease of impl. Confirmed-working set + this list documented
+  in `server/src/services/parsers/README.md`. Pattern: guard on `url.hostname`, prefer the
+  site's own embedded JSON / JSON-LD over DOM scraping, spread into `siteProduct` in
+  `parser.ts`. Each should ship with a fixture-backed test mirroring the existing parser
+  tests. Ordered easiest → hardest:
+  1. [x] **WooCommerce** (platform) — **shipped** (`parsers/woocommerce.ts`, wired into
+     `parser.ts` as a Shopify-style short-circuit; `tests/woocommerce.test.ts`). Uses the
+     no-auth Store API (`/wp-json/wc/store/products?slug=<slug>`), gated on a
+     product-permalink base (`/product/` + WPML locale variants) so it doesn't probe every
+     URL. Verified live against goshopia/nordrepublic/akke. Note: `safeFetch`'s single-IP
+     pinning is flaky against Cloudflare anycast hosts *from local dev* (falls back to the
+     generic render path on failure) — see the separate safeFetch reliability item below.
+  2. **Squarespace Commerce** (platform) — **already works via the generic path** (JSON-LD
+     gives brand/name/price/currency/image/desc/stock; verified on aaksonline.com). Only
+     gaps: name gets a `— <StoreName>` suffix, no colors/originalPrice. A thin `?format=json`
+     parser could clean those but the essentials already land — **low priority.**
+  3. **The RealReal** — **blocked: PerimeterX bot wall**, not a markup issue. Headless render
+     *and* plain fetch both get a `403` `px-captcha` denial page; no JSON-LD reaches us. The
+     "solid JSON-LD, likely works" assumption was stale. Needs challenge-solving / residential
+     proxy before any parser matters — reclassified to README "Known broken".
+  4. **Nordstrom** — **blocked: Akamai-style JS anti-bot challenge** (257 KB `istlWasHere`
+     interstitial, empty title), not the product page. Same blocker class as The RealReal.
+     Reclassified to README "Known broken".
+  5. **Grailed** — menswear resale, very on-brand. React SPA but embeds `__NEXT_DATA__` /
+     JSON-LD; extract the Next.js data blob after render.
+  6. **ASOS** — big catalog; structured data + internal `/api/product/`. Some bot
+     protection — may need rendered-fetch hardening.
+  7. **SSENSE** — luxury, super on-brand. **Regression, not a new add: used to work, now
+     broken for unknown reasons** (see README "Known broken"). Diagnose first (markup change
+     vs. new bot wall) before deciding effort. React SPA + likely Cloudflare.
+
+  _Note: Farfetch now works via the generic rendered path (headless render must wait for
+  navigation `commit`; plain fetch 502s) — no dedicated parser needed. Recorded in README._
 
 ## iOS App (Expo / React Native)
 
