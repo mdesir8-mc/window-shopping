@@ -11,5 +11,20 @@
         ]
       }
     ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(graphify:*)",
+      "Agent",
+      "Skill",
+      "mcp__796e5d3c-02c0-4014-9ef9-e02263e50c27__notion-fetch",
+      "mcp__796e5d3c-02c0-4014-9ef9-e02263e50c27__notion-search",
+      "mcp__796e5d3c-02c0-4014-9ef9-e02263e50c27__notion-update-page",
+      "mcp__796e5d3c-02c0-4014-9ef9-e02263e50c27__notion-create-pages"
+    ]
   }
 }

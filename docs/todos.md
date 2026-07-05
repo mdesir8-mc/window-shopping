@@ -122,13 +122,19 @@ bottom of each section; check things off as they ship.
   formatted String, so store the parsed number alongside for charting. Consider a
   retention cap (e.g. keep last N or 1/day) so the table doesn't grow unbounded.
 
-- [ ] **Shareable public closet link** — read-only, no-auth view of one closet via a
-  share token. Add a `shareToken String? @unique` (or `public Boolean`) to `Closet`;
-  new **public** route (`GET /api/public/closets/:token`) that bypasses the auth
-  middleware and returns only safe fields (no user PII, no internal ids beyond what's
-  needed to render); new unauthenticated frontend page that reuses `ItemGrid`/`ItemCard`
-  read-only. **Security surface — review carefully:** token must be unguessable, route
-  must be rate-limited, and revoking the token must invalidate the link.
+- [x] **Shareable public closet link** — shipped in #69 (branch
+  `claude/public-closet-share`, base `claude/mobile-infra`). `Closet.shareToken String? @unique`
+  (+ migration); owner-scoped `POST`/`DELETE /api/closets/:id/share` (idempotent enable,
+  revoke nulls the token, both behind `requireAuth` + `shareLimiter`); unauthenticated
+  `GET /api/public/closets/:token` (`server/src/routes/public.ts`) outside `requireAuth`,
+  dedicated `shareViewLimiter`, 64-hex token validated pre-DB, opaque 404 for
+  wrong/revoked/malformed, `X-Robots-Tag: noindex`, `findUnique` lookup. Safe fields via a
+  dedicated explicit-allowlist `publicSerializers.ts` (no `userId`/`note`/`favorited`/
+  `lastCheckedAt`/`shareToken`). Frontend `/share/:token` read-only page reuses `ProductTile`
+  (not `ItemCard` — it's coupled to auth hooks), bare-axios public fetch (no bearer leak),
+  client `noindex`; share enable/copy/revoke UI in `ClosetDetail`. Reviewed via
+  `/total-security` (all PASS/CLEAN, no CRITICAL/HIGH). Token unguessable (256-bit CSPRNG),
+  rate-limited, revocation invalidates instantly — all three security requirements met.
 
 - [x] **Landing-page parse demo** — shipped in #58. Public `POST /api/public/parse-url`
   (`server/src/routes/public.ts`) calls `parseProductPage(url, { demoMode: true })` —
