@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import PublicCloset from "./pages/PublicCloset";
 import NotFound from "./pages/NotFound";
 
 function AuthBootstrap() {
@@ -68,6 +69,7 @@ export default function App() {
 
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/share/:token" element={<PublicCloset />} />
 
         {user ? (
           <Route element={<AppShell />}>

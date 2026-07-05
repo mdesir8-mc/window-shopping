@@ -3,9 +3,15 @@ import rateLimit from "express-rate-limit";
 import { prisma } from "../lib/prisma";
 import type { AuthenticatedRequest } from "../types";
 import { asyncHandler, HttpError } from "../utils/http";
+import { getAppBaseUrl } from "../services/email";
 import { parseExportFormat, sendItemsExport } from "../utils/itemExport";
 import { serializeCloset, serializeSection } from "../utils/serializers";
+import { generateShareToken } from "../utils/shareToken";
 import { optionalInteger, optionalString, optionalStringArray, requireString } from "../utils/validation";
+
+function shareUrl(token: string): string {
+  return `${getAppBaseUrl().replace(/\/+$/, "")}/share/${token}`;
+}
 
 const router = Router();
 
@@ -245,6 +251,51 @@ router.delete(
         id: closetId,
         userId: request.user.id
       }
+    });
+
+    if (result.count === 0) {
+      throw new HttpError(404, "Closet not found.");
+    }
+
+    res.status(204).send();
+  })
+);
+
+router.post(
+  "/:id/share",
+  asyncHandler(async (req, res) => {
+    const request = req as AuthenticatedRequest;
+    const closetId = requireString(req.params.id, "id");
+    const closet = await prisma.closet.findFirst({
+      where: { id: closetId, userId: request.user.id }
+    });
+
+    if (!closet) {
+      throw new HttpError(404, "Closet not found.");
+    }
+
+    // Idempotent: re-enabling returns the existing token so a double-click never
+    // silently orphans outstanding links. Revoke + re-enable to rotate.
+    const token = closet.shareToken ?? generateShareToken();
+    if (!closet.shareToken) {
+      await prisma.closet.update({
+        where: { id: closet.id },
+        data: { shareToken: token }
+      });
+    }
+
+    res.json({ shareToken: token, shareUrl: shareUrl(token) });
+  })
+);
+
+router.delete(
+  "/:id/share",
+  asyncHandler(async (req, res) => {
+    const request = req as AuthenticatedRequest;
+    const closetId = requireString(req.params.id, "id");
+    const result = await prisma.closet.updateMany({
+      where: { id: closetId, userId: request.user.id },
+      data: { shareToken: null }
     });
 
     if (result.count === 0) {

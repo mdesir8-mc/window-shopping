@@ -7,7 +7,14 @@ import ItemGrid from "../components/items/ItemGrid";
 import ProductTile from "../components/ui/ProductTile";
 import Modal from "../components/ui/Modal";
 import { useAppShell } from "../components/layout/AppShell";
-import { useCloset, useCreateSection, useDeleteSection, usePatchSection } from "../hooks/useClosets";
+import {
+  useCloset,
+  useCreateSection,
+  useDeleteSection,
+  useDisableShare,
+  useEnableShare,
+  usePatchSection
+} from "../hooks/useClosets";
 import { useItems } from "../hooks/useItems";
 import { useIsMobile } from "../hooks/useMediaQuery";
 import { formatCompactCurrency, hashTone, lightenHex, parsePriceToNumber } from "../lib/format";
@@ -37,9 +44,12 @@ export default function ClosetDetail() {
   const createSectionMutation = useCreateSection();
   const patchSectionMutation = usePatchSection();
   const deleteSectionMutation = useDeleteSection();
+  const enableShareMutation = useEnableShare();
+  const disableShareMutation = useDisableShare();
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [sectionModalOpen, setSectionModalOpen] = useState(false);
   const [sectionName, setSectionName] = useState("");
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const [exportingFormat, setExportingFormat] = useState<ExportFormat | null>(null);
   const closet = closetQuery.data;
   const search = searchParams.get("search") ?? "";
@@ -102,6 +112,49 @@ export default function ClosetDetail() {
       showToast("Couldn't export this closet. Try again shortly.");
     } finally {
       setExportingFormat(null);
+    }
+  }
+
+  const shareUrl =
+    closet?.shareToken && typeof window !== "undefined"
+      ? `${window.location.origin}/share/${closet.shareToken}`
+      : null;
+
+  async function handleEnableShare() {
+    if (!closet) {
+      return;
+    }
+
+    try {
+      await enableShareMutation.mutateAsync(closet.id);
+    } catch {
+      showToast("Couldn't create a share link. Try again shortly.");
+    }
+  }
+
+  async function handleDisableShare() {
+    if (!closet) {
+      return;
+    }
+
+    try {
+      await disableShareMutation.mutateAsync(closet.id);
+      showToast("Sharing turned off.");
+    } catch {
+      showToast("Couldn't turn off sharing. Try again shortly.");
+    }
+  }
+
+  async function handleCopyShareUrl() {
+    if (!shareUrl) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      showToast("Link copied.");
+    } catch {
+      showToast("Couldn't copy. Copy it manually.");
     }
   }
 
@@ -236,6 +289,22 @@ export default function ClosetDetail() {
               }}
             >
               Edit closet
+            </button>
+            <button
+              type="button"
+              onClick={() => setShareModalOpen(true)}
+              style={{
+                padding: "10px 14px",
+                border: "1px solid var(--ws-hairline)",
+                background: closet.shareToken ? "var(--ws-accent)" : "var(--ws-hover-bg, transparent)",
+                color: closet.shareToken ? "var(--ws-paper)" : "inherit",
+                cursor: "pointer",
+                fontSize: 11,
+                letterSpacing: 1.5,
+                textTransform: "uppercase"
+              }}
+            >
+              {closet.shareToken ? "Shared" : "Share"}
             </button>
             {(["csv", "json"] as const).map((format) => (
               <button
@@ -618,6 +687,102 @@ export default function ClosetDetail() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      <Modal open={shareModalOpen} onClose={() => setShareModalOpen(false)} width={480}>
+        <div style={{ padding: 28 }}>
+          <Eyebrow>Share closet</Eyebrow>
+          <Display size={30} style={{ marginTop: 10 }}>
+            {closet.shareToken ? "Anyone with the link" : "Share this closet"}
+          </Display>
+          <p style={{ marginTop: 12, fontFamily: "var(--ws-ui)", fontSize: 13, color: "var(--ws-muted)" }}>
+            {closet.shareToken
+              ? "Anyone with this link can view this closet — read-only, no account needed. Turn off sharing to disable the link."
+              : "Create a private link to a read-only view of this closet. No sign-in required for viewers. You can turn it off anytime."}
+          </p>
+
+          {closet.shareToken && shareUrl ? (
+            <>
+              <div
+                style={{
+                  marginTop: 18,
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "stretch"
+                }}
+              >
+                <input
+                  readOnly
+                  value={shareUrl}
+                  onFocus={(event) => event.target.select()}
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    border: "1px solid var(--ws-hairline)",
+                    background: "var(--ws-surface)",
+                    padding: "12px 14px",
+                    fontFamily: "var(--ws-mono)",
+                    fontSize: 12
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => void handleCopyShareUrl()}
+                  style={{
+                    padding: "10px 14px",
+                    border: "none",
+                    background: "var(--ws-ink)",
+                    color: "var(--ws-paper)",
+                    cursor: "pointer",
+                    fontSize: 11,
+                    letterSpacing: 1.5,
+                    textTransform: "uppercase"
+                  }}
+                >
+                  Copy
+                </button>
+              </div>
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
+                <button
+                  type="button"
+                  disabled={disableShareMutation.isPending}
+                  onClick={() => void handleDisableShare()}
+                  style={{
+                    padding: "10px 14px",
+                    border: "1px solid var(--ws-hairline)",
+                    background: "var(--ws-hover-bg, transparent)",
+                    cursor: disableShareMutation.isPending ? "default" : "pointer",
+                    fontSize: 11,
+                    letterSpacing: 1.5,
+                    textTransform: "uppercase"
+                  }}
+                >
+                  {disableShareMutation.isPending ? "Turning off" : "Stop sharing"}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 20 }}>
+              <button
+                type="button"
+                disabled={enableShareMutation.isPending}
+                onClick={() => void handleEnableShare()}
+                style={{
+                  padding: "10px 14px",
+                  border: "none",
+                  background: "var(--ws-ink)",
+                  color: "var(--ws-paper)",
+                  cursor: enableShareMutation.isPending ? "default" : "pointer",
+                  fontSize: 11,
+                  letterSpacing: 1.8,
+                  textTransform: "uppercase"
+                }}
+              >
+                {enableShareMutation.isPending ? "Creating" : "Create link"}
+              </button>
+            </div>
+          )}
+        </div>
       </Modal>
     </div>
   );

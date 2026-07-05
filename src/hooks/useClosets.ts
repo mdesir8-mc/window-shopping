@@ -4,11 +4,14 @@ import {
   createSection,
   deleteCloset,
   deleteSection,
+  disableClosetShare,
+  enableClosetShare,
   getCloset,
   listClosets,
   patchCloset,
   patchSection
 } from "../api/closets";
+import { fetchPublicCloset } from "../api/public";
 import type { ClosetPayload, SectionPayload } from "../types";
 
 export function useClosets() {
@@ -59,6 +62,39 @@ export function useDeleteCloset() {
       queryClient.invalidateQueries({ queryKey: ["closets"] });
       queryClient.invalidateQueries({ queryKey: ["items"] });
     }
+  });
+}
+
+export function useEnableShare() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => enableClosetShare(id),
+    onSuccess: (_link, id) => {
+      queryClient.invalidateQueries({ queryKey: ["closets", id] });
+      queryClient.invalidateQueries({ queryKey: ["closets"] });
+    }
+  });
+}
+
+export function useDisableShare() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => disableClosetShare(id),
+    onSuccess: (_result, id) => {
+      queryClient.invalidateQueries({ queryKey: ["closets", id] });
+      queryClient.invalidateQueries({ queryKey: ["closets"] });
+    }
+  });
+}
+
+export function usePublicCloset(token?: string) {
+  return useQuery({
+    queryKey: ["public-closet", token],
+    queryFn: () => fetchPublicCloset(token as string),
+    enabled: Boolean(token),
+    retry: false
   });
 }
 
