@@ -21,6 +21,7 @@ type CountedCloset = {
   accent: string | null;
   tags: string[];
   season: string | null;
+  shareToken?: string | null;
   createdAt: Date;
   updatedAt: Date;
   sections?: CountedSection[];
@@ -94,6 +95,7 @@ export function serializeCloset(closet: CountedCloset) {
     accent: closet.accent,
     tags: closet.tags,
     season: closet.season,
+    shareToken: closet.shareToken ?? null,
     createdAt: closet.createdAt.toISOString(),
     updatedAt: closet.updatedAt.toISOString(),
     itemCount: closet.itemCount ?? closet._count?.items ?? 0,

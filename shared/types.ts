@@ -57,10 +57,55 @@ export interface Closet {
   accent: string | null;
   tags: string[];
   season: string | null;
+  shareToken: string | null;
   createdAt: string;
   updatedAt: string;
   itemCount: number;
   sections: Section[];
+}
+
+export interface ShareLink {
+  shareToken: string;
+  shareUrl: string;
+}
+
+export interface PublicSection {
+  id: string;
+  name: string;
+  order: number;
+  itemCount: number;
+}
+
+export interface PublicItem {
+  id: string;
+  sectionId: string | null;
+  brand: string;
+  name: string;
+  price: string | null;
+  originalPrice: string | null;
+  currency: string | null;
+  source: string | null;
+  url: string | null;
+  season: string;
+  tags: string[];
+  colors: string[];
+  description: string | null;
+  imageUrl: string | null;
+  inStock: boolean | null;
+  onSale: boolean;
+  addedAt: string;
+}
+
+export interface PublicCloset {
+  id: string;
+  name: string;
+  subtitle: string | null;
+  accent: string | null;
+  tags: string[];
+  season: string | null;
+  itemCount: number;
+  sections: PublicSection[];
+  items: PublicItem[];
 }
 
 export interface ItemLink {

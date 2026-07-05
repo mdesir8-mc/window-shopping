@@ -62,6 +62,7 @@ model Closet {
   accent    String?
   tags      String[]
   season    String?
+  shareToken String?  @unique
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   sections  Section[]

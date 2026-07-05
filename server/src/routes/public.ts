@@ -1,11 +1,59 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
+import { prisma } from "../lib/prisma";
 import { parseProductPage, ParserFetchError } from "../services/parser";
 import { asyncHandler, HttpError } from "../utils/http";
+import { serializePublicCloset } from "../utils/publicSerializers";
+import { isValidShareToken } from "../utils/shareToken";
 import { validateSsrfSafeUrl } from "../utils/ssrf";
 import { requireString } from "../utils/validation";
 
 const router = Router();
+
+// Cheap indexed DB read, so no global daily cap (unlike parse-url, which launches
+// a headless browser). This limiter is anti-scraping/DoS only — token brute-force
+// is already a non-issue at 256 bits of entropy.
+const shareViewLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests. Try again in a minute." },
+  skip: () => process.env.NODE_ENV === "test"
+});
+
+router.get(
+  "/closets/:token",
+  shareViewLimiter,
+  asyncHandler(async (req, res) => {
+    const token = requireString(req.params.token, "token");
+    // Reject malformed tokens before touching the DB. A revoked or bogus token is
+    // indistinguishable from a wrong one — always the same opaque 404.
+    if (!isValidShareToken(token)) {
+      throw new HttpError(404, "Closet not found.");
+    }
+
+    const closet = await prisma.closet.findUnique({
+      where: { shareToken: token },
+      include: {
+        sections: {
+          orderBy: { order: "asc" },
+          include: { _count: { select: { items: true } } }
+        },
+        items: { orderBy: { addedAt: "desc" } },
+        _count: { select: { items: true } }
+      }
+    });
+
+    if (!closet) {
+      throw new HttpError(404, "Closet not found.");
+    }
+
+    // Keep leaked share links out of search indexes.
+    res.setHeader("X-Robots-Tag", "noindex");
+    res.json(serializePublicCloset(closet));
+  })
+);
 
 // Unauthenticated landing-page parse demo. Stricter than the authed parseLimiter
 // (10/min) since the surface is open to the internet and each parse spins up a
