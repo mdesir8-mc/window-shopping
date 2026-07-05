@@ -14,40 +14,6 @@ import {
 } from "../api/items";
 import type { Item, ItemFilters, ItemPayload } from "../types";
 
-function itemMatchesFilters(item: Item, filters: ItemFilters) {
-  if (filters.closetId && item.closetId !== filters.closetId) {
-    return false;
-  }
-
-  if (filters.sectionId && item.sectionId !== filters.sectionId) {
-    return false;
-  }
-
-  if (filters.season && item.season !== filters.season) {
-    return false;
-  }
-
-  if (filters.onSale !== undefined && item.onSale !== filters.onSale) {
-    return false;
-  }
-
-  if (filters.inStock !== undefined && item.inStock !== filters.inStock) {
-    return false;
-  }
-
-  if (filters.search) {
-    const haystack = [item.brand, item.name, item.description ?? "", item.tags.join(" ")]
-      .join(" ")
-      .toLowerCase();
-
-    if (!haystack.includes(filters.search.toLowerCase())) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 function patchItemInLists(queryClient: ReturnType<typeof useQueryClient>, updater: (item: Item) => Item) {
   const cache = queryClient.getQueryCache().findAll({ queryKey: ["items"] });
 
@@ -219,8 +185,4 @@ export function useOptimisticTagUpdate() {
   }
 
   return { updateItemTags, isPending: patchMutation.isPending };
-}
-
-export function filterItems(items: Item[], filters: ItemFilters) {
-  return items.filter((item) => itemMatchesFilters(item, filters));
 }

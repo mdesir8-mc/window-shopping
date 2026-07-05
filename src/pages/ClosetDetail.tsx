@@ -6,7 +6,7 @@ import Tag from "../components/ui/Tag";
 import ItemGrid from "../components/items/ItemGrid";
 import ProductTile from "../components/ui/ProductTile";
 import Modal from "../components/ui/Modal";
-import { useAppShell } from "../components/layout/AppShell";
+import { useAppShell } from "../components/layout/AppShellContext";
 import {
   useCloset,
   useCreateSection,
@@ -17,8 +17,9 @@ import {
 } from "../hooks/useClosets";
 import { useItems } from "../hooks/useItems";
 import { useIsMobile } from "../hooks/useMediaQuery";
-import { formatCompactCurrency, hashTone, lightenHex, parsePriceToNumber } from "../lib/format";
+import { formatCompactCurrency, hashTone, lightenHex } from "../lib/format";
 import { downloadClosetExport, type ExportFormat } from "../api/export";
+import { computeClosetStats } from "./useClosetDetail";
 import type { ItemFilters } from "../types";
 
 const SORT_OPTIONS = [
@@ -68,18 +69,7 @@ export default function ClosetDetail() {
   });
   const items = itemsQuery.data ?? [];
   const activeSectionObject = closet?.sections.find((section) => section.id === activeSection) ?? null;
-  const totalValue = useMemo(
-    () => items.reduce((sum, item) => sum + parsePriceToNumber(item.price), 0),
-    [items]
-  );
-  const onSaleCount = useMemo(
-    () => items.filter((item) => item.onSale).length,
-    [items]
-  );
-  const outOfStockCount = useMemo(
-    () => items.filter((item) => item.inStock === false).length,
-    [items]
-  );
+  const { totalValue, onSaleCount, outOfStockCount } = useMemo(() => computeClosetStats(items), [items]);
   const hasActiveItemFilters = Boolean(search || season || onSaleFilter || inStockFilter);
 
   function setUrlParam(key: string, value: string | null) {

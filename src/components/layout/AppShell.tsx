@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Outlet } from "react-router-dom";
 import type { Closet, Item } from "../../types";
+import { AppShellContext, type AppShellContextValue } from "./AppShellContext";
 import { useClosets } from "../../hooks/useClosets";
 import { useItems } from "../../hooks/useItems";
 import { useAuthStore } from "../../store/auth";
@@ -16,28 +17,7 @@ import { DEFAULT_THEME, type ThemeName } from "../../constants";
 import { useAuth } from "../../hooks/useAuth";
 import { useIsMobile } from "../../hooks/useMediaQuery";
 
-interface AppShellContextValue {
-  openAddItem: () => void;
-  openTagManager: () => void;
-  openItemDrawer: (itemId: string) => void;
-  closeItemDrawer: () => void;
-  openClosetForm: (closet?: Closet | null) => void;
-  openItemForm: (item: Item) => void;
-  showToast: (message: string) => void;
-}
-
-const AppShellContext = createContext<AppShellContextValue | null>(null);
 const THEME_STORAGE_KEY = "window-shopping.theme";
-
-export function useAppShell() {
-  const value = useContext(AppShellContext);
-
-  if (!value) {
-    throw new Error("useAppShell must be used within AppShell.");
-  }
-
-  return value;
-}
 
 export default function AppShell() {
   const isMobile = useIsMobile();

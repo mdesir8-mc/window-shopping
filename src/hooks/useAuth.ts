@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCurrentUser, googleLogin, login, logout as logoutApi, register, updateProfile } from "../api/auth";
 import { useAuthStore } from "../store/auth";
 
-export function useCurrentUser() {
+function useCurrentUser() {
   const user = useAuthStore((state) => state.user);
 
   return useQuery({

@@ -5,7 +5,7 @@ import Tag from "../ui/Tag";
 import { hasRefreshableUrl, isStale } from "../../../shared/staleness";
 import { formatRelativeDate, hashTone } from "../../lib/format";
 import { useRefreshItem } from "../../hooks/useItems";
-import { useAppShell } from "../layout/AppShell";
+import { useAppShell } from "../layout/AppShellContext";
 
 export default function ItemCard({
   item,

@@ -7,7 +7,7 @@ import { hashTone } from "../../lib/format";
 import { useTags } from "../../hooks/useTags";
 import { useRefreshStaleItems } from "../../hooks/useItems";
 import { isStale } from "../../../shared/staleness";
-import { useAppShell } from "./AppShell";
+import { useAppShell } from "./AppShellContext";
 import { useIsMobile } from "../../hooks/useMediaQuery";
 
 interface SidebarProps {
