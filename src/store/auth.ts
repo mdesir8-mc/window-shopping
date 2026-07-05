@@ -10,7 +10,7 @@ interface AuthState {
   clearAuth: () => void;
 }
 
-export const AUTH_STORAGE_KEY = "window-shopping.auth";
+const AUTH_STORAGE_KEY = "window-shopping.auth";
 
 function persistedUser(state: unknown) {
   return state && typeof state === "object" && "user" in state ? (state as Pick<AuthState, "user">).user : null;

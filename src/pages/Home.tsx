@@ -9,7 +9,7 @@ import { useClosets } from "../hooks/useClosets";
 import { useItems } from "../hooks/useItems";
 import { useTags } from "../hooks/useTags";
 import { formatCompactCurrency, greetingForHour, parsePriceToNumber } from "../lib/format";
-import { useAppShell } from "../components/layout/AppShell";
+import { useAppShell } from "../components/layout/AppShellContext";
 import { useAuthStore } from "../store/auth";
 import { useIsMobile } from "../hooks/useMediaQuery";
 
