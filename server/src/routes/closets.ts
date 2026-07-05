@@ -24,6 +24,17 @@ const exportLimiter = rateLimit({
   skip: () => process.env.NODE_ENV === "test"
 });
 
+// Defense-in-depth on the share enable/revoke mutations (already owner-scoped +
+// behind requireAuth), matching the limiter convention used elsewhere.
+const shareLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many share changes. Try again in a few minutes." },
+  skip: () => process.env.NODE_ENV === "test"
+});
+
 async function findOwnedCloset(userId: string, closetId: string) {
   return prisma.closet.findFirst({
     where: {
@@ -263,6 +274,7 @@ router.delete(
 
 router.post(
   "/:id/share",
+  shareLimiter,
   asyncHandler(async (req, res) => {
     const request = req as AuthenticatedRequest;
     const closetId = requireString(req.params.id, "id");
@@ -290,6 +302,7 @@ router.post(
 
 router.delete(
   "/:id/share",
+  shareLimiter,
   asyncHandler(async (req, res) => {
     const request = req as AuthenticatedRequest;
     const closetId = requireString(req.params.id, "id");
