@@ -135,6 +135,24 @@ export function serializeItem(item: SerializedItemInput) {
   };
 }
 
+export function serializePriceSnapshot(snapshot: {
+  id: string;
+  itemId: string;
+  price: string | null;
+  priceNumeric: number | null;
+  inStock: boolean | null;
+  capturedAt: Date;
+}) {
+  return {
+    id: snapshot.id,
+    itemId: snapshot.itemId,
+    price: snapshot.price,
+    priceNumeric: snapshot.priceNumeric,
+    inStock: snapshot.inStock,
+    capturedAt: snapshot.capturedAt.toISOString()
+  };
+}
+
 export function serializeTag(tag: { id: string; userId: string; name: string; color: string | null; createdAt: Date }, itemCount = 0) {
   return {
     id: tag.id,

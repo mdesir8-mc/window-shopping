@@ -4,6 +4,7 @@ import { fetchRenderedHtml } from "./browser";
 import { extractUniqloProduct } from "./parsers/uniqlo";
 import { extractAmazonProduct } from "./parsers/amazon";
 import { extractCarharttProduct } from "./parsers/carhartt";
+import { extractGrailedProduct, isGrailedHost, GRAILED_RENDER_USER_AGENT } from "./parsers/grailed";
 import { fetchShopifyProduct } from "./parsers/shopify";
 import { fetchWooCommerceProduct } from "./parsers/woocommerce";
 import { fetchSquarespaceProduct } from "./parsers/squarespace";
@@ -595,8 +596,13 @@ export async function parseProductPage(
         html = await fetchRenderedHtml(url.toString());
       }
     } else {
+      // Grailed's Cloudflare edge 403s Chromium's default "HeadlessChrome" UA, so that
+      // host renders with a real browser UA. Other hosts keep the default.
+      const renderOptions = isGrailedHost(url.hostname)
+        ? { userAgent: GRAILED_RENDER_USER_AGENT }
+        : undefined;
       try {
-        html = await fetchRenderedHtml(url.toString());
+        html = await fetchRenderedHtml(url.toString(), renderOptions);
       } catch (renderError) {
         console.error("[parser] rendered fetch failed, falling back to raw:", renderError);
         html = await fetchRawHtml(url.toString());
@@ -639,6 +645,7 @@ export async function parseProductPage(
     ...extractUniqloProduct(html, url),
     ...extractAmazonProduct(html, url),
     ...extractCarharttProduct(html, url),
+    ...extractGrailedProduct(html, url),
     ...(shopify ?? {}),
     ...(woo ?? {}),
     ...(squarespace ?? {})

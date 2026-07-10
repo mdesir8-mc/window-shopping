@@ -173,8 +173,15 @@ bottom of each section; check things off as they ship.
   4. [x] **Nordstrom** — **addressed pending API key.** Same unblocker tier as The RealReal
      (Akamai JS challenge). Set the env vars and Nordstrom routes through automatically.
      Documented in README "Behind the unblocker tier".
-  5. **Grailed** — menswear resale, very on-brand. React SPA but embeds `__NEXT_DATA__` /
-     JSON-LD; extract the Next.js data blob after render.
+  5. [x] **Grailed** — **shipped** (`parsers/grailed.ts`, spread into `parser.ts` alongside
+     the other HTML extractors; `tests/grailed.test.ts`). Reads the `__NEXT_DATA__`
+     `props.pageProps.listing` blob: brand from `designerNames`, `priceDrops[0]` →
+     `originalPrice` when `dropped`, color from `traits`, `inStock` = `!sold`, and the real
+     seller description (the JSON-LD one is boilerplate). Currency comes from the generic
+     JSON-LD offer. **Gotcha:** Grailed's Cloudflare edge 403s Chromium's default
+     `HeadlessChrome` UA, so `fetchRenderedHtml` gained an optional `userAgent` and
+     `parser.ts` passes a real browser UA for `grailed.com` only. Verified live against
+     real listings (incl. a price-dropped one).
   6. **ASOS** — big catalog; structured data + internal `/api/product/`. Some bot
      protection — may need rendered-fetch hardening.
   7. **SSENSE** — luxury, super on-brand. **Regression, not a new add: used to work, now

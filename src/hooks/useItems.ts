@@ -4,6 +4,7 @@ import {
   deleteItem,
   favoriteItem,
   getItem,
+  getItemHistory,
   listItems,
   moveItem,
   parseUrl,
@@ -43,6 +44,16 @@ export function useItem(id?: string) {
   return useQuery({
     queryKey: ["items", "detail", id],
     queryFn: () => getItem(id as string),
+    enabled: Boolean(id)
+  });
+}
+
+// Keyed outside the ["items"] namespace on purpose: item mutations prefix-invalidate
+// ["items"], and price history is unaffected by them.
+export function useItemHistory(id?: string) {
+  return useQuery({
+    queryKey: ["item-history", id],
+    queryFn: () => getItemHistory(id as string),
     enabled: Boolean(id)
   });
 }

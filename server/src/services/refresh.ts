@@ -5,6 +5,7 @@ import { parseProductPage, ParserFetchError } from "./parser";
 import { EmailSendError, getAppBaseUrl, sendEmail, type SendEmailResult } from "./email";
 import { priceDropEmail, type OutOfStockEntry, type PriceDropEntry } from "./email-templates";
 import { recordEmailLog } from "./email-log";
+import { recordPriceSnapshot } from "./priceHistory";
 import { FRESHNESS_THRESHOLD_MS } from "../../../shared/staleness";
 import { parsePriceToNumber } from "../../../shared/price";
 
@@ -62,6 +63,12 @@ export async function refreshItemRecord(item: RefreshableItem) {
       }
     }
   });
+
+  // Best-effort; never let a history write fail the refresh itself. Note prevPrice above
+  // comes from the item row (which manual PATCH edits touch), while the snapshot dedup
+  // compares against the last *snapshot* — the two "previous" values can legitimately
+  // differ.
+  await recordPriceSnapshot(item.id, { price: parsed.price, inStock: parsed.inStock });
 
   return { updated, prevPrice, newPrice, prevInStock: item.inStock };
 }

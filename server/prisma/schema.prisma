@@ -110,8 +110,27 @@ model Item {
   addedAt       DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  priceSnapshots PriceSnapshot[]
+
   @@index([closetId])
   @@index([sectionId])
+}
+
+// One row per observed *change* in an item's price or stock, written on item creation
+// and whenever a refresh re-parses the page. Manual PATCH edits are not recorded:
+// history is observed market data, not user corrections.
+model PriceSnapshot {
+  id           String   @id @default(cuid())
+  itemId       String
+  item         Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  price        String?
+  // Null means "no comparable price". parsePriceToNumber() maps missing/unparseable
+  // prices to 0, which would otherwise plot as a real $0 point.
+  priceNumeric Float?
+  inStock      Boolean?
+  capturedAt   DateTime @default(now())
+
+  @@index([itemId, capturedAt])
 }
 
 model Tag {

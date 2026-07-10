@@ -5,9 +5,10 @@ import { parseProductPage, ParserFetchError } from "../services/parser";
 import type { AuthenticatedRequest } from "../types";
 import { asyncHandler, HttpError } from "../utils/http";
 import { parseExportFormat, sendItemsExport } from "../utils/itemExport";
-import { serializeItem } from "../utils/serializers";
+import { serializeItem, serializePriceSnapshot } from "../utils/serializers";
 import { validateSsrfSafeUrl } from "../utils/ssrf";
 import { parsePriceToNumber } from "../../../shared/price";
+import { listPriceSnapshots, recordPriceSnapshot } from "../services/priceHistory";
 import { refreshItemRecord, refreshStaleItemsForUser } from "../services/refresh";
 import {
   optionalBoolean,
@@ -264,6 +265,8 @@ router.post(
       }
     });
 
+    await recordPriceSnapshot(item.id, { price: item.price, inStock: item.inStock });
+
     res.status(201).json(serializeItem(item));
   })
 );
@@ -315,6 +318,25 @@ router.get(
     }
 
     res.json(serializeItem(item));
+  })
+);
+
+router.get(
+  "/:id/history",
+  asyncHandler(async (req, res) => {
+    const request = req as AuthenticatedRequest;
+    const itemId = requireString(req.params.id, "id");
+    const item = await findOwnedItem(request.user.id, itemId);
+
+    if (!item) {
+      throw new HttpError(404, "Item not found.");
+    }
+
+    const rawLimit = Number(req.query.limit);
+    const limit = Number.isInteger(rawLimit) && rawLimit > 0 ? rawLimit : undefined;
+    const snapshots = await listPriceSnapshots(itemId, limit);
+
+    res.json(snapshots.map(serializePriceSnapshot));
   })
 );
 
