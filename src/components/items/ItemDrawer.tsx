@@ -6,6 +6,7 @@ import Display from "../ui/Display";
 import Hairline from "../ui/Hairline";
 import Tag from "../ui/Tag";
 import Meta from "../ui/Meta";
+import Sparkline from "../ui/Sparkline";
 import { SEASONS } from "../../constants";
 import { hasRefreshableUrl, isStale } from "../../../shared/staleness";
 import { formatRelativeDate, hashTone } from "../../lib/format";
@@ -14,6 +15,7 @@ import {
   useDeleteItem,
   useFavoriteItem,
   useItem,
+  useItemHistory,
   useMoveItem,
   useOptimisticTagUpdate,
   usePatchItem,
@@ -31,6 +33,7 @@ export default function ItemDrawer({
 }) {
   const isMobile = useIsMobile();
   const itemQuery = useItem(itemId ?? undefined);
+  const historyQuery = useItemHistory(itemId ?? undefined);
   const closetsQuery = useClosets();
   const tagsQuery = useTags();
   const patchMutation = usePatchItem();
@@ -49,6 +52,30 @@ export default function ItemDrawer({
   const suggestedTags = useMemo(() => tagsQuery.data ?? [], [tagsQuery.data]);
   const refreshableUrl = hasRefreshableUrl(item?.url ?? null);
   const stale = item ? isStale(item.lastCheckedAt, item.url) : false;
+
+  // Snapshots with no comparable price can't be plotted. Under two points there's no
+  // trend worth drawing.
+  const priceHistory = useMemo(() => {
+    const priced = (historyQuery.data ?? []).filter((snapshot) => snapshot.priceNumeric !== null);
+
+    if (priced.length < 2) {
+      return null;
+    }
+
+    let low = priced[0];
+    let high = priced[0];
+
+    for (const snapshot of priced) {
+      if (snapshot.priceNumeric! < low.priceNumeric!) {
+        low = snapshot;
+      }
+      if (snapshot.priceNumeric! > high.priceNumeric!) {
+        high = snapshot;
+      }
+    }
+
+    return { low, high, points: priced.map((snapshot) => snapshot.priceNumeric!) };
+  }, [historyQuery.data]);
 
   useEffect(() => {
     if (item) {
@@ -137,6 +164,21 @@ export default function ItemDrawer({
                 </span>
               ) : null}
             </div>
+
+            {priceHistory ? (
+              <div style={{ marginTop: 20 }}>
+                <Eyebrow style={{ marginBottom: 10 }}>Price history</Eyebrow>
+                <Sparkline points={priceHistory.points} width={isMobile ? 260 : 320} />
+                <Meta
+                  style={{ marginTop: 10 }}
+                  items={[
+                    `${priceHistory.points.length} readings`,
+                    priceHistory.low.price ? `Low ${priceHistory.low.price}` : null,
+                    priceHistory.high.price ? `High ${priceHistory.high.price}` : null
+                  ]}
+                />
+              </div>
+            ) : null}
 
             {item.description ? (
               <div

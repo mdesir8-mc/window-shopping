@@ -1,5 +1,12 @@
 import { apiClient } from "./client";
-import type { Item, ItemFilters, ItemPayload, ParsedProduct, RefreshStaleSummary } from "../types";
+import type {
+  Item,
+  ItemFilters,
+  ItemPayload,
+  ParsedProduct,
+  PriceSnapshot,
+  RefreshStaleSummary
+} from "../types";
 
 function toSearchParams(filters: ItemFilters) {
   const params = new URLSearchParams();
@@ -58,6 +65,11 @@ export async function parseUrl(url: string) {
 // Unauthenticated landing-page demo parse — skips AI enrichment server-side.
 export async function parseUrlPublic(url: string) {
   const response = await apiClient.post<ParsedProduct>("/api/public/parse-url", { url });
+  return response.data;
+}
+
+export async function getItemHistory(id: string) {
+  const response = await apiClient.get<PriceSnapshot[]>(`/api/items/${id}/history`);
   return response.data;
 }
 

@@ -140,6 +140,16 @@ export interface Item {
   section?: ItemLink | null;
 }
 
+export interface PriceSnapshot {
+  id: string;
+  itemId: string;
+  price: string | null;
+  // Null when the observed price was missing or unparseable — skip when charting.
+  priceNumeric: number | null;
+  inStock: boolean | null;
+  capturedAt: string;
+}
+
 export interface Tag {
   id: string;
   userId: string;
