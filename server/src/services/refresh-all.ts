@@ -7,6 +7,7 @@ export type RefreshAllSummary = {
   refreshed: number;
   priceDrops: number;
   outOfStock: number;
+  backInStock: number;
 };
 
 /**
@@ -33,6 +34,7 @@ export async function refreshAllUsers(): Promise<RefreshAllSummary> {
   let refreshed = 0;
   let priceDrops = 0;
   let outOfStock = 0;
+  let backInStock = 0;
 
   for (const user of users) {
     try {
@@ -40,14 +42,15 @@ export async function refreshAllUsers(): Promise<RefreshAllSummary> {
       refreshed += summary.refreshed;
       priceDrops += summary.priceDrops;
       outOfStock += summary.outOfStock;
+      backInStock += summary.backInStock;
     } catch (error) {
       console.error(`[refresh-all] failed for user ${user.id}:`, error);
     }
   }
 
   console.log(
-    `[refresh-all] done: refreshed=${refreshed} priceDrops=${priceDrops} outOfStock=${outOfStock}`
+    `[refresh-all] done: refreshed=${refreshed} priceDrops=${priceDrops} outOfStock=${outOfStock} backInStock=${backInStock}`
   );
 
-  return { users: users.length, refreshed, priceDrops, outOfStock };
+  return { users: users.length, refreshed, priceDrops, outOfStock, backInStock };
 }

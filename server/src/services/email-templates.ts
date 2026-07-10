@@ -128,9 +128,17 @@ export type OutOfStockEntry = {
   closetName: string;
 };
 
+export type BackInStockEntry = {
+  brand: string;
+  name: string;
+  url: string | null;
+  closetName: string;
+};
+
 type PriceDropEmailInput = {
   drops: PriceDropEntry[];
   outOfStock: OutOfStockEntry[];
+  backInStock: BackInStockEntry[];
   baseUrl: string;
 };
 
@@ -144,12 +152,14 @@ function itemLabel(brand: string, name: string, url: string | null): string {
  * items. Lists each change with a link back to the product, and a CTA into the in-app
  * price-drops view.
  */
-export function priceDropEmail({ drops, outOfStock, baseUrl }: PriceDropEmailInput): RenderedEmail {
+export function priceDropEmail({ drops, outOfStock, backInStock, baseUrl }: PriceDropEmailInput): RenderedEmail {
   const dropCount = drops.length;
   const oosCount = outOfStock.length;
+  const backCount = backInStock.length;
 
   const subjectParts: string[] = [];
   if (dropCount > 0) subjectParts.push(`${dropCount} price drop${dropCount === 1 ? "" : "s"}`);
+  if (backCount > 0) subjectParts.push(`${backCount} back in stock`);
   if (oosCount > 0) subjectParts.push(`${oosCount} out of stock`);
   const subject = `Window Shopping: ${subjectParts.join(" · ")}`;
 
@@ -164,6 +174,17 @@ export function priceDropEmail({ drops, outOfStock, baseUrl }: PriceDropEmailInp
       )
       .join("");
     sections.push(`<p style="font-weight:600;margin:0 0 8px;">Price drops</p><ul style="padding-left:18px;margin:0 0 16px;">${rows}</ul>`);
+  }
+  if (backCount > 0) {
+    const rows = backInStock
+      .map(
+        (b) =>
+          `<li style="margin-bottom:8px;">${itemLabel(b.brand, b.name, b.url)}<br/>` +
+          `<span style="color:#6b7280;">${escapeHtml(b.closetName)} · </span>` +
+          `<span style="color:#15803d;font-weight:600;">back in stock</span></li>`
+      )
+      .join("");
+    sections.push(`<p style="font-weight:600;margin:0 0 8px;">Back in stock</p><ul style="padding-left:18px;margin:0 0 16px;">${rows}</ul>`);
   }
   if (oosCount > 0) {
     const rows = outOfStock
@@ -181,6 +202,13 @@ export function priceDropEmail({ drops, outOfStock, baseUrl }: PriceDropEmailInp
     textLines.push("Price drops:");
     for (const d of drops) {
       textLines.push(`- ${d.brand} — ${d.name} (${d.closetName}): ${d.oldPrice} -> ${d.newPrice}${d.url ? ` ${d.url}` : ""}`);
+    }
+    textLines.push("");
+  }
+  if (backCount > 0) {
+    textLines.push("Back in stock:");
+    for (const b of backInStock) {
+      textLines.push(`- ${b.brand} — ${b.name} (${b.closetName})${b.url ? ` ${b.url}` : ""}`);
     }
     textLines.push("");
   }
