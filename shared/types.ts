@@ -189,6 +189,7 @@ export interface RefreshStaleSummary {
   refreshed: number;
   priceDrops: number;
   outOfStock: number;
+  backInStock: number;
   failed: number;
 }
 

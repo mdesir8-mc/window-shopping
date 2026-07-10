@@ -3,7 +3,12 @@ import { HttpError } from "../utils/http";
 import { validateSsrfSafeUrl } from "../utils/ssrf";
 import { parseProductPage, ParserFetchError } from "./parser";
 import { EmailSendError, getAppBaseUrl, sendEmail, type SendEmailResult } from "./email";
-import { priceDropEmail, type OutOfStockEntry, type PriceDropEntry } from "./email-templates";
+import {
+  priceDropEmail,
+  type BackInStockEntry,
+  type OutOfStockEntry,
+  type PriceDropEntry
+} from "./email-templates";
 import { recordEmailLog } from "./email-log";
 import { recordPriceSnapshot } from "./priceHistory";
 import { FRESHNESS_THRESHOLD_MS } from "../../../shared/staleness";
@@ -78,6 +83,7 @@ export type RefreshStaleSummary = {
   refreshed: number;
   priceDrops: number;
   outOfStock: number;
+  backInStock: number;
   failed: number;
 };
 
@@ -118,10 +124,12 @@ export async function refreshStaleItemsForUser(userId: string): Promise<RefreshS
   let refreshed = 0;
   let priceDrops = 0;
   let outOfStock = 0;
+  let backInStock = 0;
   let failed = 0;
 
   const drops: PriceDropEntry[] = [];
   const oosTransitions: OutOfStockEntry[] = [];
+  const backInStockTransitions: BackInStockEntry[] = [];
 
   for (const item of stale) {
     try {
@@ -151,6 +159,19 @@ export async function refreshStaleItemsForUser(userId: string): Promise<RefreshS
           });
         }
       }
+
+      // Symmetric-but-not-identical with the OOS gate above. OOS fires on `null → false`
+      // (first check discovers OOS). Back-in-stock is strict `false → true`: without a
+      // prior OOS event there's nothing to "come back" from, so `null → true` is silent.
+      if (prevInStock === false && updated.inStock === true) {
+        backInStock += 1;
+        backInStockTransitions.push({
+          brand: item.brand,
+          name: item.name,
+          url: item.url,
+          closetName: item.closet.name
+        });
+      }
     } catch (error) {
       if (error instanceof ParserFetchError || error instanceof HttpError) {
         failed += 1;
@@ -161,17 +182,18 @@ export async function refreshStaleItemsForUser(userId: string): Promise<RefreshS
     }
   }
 
-  if (drops.length > 0 || oosTransitions.length > 0) {
-    await notifyPriceChanges(userId, drops, oosTransitions);
+  if (drops.length > 0 || oosTransitions.length > 0 || backInStockTransitions.length > 0) {
+    await notifyPriceChanges(userId, drops, oosTransitions, backInStockTransitions);
   }
 
-  return { checked: stale.length, refreshed, priceDrops, outOfStock, failed };
+  return { checked: stale.length, refreshed, priceDrops, outOfStock, backInStock, failed };
 }
 
 async function notifyPriceChanges(
   userId: string,
   drops: PriceDropEntry[],
-  outOfStock: OutOfStockEntry[]
+  outOfStock: OutOfStockEntry[],
+  backInStock: BackInStockEntry[]
 ): Promise<void> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -182,7 +204,7 @@ async function notifyPriceChanges(
     return;
   }
 
-  const rendered = priceDropEmail({ drops, outOfStock, baseUrl: getAppBaseUrl() });
+  const rendered = priceDropEmail({ drops, outOfStock, backInStock, baseUrl: getAppBaseUrl() });
 
   let result: SendEmailResult | undefined;
   let sendError: unknown;

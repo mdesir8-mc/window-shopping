@@ -99,13 +99,16 @@ bottom of each section; check things off as they ship.
   AppShell switches to single-column block layout; Sidebar becomes sticky top-bar
   with expandable drawer (chip-style closet/season rows, horizontally scrollable);
   Modal adapts to bottom-sheet (full-width, rounded top corners, slide-up animation).
-- [ ] **Back-in-stock alerts** — refresh already emails out-of-stock *transitions*
-  (`notifyPriceChanges` in `server/src/services/refresh.ts`); add the reverse
-  transition (`inStock` false→true) to the same digest. `inStock` is already tracked
-  per item. Reuse the existing email infra (`priceDropEmail` / `email-templates.ts`)
-  and the daily `jobs/refresh-all.ts` cron; gate on the existing `User.emailNotifications`
-  pref. Mostly: detect the transition in `refreshItemRecord`/`refreshStaleItemsForUser`
-  and add a "back in stock" section to the digest template.
+- [x] **Back-in-stock alerts** — `refreshStaleItemsForUser` now collects a
+  `BackInStockEntry` on the strict `inStock` false→true transition (symmetric with the
+  existing OOS gate but null-safe: `null → true` stays silent because there was no OOS
+  event to reverse). `priceDropEmail` gained a "Back in stock" section (HTML + text) and
+  a subject fragment (`Nn back in stock`). `RefreshStaleSummary` +
+  `RefreshAllSummary` gained additive `backInStock: number` counters (shared
+  `shared/types.ts`), surfaced in the sidebar refresh toast + summary line. No schema
+  change; reuses the daily `refresh-all` cron and the `User.emailNotifications` gate.
+  Two new tests in `server/tests/api.test.ts`: OOS→in-stock digest, plus null-prev
+  silence check.
 
 - [ ] **Target-price alerts** — let users set a desired price per item; email when the
   refreshed price drops to or below it. Add `targetPrice String?` (or normalized number)

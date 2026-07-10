@@ -758,6 +758,7 @@ describeDb("API integration", () => {
       refreshed: 1,
       priceDrops: 1,
       outOfStock: 1,
+      backInStock: 0,
       failed: 0
     });
   });
@@ -851,6 +852,54 @@ describeDb("API integration", () => {
     mockParsed({ price: "$200.00", inStock: false });
     const second = await request.post("/api/items/refresh-stale").set("Authorization", `Bearer ${token}`);
     expect(second.body).toMatchObject({ priceDrops: 0, outOfStock: 1 });
+    expect(sendEmailMock).not.toHaveBeenCalled();
+  });
+
+  it("emails on back-in-stock transition (out-of-stock -> in-stock)", async () => {
+    const token = await registerUser("back@example.com");
+    const closet = await createCloset(token);
+    const item = await createStalePricedItem(token, closet.id, { price: "$200.00", inStock: true });
+
+    // First run: flip to out-of-stock. Records the prior OOS state we'll reverse.
+    mockParsed({ price: "$200.00", inStock: false });
+    const first = await request.post("/api/items/refresh-stale").set("Authorization", `Bearer ${token}`);
+    expect(first.body).toMatchObject({ priceDrops: 0, outOfStock: 1, backInStock: 0 });
+    expect(sendEmailMock).toHaveBeenCalledTimes(1);
+    sendEmailMock.mockClear();
+
+    // Second run: back in stock.
+    await testPrisma!.item.update({
+      where: { id: item.id },
+      data: { lastCheckedAt: new Date(Date.now() - 48 * 60 * 60 * 1000) }
+    });
+    mockParsed({ price: "$200.00", inStock: true });
+    sendEmailMock.mockResolvedValueOnce({ id: "resend-back", skipped: false });
+    const second = await request.post("/api/items/refresh-stale").set("Authorization", `Bearer ${token}`);
+    expect(second.body).toMatchObject({ priceDrops: 0, outOfStock: 0, backInStock: 1 });
+    expect(sendEmailMock).toHaveBeenCalledTimes(1);
+
+    const sent = sendEmailMock.mock.calls[0][0];
+    expect(sent.to).toBe("back@example.com");
+    expect(sent.html).toContain("Back in stock");
+    expect(sent.html).toContain("Coat");
+    expect(sent.subject).toContain("back in stock");
+
+    const logs = await testPrisma!.emailLog.findMany({ where: { type: "price_drop" } });
+    // First email (OOS) + this one.
+    expect(logs).toHaveLength(2);
+  });
+
+  it("does not email back-in-stock when the item was never seen out of stock", async () => {
+    const token = await registerUser("neverchecked@example.com");
+    const closet = await createCloset(token);
+    const item = await createStalePricedItem(token, closet.id, { price: "$200.00", inStock: true });
+    // Simulate a never-checked prior state.
+    await testPrisma!.item.update({ where: { id: item.id }, data: { inStock: null } });
+
+    mockParsed({ price: "$200.00", inStock: true });
+    const response = await request.post("/api/items/refresh-stale").set("Authorization", `Bearer ${token}`);
+
+    expect(response.body).toMatchObject({ backInStock: 0, outOfStock: 0 });
     expect(sendEmailMock).not.toHaveBeenCalled();
   });
 
