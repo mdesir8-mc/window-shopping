@@ -133,14 +133,22 @@ function releaseRenderSlot(): void {
   activeRenders = Math.max(0, activeRenders - 1);
 }
 
-export async function fetchRenderedHtml(url: string): Promise<string> {
+export async function fetchRenderedHtml(
+  url: string,
+  options?: { userAgent?: string }
+): Promise<string> {
   // Gate before launching/reusing the browser and opening a page — no point holding
   // a slot while the browser boots.
   await acquireRenderSlot();
 
   try {
     const instance = await ensureBrowser();
-    const page = await instance.newPage();
+    // Chromium's default headless User-Agent advertises "HeadlessChrome", which some
+    // bot walls (Grailed's Cloudflare) reject outright. Callers pass a real browser UA
+    // for those hosts; everything else keeps the default.
+    const page = await instance.newPage(
+      options?.userAgent ? { userAgent: options.userAgent } : undefined
+    );
 
     try {
       await page.route("**/*", async (route) => {

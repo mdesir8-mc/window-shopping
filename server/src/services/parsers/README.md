@@ -41,6 +41,7 @@ then to Claude AI enrichment.
 | **Amazon** | `amazon.*` (any TLD) | HTML DOM scrape + anti-bot retry | `#productTitle`, `.a-offscreen` price, strikethrough list price → `originalPrice`; currency from symbol/host; 8-attempt retry for the price-hydration A/B + robot-check interstitial. |
 | **Uniqlo** | `uniqlo.com` | `window.__PRELOADED_STATE__` JSON | Brand fixed to `UNIQLO`; `promo`/`base` prices → `price`/`originalPrice`; colors + stock from `representative`. |
 | **Carhartt** | `carhartt.com` | JSON-LD `Product` | Color pulled from main image `alt` (JSON-LD `color` is null pre-hydration); AggregateOffer low/high is a size range, not a markdown, so no `originalPrice`. |
+| **Grailed** | `grailed.com` | `__NEXT_DATA__` listing blob | **Requires a real browser User-Agent on the render** — Cloudflare 403s Chromium's default `HeadlessChrome` UA (see below). Brand from `designerNames`; `priceDrops` is the descending price history whose last entry is the current price, so `priceDrops[0]` → `originalPrice` when `dropped`; color from the `traits` list; `inStock` = `!sold`. Description comes from the listing (the JSON-LD one is boilerplate: "Find `<name>` and more items on grailed.com"). Currency is absent from the blob, so it's left to the generic JSON-LD offer (`USD`). |
 
 ### Working via the generic path (no dedicated parser)
 
@@ -50,6 +51,15 @@ then to Claude AI enrichment.
 
 Any retailer with clean JSON-LD `Product` or OpenGraph `product:*` meta generally
 parses through the generic path without a dedicated file.
+
+## Render User-Agent
+
+Playwright's headless Chromium advertises `HeadlessChrome` in its User-Agent, which some
+Cloudflare configurations reject with a `403` before any markup is served. `fetchRenderedHtml`
+takes an optional `userAgent` so a host that needs a real browser UA can opt in
+(`parseProductPage` passes `GRAILED_RENDER_USER_AGENT` for `grailed.com`); every other host
+keeps Chromium's default. This is a per-host override rather than a global default so the
+render behaviour for already-working retailers is unchanged.
 
 ## Behind the unblocker tier
 
