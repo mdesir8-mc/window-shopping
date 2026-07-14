@@ -43,6 +43,7 @@ export default function ItemDrawer({
   const refreshMutation = useRefreshItem();
   const { updateItemTags, isPending: isTagPending } = useOptimisticTagUpdate();
   const [newTag, setNewTag] = useState("");
+  const [targetPriceDraft, setTargetPriceDraft] = useState("");
   const [moveClosetId, setMoveClosetId] = useState("");
   const [moveSectionId, setMoveSectionId] = useState("");
   const item = itemQuery.data;
@@ -79,10 +80,22 @@ export default function ItemDrawer({
 
   useEffect(() => {
     if (item) {
+      setTargetPriceDraft(item.targetPrice ?? "");
       setMoveClosetId(item.closetId);
       setMoveSectionId(item.sectionId ?? "");
     }
   }, [item]);
+
+  async function handleTargetPriceSave() {
+    if (!item) {
+      return;
+    }
+
+    await patchMutation.mutateAsync({
+      id: item.id,
+      payload: { targetPrice: targetPriceDraft.trim() || null }
+    });
+  }
 
   if (!itemId) {
     return null;
@@ -163,6 +176,43 @@ export default function ItemDrawer({
                   ON SALE
                 </span>
               ) : null}
+            </div>
+
+            <div style={{ display: "grid", gap: 8, marginTop: 18 }}>
+              <Eyebrow>Target price alert</Eyebrow>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  value={targetPriceDraft}
+                  onChange={(event) => setTargetPriceDraft(event.target.value)}
+                  placeholder="$180.00"
+                  aria-label="Target price"
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    border: "1px solid var(--ws-hairline)",
+                    background: "var(--ws-surface)",
+                    color: "var(--ws-ink)",
+                    padding: "12px 14px"
+                  }}
+                />
+                <button
+                  type="button"
+                  disabled={patchMutation.isPending || targetPriceDraft.trim() === (item.targetPrice ?? "")}
+                  onClick={() => void handleTargetPriceSave()}
+                  style={{
+                    padding: "12px 16px",
+                    border: "1px solid var(--ws-hairline)",
+                    background: "var(--ws-hover-bg, transparent)",
+                    cursor: patchMutation.isPending ? "default" : "pointer",
+                    fontSize: 11,
+                    textTransform: "uppercase",
+                    letterSpacing: 1.5,
+                    opacity: patchMutation.isPending || targetPriceDraft.trim() === (item.targetPrice ?? "") ? 0.55 : 1
+                  }}
+                >
+                  Save
+                </button>
+              </div>
             </div>
 
             {priceHistory ? (

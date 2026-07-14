@@ -7,6 +7,7 @@ vi.mock("../src/services/refresh-all", () => ({
     users: 0,
     refreshed: 0,
     priceDrops: 0,
+    targetPriceHits: 0,
     outOfStock: 0,
     backInStock: 0
   }))
@@ -35,6 +36,7 @@ describe("POST /api/cron/refresh", () => {
       users: 0,
       refreshed: 0,
       priceDrops: 0,
+      targetPriceHits: 0,
       outOfStock: 0,
       backInStock: 0
     });
@@ -78,7 +80,7 @@ describe("POST /api/cron/refresh", () => {
     mockedRefreshAll.mockImplementationOnce(
       () =>
         new Promise((resolve) => {
-          release = () => resolve({ users: 0, refreshed: 0, priceDrops: 0, outOfStock: 0, backInStock: 0 });
+          release = () => resolve({ users: 0, refreshed: 0, priceDrops: 0, targetPriceHits: 0, outOfStock: 0, backInStock: 0 });
         })
     );
 

@@ -33,6 +33,7 @@ export default function AddItemFlow({
   const [season, setSeason] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [customTag, setCustomTag] = useState("");
+  const [targetPrice, setTargetPrice] = useState("");
   const [manualName, setManualName] = useState("");
   const [manualBrand, setManualBrand] = useState("");
   const [manualPrice, setManualPrice] = useState("");
@@ -51,6 +52,7 @@ export default function AddItemFlow({
       setSeason("");
       setSelectedTags([]);
       setCustomTag("");
+      setTargetPrice("");
       setManualName("");
       setManualBrand("");
       setManualPrice("");
@@ -140,6 +142,7 @@ export default function AddItemFlow({
       name: parsed.name ?? "Untitled product",
       season,
       price: parsed.price,
+      targetPrice: targetPrice || null,
       originalPrice: parsed.originalPrice,
       currency: parsed.currency,
       source: parsed.source,
@@ -487,6 +490,21 @@ export default function AddItemFlow({
                     </option>
                   ))}
                 </select>
+              </label>
+
+              <label style={{ display: "grid", gap: 8 }}>
+                <Eyebrow>Target price</Eyebrow>
+                <input
+                  value={targetPrice}
+                  onChange={(event) => setTargetPrice(event.target.value)}
+                  placeholder="180.00"
+                  style={{
+                    border: "1px solid var(--ws-hairline)",
+                    background: "var(--ws-surface)",
+                    color: "var(--ws-ink)",
+                    padding: "14px 16px"
+                  }}
+                />
               </label>
             </div>
 

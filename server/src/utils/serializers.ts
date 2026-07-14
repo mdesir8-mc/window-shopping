@@ -38,6 +38,7 @@ type SerializedItemInput = {
   brand: string;
   name: string;
   price: string | null;
+  targetPrice: string | null;
   originalPrice: string | null;
   currency: string | null;
   source: string | null;
@@ -114,6 +115,7 @@ export function serializeItem(item: SerializedItemInput) {
     brand: item.brand,
     name: item.name,
     price: item.price,
+    targetPrice: item.targetPrice,
     originalPrice: item.originalPrice,
     currency: item.currency,
     source: item.source,

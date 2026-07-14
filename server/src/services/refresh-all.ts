@@ -6,6 +6,7 @@ export type RefreshAllSummary = {
   users: number;
   refreshed: number;
   priceDrops: number;
+  targetPriceHits: number;
   outOfStock: number;
   backInStock: number;
 };
@@ -33,6 +34,7 @@ export async function refreshAllUsers(): Promise<RefreshAllSummary> {
 
   let refreshed = 0;
   let priceDrops = 0;
+  let targetPriceHits = 0;
   let outOfStock = 0;
   let backInStock = 0;
 
@@ -41,6 +43,7 @@ export async function refreshAllUsers(): Promise<RefreshAllSummary> {
       const summary = await refreshStaleItemsForUser(user.id);
       refreshed += summary.refreshed;
       priceDrops += summary.priceDrops;
+      targetPriceHits += summary.targetPriceHits;
       outOfStock += summary.outOfStock;
       backInStock += summary.backInStock;
     } catch (error) {
@@ -49,8 +52,8 @@ export async function refreshAllUsers(): Promise<RefreshAllSummary> {
   }
 
   console.log(
-    `[refresh-all] done: refreshed=${refreshed} priceDrops=${priceDrops} outOfStock=${outOfStock} backInStock=${backInStock}`
+    `[refresh-all] done: refreshed=${refreshed} priceDrops=${priceDrops} targetPriceHits=${targetPriceHits} outOfStock=${outOfStock} backInStock=${backInStock}`
   );
 
-  return { users: users.length, refreshed, priceDrops, outOfStock, backInStock };
+  return { users: users.length, refreshed, priceDrops, targetPriceHits, outOfStock, backInStock };
 }

@@ -60,6 +60,25 @@ function optionalQueryBoolean(value: unknown) {
   return undefined;
 }
 
+function optionalTargetPrice(value: unknown) {
+  const targetPrice = optionalString(value);
+
+  if (targetPrice === undefined) {
+    return undefined;
+  }
+
+  if (targetPrice === null) {
+    return { targetPrice: null, targetPriceNumeric: null };
+  }
+
+  const targetPriceNumeric = parsePriceToNumber(targetPrice);
+  if (targetPriceNumeric <= 0) {
+    throw new HttpError(400, "targetPrice must be a positive price.");
+  }
+
+  return { targetPrice, targetPriceNumeric };
+}
+
 async function findOwnedItem(userId: string, itemId: string) {
   return prisma.item.findFirst({
     where: {
@@ -225,6 +244,7 @@ router.post(
     const season = requireString(req.body?.season, "season");
     const sectionId =
       req.body?.sectionId === undefined ? undefined : optionalString(req.body.sectionId);
+    const targetPrice = optionalTargetPrice(req.body?.targetPrice);
 
     await ensureClosetAndSection(request.user.id, closetId, sectionId ?? null);
 
@@ -235,6 +255,7 @@ router.post(
         brand,
         name,
         price: optionalString(req.body?.price),
+        ...(targetPrice ?? {}),
         originalPrice: optionalString(req.body?.originalPrice),
         currency: optionalString(req.body?.currency),
         source: optionalString(req.body?.source),
@@ -355,6 +376,7 @@ router.patch(
       req.body?.closetId !== undefined ? requireString(req.body.closetId, "closetId") : existing.closetId;
     const nextSectionId =
       req.body?.sectionId !== undefined ? optionalString(req.body.sectionId) : existing.sectionId;
+    const targetPrice = optionalTargetPrice(req.body?.targetPrice);
 
     if (req.body?.closetId !== undefined || req.body?.sectionId !== undefined) {
       await ensureClosetAndSection(request.user.id, nextClosetId, nextSectionId);
@@ -370,6 +392,7 @@ router.patch(
         ...(req.body?.brand !== undefined ? { brand: requireString(req.body.brand, "brand") } : {}),
         ...(req.body?.name !== undefined ? { name: requireString(req.body.name, "name") } : {}),
         ...(req.body?.price !== undefined ? { price: optionalString(req.body.price) } : {}),
+        ...(targetPrice ?? {}),
         ...(req.body?.originalPrice !== undefined ? { originalPrice: optionalString(req.body.originalPrice) } : {}),
         ...(req.body?.currency !== undefined ? { currency: optionalString(req.body.currency) } : {}),
         ...(req.body?.source !== undefined ? { source: optionalString(req.body.source) } : {}),

@@ -486,6 +486,49 @@ describeDb("API integration", () => {
     expect(patched.body.inStock).toBeNull();
   });
 
+  it("stores, serializes, clears, and validates target prices", async () => {
+    const token = await registerUser("target-price-api@example.com");
+    const closet = await createCloset(token);
+
+    const item = await request
+      .post("/api/items")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        closetId: closet.id,
+        brand: "Toteme",
+        name: "Knit",
+        season: "Winter",
+        price: "$240.00",
+        targetPrice: "$180.00",
+        tags: [],
+        colors: []
+      });
+
+    expect(item.status).toBe(201);
+    expect(item.body.targetPrice).toBe("$180.00");
+
+    const stored = await testPrisma!.item.findUniqueOrThrow({ where: { id: item.body.id } });
+    expect(stored.targetPrice).toBe("$180.00");
+    expect(stored.targetPriceNumeric).toBe(180);
+
+    const cleared = await request
+      .patch(`/api/items/${item.body.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ targetPrice: "" });
+
+    expect(cleared.status).toBe(200);
+    expect(cleared.body.targetPrice).toBeNull();
+    const clearedStored = await testPrisma!.item.findUniqueOrThrow({ where: { id: item.body.id } });
+    expect(clearedStored.targetPriceNumeric).toBeNull();
+
+    const invalid = await request
+      .patch(`/api/items/${item.body.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ targetPrice: "cheap please" });
+
+    expect(invalid.status).toBe(400);
+  });
+
   it("filters, price-sorts, exports, and persists item notes", async () => {
     const token = await registerUser("features@example.com");
     const otherToken = await registerUser("features-other@example.com");
@@ -757,6 +800,7 @@ describeDb("API integration", () => {
       checked: 1,
       refreshed: 1,
       priceDrops: 1,
+      targetPriceHits: 0,
       outOfStock: 1,
       backInStock: 0,
       failed: 0
@@ -766,7 +810,7 @@ describeDb("API integration", () => {
   async function createStalePricedItem(
     token: string,
     closetId: string,
-    overrides: { price?: string; inStock?: boolean; name?: string } = {}
+    overrides: { price?: string; targetPrice?: string; inStock?: boolean; name?: string } = {}
   ) {
     const item = await request
       .post("/api/items")
@@ -777,6 +821,7 @@ describeDb("API integration", () => {
         name: overrides.name ?? "Coat",
         season: "Fall",
         price: overrides.price ?? "$200.00",
+        targetPrice: overrides.targetPrice,
         url: `https://shop.example.com/${overrides.name ?? "coat"}`.toLowerCase(),
         inStock: overrides.inStock ?? true,
         tags: [],
@@ -830,6 +875,65 @@ describeDb("API integration", () => {
     const logs = await testPrisma!.emailLog.findMany({ where: { type: "price_drop" } });
     expect(logs).toHaveLength(1);
     expect(logs[0]).toMatchObject({ recipient: "drop@example.com", status: "sent", providerId: "resend-123" });
+  });
+
+  it("emails when a refresh reaches the item target price", async () => {
+    const token = await registerUser("target-hit@example.com");
+    const closet = await createCloset(token);
+    await createStalePricedItem(token, closet.id, { price: "$200.00", targetPrice: "$150.00", inStock: true });
+
+    mockParsed({ price: "$149.00", inStock: true });
+    sendEmailMock.mockResolvedValueOnce({ id: "resend-target", skipped: false });
+
+    const response = await request.post("/api/items/refresh-stale").set("Authorization", `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({ priceDrops: 1, targetPriceHits: 1, outOfStock: 0 });
+    expect(sendEmailMock).toHaveBeenCalledTimes(1);
+
+    const sent = sendEmailMock.mock.calls[0][0];
+    expect(sent.to).toBe("target-hit@example.com");
+    expect(sent.subject).toContain("target price hit");
+    expect(sent.html).toContain("Target price reached");
+    expect(sent.html).toContain("$150.00");
+    expect(sent.html).toContain("$149.00");
+  });
+
+  it("does not repeat target-price emails once the item is already at or below target", async () => {
+    const token = await registerUser("target-repeat@example.com");
+    const closet = await createCloset(token);
+    const item = await createStalePricedItem(token, closet.id, { price: "$200.00", targetPrice: "$150.00", inStock: true });
+
+    mockParsed({ price: "$149.00", inStock: true });
+    sendEmailMock.mockResolvedValueOnce({ id: "resend-target-first", skipped: false });
+
+    const first = await request.post("/api/items/refresh-stale").set("Authorization", `Bearer ${token}`);
+    expect(first.body).toMatchObject({ targetPriceHits: 1 });
+    expect(sendEmailMock).toHaveBeenCalledTimes(1);
+
+    sendEmailMock.mockClear();
+    await testPrisma!.item.update({
+      where: { id: item.id },
+      data: { lastCheckedAt: new Date(Date.now() - 48 * 60 * 60 * 1000) }
+    });
+    mockParsed({ price: "$149.00", inStock: true });
+
+    const second = await request.post("/api/items/refresh-stale").set("Authorization", `Bearer ${token}`);
+    expect(second.body).toMatchObject({ priceDrops: 0, targetPriceHits: 0 });
+    expect(sendEmailMock).not.toHaveBeenCalled();
+  });
+
+  it("does not email target-price alerts while the refreshed price remains above target", async () => {
+    const token = await registerUser("target-above@example.com");
+    const closet = await createCloset(token);
+    await createStalePricedItem(token, closet.id, { price: "$200.00", targetPrice: "$150.00", inStock: true });
+
+    mockParsed({ price: "$210.00", inStock: true });
+
+    const response = await request.post("/api/items/refresh-stale").set("Authorization", `Bearer ${token}`);
+
+    expect(response.body).toMatchObject({ priceDrops: 0, targetPriceHits: 0 });
+    expect(sendEmailMock).not.toHaveBeenCalled();
   });
 
   it("emails on out-of-stock transition but not while an item stays out of stock", async () => {
@@ -917,6 +1021,25 @@ describeDb("API integration", () => {
     const response = await request.post("/api/items/refresh-stale").set("Authorization", `Bearer ${token}`);
 
     expect(response.body).toMatchObject({ priceDrops: 1 });
+    expect(sendEmailMock).not.toHaveBeenCalled();
+    const logs = await testPrisma!.emailLog.findMany({ where: { type: "price_drop" } });
+    expect(logs).toHaveLength(0);
+  });
+
+  it("counts target-price hits but does not email them when the user disabled notifications", async () => {
+    const token = await registerUser("muted-target@example.com");
+    const closet = await createCloset(token);
+    await createStalePricedItem(token, closet.id, { price: "$200.00", targetPrice: "$150.00", inStock: true });
+
+    await request
+      .patch("/api/user")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ emailNotifications: false });
+
+    mockParsed({ price: "$149.00", inStock: true });
+    const response = await request.post("/api/items/refresh-stale").set("Authorization", `Bearer ${token}`);
+
+    expect(response.body).toMatchObject({ targetPriceHits: 1 });
     expect(sendEmailMock).not.toHaveBeenCalled();
     const logs = await testPrisma!.emailLog.findMany({ where: { type: "price_drop" } });
     expect(logs).toHaveLength(0);
