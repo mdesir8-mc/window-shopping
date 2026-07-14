@@ -57,17 +57,13 @@ bottom of each section; check things off as they ship.
   npm/@semantic-release/npm then. Also tracking the related `esbuild` LOW (vite→esbuild,
   Windows dev-server only). Watch item, not urgent.
 
-- [ ] **`safeFetch` single-IP pinning is fragile against Cloudflare anycast** — surfaced
-  while testing the WooCommerce Store API locally. `safeFetch` (server/src/utils/safeFetch.ts)
-  resolves one vetted IP and pins the undici connection to it (no Happy-Eyeballs), for SSRF
-  safety. Against Cloudflare-fronted hosts (which return several anycast IPs) the single
-  pinned IP is often unreachable *from local dev*, so the fetch intermittently throws
-  `fetch failed` / `ERR_INVALID_IP_ADDRESS`; plain happy-eyeballs undici was 100% reliable to
-  the same hosts. This affects **every** `safeFetch` caller (Shopify, WooCommerce, Amazon
-  raw), masked today by each parser's `.catch → generic-render` fallback. Unconfirmed whether
-  it also bites in prod (Railway may reach all anycast IPs). Investigate: does Railway see the
-  failures? If so, consider trying all vetted IPs (validate every address, then Happy-Eyeballs
-  across the vetted set) instead of pinning one.
+- [x] **`safeFetch` single-IP pinning is fragile against Cloudflare anycast** — fixed by
+  returning the full vetted DNS answer from `resolveSafeUrl` and having `safeFetch`
+  retry the next vetted address when a pinned connection fails. Redirects still
+  re-validate each hop before connecting, every resolved address must pass the SSRF
+  allowlist, and the existing IPv4 preference remains first in the candidate order.
+  This is sequential fallback rather than speculative duplicate GETs, which avoids
+  sending multiple retailer requests for one parse attempt.
 
 ## Features
 

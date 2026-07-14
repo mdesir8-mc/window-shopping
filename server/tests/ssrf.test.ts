@@ -17,7 +17,24 @@ describe("resolveSafeUrl", () => {
     const target = await resolveSafeUrl("https://example.com/p?x=1");
     expect(target.address).toBe("93.184.216.34");
     expect(target.family).toBe(4);
+    expect(target.addresses).toEqual([{ address: "93.184.216.34", family: 4 }]);
     expect(target.url.href).toBe("https://example.com/p?x=1");
+  });
+
+  it("returns all vetted addresses with IPv4 candidates first", async () => {
+    mockedLookup.mockResolvedValue([
+      { address: "2001:db8::1", family: 6 },
+      { address: "93.184.216.34", family: 4 },
+      { address: "93.184.216.34", family: 4 }
+    ] as never);
+
+    const target = await resolveSafeUrl("https://example.com/");
+    expect(target.address).toBe("93.184.216.34");
+    expect(target.family).toBe(4);
+    expect(target.addresses).toEqual([
+      { address: "93.184.216.34", family: 4 },
+      { address: "2001:db8::1", family: 6 }
+    ]);
   });
 
   it.each([

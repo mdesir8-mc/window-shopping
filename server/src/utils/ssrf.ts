@@ -54,17 +54,41 @@ export function assertAllowedAddress(address: string, family: number): void {
   }
 }
 
-export interface SafeTarget {
-  url: URL;
+export interface SafeAddress {
   address: string;
   family: 4 | 6;
 }
 
-// Resolve a hostname and validate every address it maps to, returning a single vetted IP
-// to connect to. Callers should pin the connection to `address` so a second DNS resolution
-// can't swap in an internal address (DNS rebinding). Every resolved address must pass — not
-// just the first.
-export async function resolveSafeHost(hostname: string): Promise<{ address: string; family: 4 | 6 }> {
+export interface SafeTarget extends SafeAddress {
+  url: URL;
+  addresses: SafeAddress[];
+}
+
+function orderSafeAddresses(resolved: Array<{ address: string; family: number }>): SafeAddress[] {
+  const addresses: SafeAddress[] = [];
+  const seen = new Set<string>();
+
+  for (const { address, family } of resolved) {
+    assertAllowedAddress(address, family);
+
+    const safeFamily: 4 | 6 = family === 6 ? 6 : 4;
+    const key = `${safeFamily}:${address}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      addresses.push({ address, family: safeFamily });
+    }
+  }
+
+  // Keep the existing IPv4 preference, then fall back through the rest of the vetted set.
+  return [
+    ...addresses.filter((entry) => entry.family === 4),
+    ...addresses.filter((entry) => entry.family !== 4)
+  ];
+}
+
+// Resolve a hostname and validate every address it maps to, returning all vetted IPs
+// callers may pin connections to. Every resolved address must pass — not just the first.
+export async function resolveSafeHostAddresses(hostname: string): Promise<SafeAddress[]> {
   let resolved: Array<{ address: string; family: number }>;
 
   try {
@@ -77,20 +101,16 @@ export async function resolveSafeHost(hostname: string): Promise<{ address: stri
     throw new HttpError(400, "url hostname could not be resolved.");
   }
 
-  for (const { address, family } of resolved) {
-    assertAllowedAddress(address, family);
-  }
-
-  // Prefer an IPv4 address from the validated set. The proxy pins the connection to a
-  // single IP (no Happy-Eyeballs fallback), so if DNS returns AAAA first and the host
-  // container has no IPv6 egress, connecting to it hangs until the caller's timeout.
-  // Picking IPv4 when available matches undici's effective behavior; every address was
-  // already validated above, so this doesn't weaken the SSRF guard.
-  const target = resolved.find((entry) => entry.family === 4) ?? resolved[0];
-  return { address: target.address, family: target.family === 6 ? 6 : 4 };
+  return orderSafeAddresses(resolved);
 }
 
-// Resolve and validate a user-supplied URL, returning the parsed URL plus a single vetted IP.
+// Back-compat helper for code paths that still need one pinned IP, such as the
+// Playwright CONNECT proxy.
+export async function resolveSafeHost(hostname: string): Promise<SafeAddress> {
+  return (await resolveSafeHostAddresses(hostname))[0];
+}
+
+// Resolve and validate a user-supplied URL, returning the parsed URL plus vetted IPs.
 export async function resolveSafeUrl(rawUrl: string): Promise<SafeTarget> {
   let url: URL;
 
@@ -104,8 +124,9 @@ export async function resolveSafeUrl(rawUrl: string): Promise<SafeTarget> {
     throw new HttpError(400, "url must be a valid http or https URL.");
   }
 
-  const { address, family } = await resolveSafeHost(url.hostname);
-  return { url, address, family };
+  const addresses = await resolveSafeHostAddresses(url.hostname);
+  const [target] = addresses;
+  return { url, address: target.address, family: target.family, addresses };
 }
 
 // Back-compat wrapper for callers that only need validation (the route-level early
