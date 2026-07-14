@@ -10,6 +10,7 @@ function makeItem(overrides: Partial<Item>): Item {
     brand: "Brand",
     name: "Item",
     price: null,
+    targetPrice: null,
     originalPrice: null,
     currency: null,
     source: null,

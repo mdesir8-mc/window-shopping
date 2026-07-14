@@ -110,20 +110,26 @@ bottom of each section; check things off as they ship.
   Two new tests in `server/tests/api.test.ts`: OOS→in-stock digest, plus null-prev
   silence check.
 
-- [ ] **Target-price alerts** — let users set a desired price per item; email when the
-  refreshed price drops to or below it. Add `targetPrice String?` (or normalized number)
-  to `Item` (`server/prisma/schema.prisma` + migration), expose in `ItemPayload`
-  (`shared/types.ts`) and the item form/drawer. In `refreshStaleItemsForUser`, compare
-  `parsePriceToNumber(price)` against the target and send via the existing
-  `priceDropEmail` path. Reuses email + cron; no new notification channel.
+- [x] **Target-price alerts** — shipped on this branch. Adds `Item.targetPrice String?`
+  plus server-only `targetPriceNumeric Float?` (`20260714120000_add_item_target_price`)
+  and exposes `targetPrice` through `Item`, `ItemPayload`, create/patch, add-item
+  preview, edit modal, and the `ItemDrawer` quick control. `refreshStaleItemsForUser`
+  compares refreshed prices with the normalized target and records a `targetPriceHits`
+  summary count; it emails only on the first crossing (`prevPrice` missing or above
+  target → refreshed price at/below target) so already-below-target items do not repeat.
+  The existing refresh digest now has a "Target price reached" section and reuses the
+  email preference/cron path. DB-backed API coverage was added in `server/tests/api.test.ts`
+  but skips locally unless `TEST_DATABASE_URL` is set.
 
-- [ ] **Price history + sparkline** — biggest value, medium cost. Today `Item.price` is a
-  single String with no history. Add a `PriceSnapshot { id, itemId, price, inStock,
-  capturedAt }` model (+ index on `itemId, capturedAt`); write one row each time
-  `refreshItemRecord` runs (and on create). Expose `GET /api/items/:id/history`; render a
-  small sparkline in `ItemDrawer` (and optionally on `ItemCard`). Note: price is a
-  formatted String, so store the parsed number alongside for charting. Consider a
-  retention cap (e.g. keep last N or 1/day) so the table doesn't grow unbounded.
+- [x] **Price history + sparkline** — shipped in #73 (`feat: price history + Grailed
+  parser`, with the core work in `cea740e`). Adds `PriceSnapshot { id, itemId, price,
+  priceNumeric, inStock, capturedAt }` plus the `itemId, capturedAt` index and cascade
+  delete. Snapshots are written on item create and refresh via `recordPriceSnapshot`,
+  deduped when price/stock are unchanged, and capped at 365 per item. Exposes
+  `GET /api/items/:id/history`, `PriceSnapshot` shared types, `getItemHistory` /
+  `useItemHistory`, and an `ItemDrawer` sparkline with low/high/readings metadata.
+  Covered by `server/tests/priceHistory.test.ts`; locally the suite skips unless
+  `TEST_DATABASE_URL` is set.
 
 - [x] **Shareable public closet link** — shipped in #69 (branch
   `claude/public-closet-share`, base `claude/mobile-infra`). `Closet.shareToken String? @unique`

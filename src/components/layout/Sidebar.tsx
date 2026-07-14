@@ -430,6 +430,9 @@ export default function Sidebar({
                             if (result.priceDrops > 0) {
                               parts.push(`${result.priceDrops} price drop${result.priceDrops === 1 ? "" : "s"}`);
                             }
+                            if (result.targetPriceHits > 0) {
+                              parts.push(`${result.targetPriceHits} target hit${result.targetPriceHits === 1 ? "" : "s"}`);
+                            }
                             if (result.backInStock > 0) {
                               parts.push(`${result.backInStock} back in stock`);
                             }
@@ -566,6 +569,9 @@ export default function Sidebar({
                   if (result.priceDrops > 0) {
                     parts.push(`${result.priceDrops} price drop${result.priceDrops === 1 ? "" : "s"}`);
                   }
+                  if (result.targetPriceHits > 0) {
+                    parts.push(`${result.targetPriceHits} target hit${result.targetPriceHits === 1 ? "" : "s"}`);
+                  }
                   if (result.backInStock > 0) {
                     parts.push(`${result.backInStock} back in stock`);
                   }
@@ -611,6 +617,7 @@ export default function Sidebar({
           <div style={{ marginTop: 6, padding: "0 10px", fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-muted)", lineHeight: 1.5 }}>
             Checked {summary.checked}
             {summary.priceDrops > 0 ? ` · ${summary.priceDrops} price drop${summary.priceDrops === 1 ? "" : "s"}` : ""}
+            {summary.targetPriceHits > 0 ? ` · ${summary.targetPriceHits} target hit${summary.targetPriceHits === 1 ? "" : "s"}` : ""}
             {summary.backInStock > 0 ? ` · ${summary.backInStock} back in stock` : ""}
             {summary.outOfStock > 0 ? ` · ${summary.outOfStock} out of stock` : ""}
             {summary.failed > 0 ? ` · ${summary.failed} failed` : ""}

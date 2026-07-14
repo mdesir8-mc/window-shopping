@@ -120,6 +120,7 @@ export interface Item {
   brand: string;
   name: string;
   price: string | null;
+  targetPrice: string | null;
   originalPrice: string | null;
   currency: string | null;
   source: string | null;
@@ -188,6 +189,7 @@ export interface RefreshStaleSummary {
   checked: number;
   refreshed: number;
   priceDrops: number;
+  targetPriceHits: number;
   outOfStock: number;
   backInStock: number;
   failed: number;
@@ -200,6 +202,7 @@ export interface ItemPayload {
   name: string;
   season: string;
   price?: string | null;
+  targetPrice?: string | null;
   originalPrice?: string | null;
   currency?: string | null;
   source?: string | null;

@@ -7,7 +7,8 @@ import {
   priceDropEmail,
   type BackInStockEntry,
   type OutOfStockEntry,
-  type PriceDropEntry
+  type PriceDropEntry,
+  type TargetPriceEntry
 } from "./email-templates";
 import { recordEmailLog } from "./email-log";
 import { recordPriceSnapshot } from "./priceHistory";
@@ -29,9 +30,15 @@ type RefreshableItem = {
   id: string;
   url: string | null;
   price: string | null;
+  targetPrice: string | null;
+  targetPriceNumeric: number | null;
   onSale: boolean;
   inStock: boolean | null;
 };
+
+function reachedTargetPrice(prevPrice: number, newPrice: number, targetPriceNumeric: number | null) {
+  return Boolean(targetPriceNumeric && newPrice > 0 && newPrice <= targetPriceNumeric && (prevPrice <= 0 || prevPrice > targetPriceNumeric));
+}
 
 export async function refreshItemRecord(item: RefreshableItem) {
   const url = await requireRefreshableUrl(item.url);
@@ -82,6 +89,7 @@ export type RefreshStaleSummary = {
   checked: number;
   refreshed: number;
   priceDrops: number;
+  targetPriceHits: number;
   outOfStock: number;
   backInStock: number;
   failed: number;
@@ -106,6 +114,8 @@ export async function refreshStaleItemsForUser(userId: string): Promise<RefreshS
       id: true,
       url: true,
       price: true,
+      targetPrice: true,
+      targetPriceNumeric: true,
       onSale: true,
       inStock: true,
       brand: true,
@@ -123,11 +133,13 @@ export async function refreshStaleItemsForUser(userId: string): Promise<RefreshS
 
   let refreshed = 0;
   let priceDrops = 0;
+  let targetPriceHits = 0;
   let outOfStock = 0;
   let backInStock = 0;
   let failed = 0;
 
   const drops: PriceDropEntry[] = [];
+  const targetHits: TargetPriceEntry[] = [];
   const oosTransitions: OutOfStockEntry[] = [];
   const backInStockTransitions: BackInStockEntry[] = [];
 
@@ -143,6 +155,18 @@ export async function refreshStaleItemsForUser(userId: string): Promise<RefreshS
           name: item.name,
           oldPrice: item.price ?? "",
           newPrice: updated.price ?? "",
+          url: item.url,
+          closetName: item.closet.name
+        });
+      }
+
+      if (reachedTargetPrice(prevPrice, newPrice, item.targetPriceNumeric)) {
+        targetPriceHits += 1;
+        targetHits.push({
+          brand: item.brand,
+          name: item.name,
+          targetPrice: item.targetPrice ?? String(item.targetPriceNumeric),
+          currentPrice: updated.price ?? String(newPrice),
           url: item.url,
           closetName: item.closet.name
         });
@@ -182,16 +206,17 @@ export async function refreshStaleItemsForUser(userId: string): Promise<RefreshS
     }
   }
 
-  if (drops.length > 0 || oosTransitions.length > 0 || backInStockTransitions.length > 0) {
-    await notifyPriceChanges(userId, drops, oosTransitions, backInStockTransitions);
+  if (drops.length > 0 || targetHits.length > 0 || oosTransitions.length > 0 || backInStockTransitions.length > 0) {
+    await notifyPriceChanges(userId, drops, targetHits, oosTransitions, backInStockTransitions);
   }
 
-  return { checked: stale.length, refreshed, priceDrops, outOfStock, backInStock, failed };
+  return { checked: stale.length, refreshed, priceDrops, targetPriceHits, outOfStock, backInStock, failed };
 }
 
 async function notifyPriceChanges(
   userId: string,
   drops: PriceDropEntry[],
+  targetHits: TargetPriceEntry[],
   outOfStock: OutOfStockEntry[],
   backInStock: BackInStockEntry[]
 ): Promise<void> {
@@ -204,7 +229,7 @@ async function notifyPriceChanges(
     return;
   }
 
-  const rendered = priceDropEmail({ drops, outOfStock, backInStock, baseUrl: getAppBaseUrl() });
+  const rendered = priceDropEmail({ drops, targetHits, outOfStock, backInStock, baseUrl: getAppBaseUrl() });
 
   let result: SendEmailResult | undefined;
   let sendError: unknown;

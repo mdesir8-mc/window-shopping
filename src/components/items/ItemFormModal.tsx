@@ -35,6 +35,7 @@ export default function ItemFormModal({ open, item, onClose }: ItemFormModalProp
   const [name, setName] = useState("");
   const [brand, setBrand] = useState("");
   const [price, setPrice] = useState("");
+  const [targetPrice, setTargetPrice] = useState("");
   const [note, setNote] = useState("");
   const [tagText, setTagText] = useState("");
   const [sectionId, setSectionId] = useState("");
@@ -46,6 +47,7 @@ export default function ItemFormModal({ open, item, onClose }: ItemFormModalProp
     setName(item?.name ?? "");
     setBrand(item?.brand ?? "");
     setPrice(item?.price ?? "");
+    setTargetPrice(item?.targetPrice ?? "");
     setNote(item?.note ?? "");
     setTagText(item?.tags.join(", ") ?? "");
     setSectionId(item?.sectionId ?? "");
@@ -60,6 +62,7 @@ export default function ItemFormModal({ open, item, onClose }: ItemFormModalProp
         name,
         brand,
         price: price || null,
+        targetPrice: targetPrice || null,
         note: note || null,
         tags: normalizeTags(tagText),
         sectionId: sectionId || null
@@ -114,6 +117,21 @@ export default function ItemFormModal({ open, item, onClose }: ItemFormModalProp
               value={price}
               onChange={(event) => setPrice(event.target.value)}
               placeholder="249.00"
+              style={{
+                border: "1px solid var(--ws-hairline)",
+                background: "var(--ws-surface)",
+                color: "var(--ws-ink)",
+                padding: "14px 16px"
+              }}
+            />
+          </label>
+
+          <label style={{ display: "grid", gap: 8 }}>
+            <Eyebrow>Target price</Eyebrow>
+            <input
+              value={targetPrice}
+              onChange={(event) => setTargetPrice(event.target.value)}
+              placeholder="180.00"
               style={{
                 border: "1px solid var(--ws-hairline)",
                 background: "var(--ws-surface)",

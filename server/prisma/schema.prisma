@@ -93,6 +93,8 @@ model Item {
   brand         String
   name          String
   price         String?
+  targetPrice   String?
+  targetPriceNumeric Float?
   originalPrice String?
   currency      String?
   source        String?
