@@ -1,0 +1,24 @@
+name: Daily refresh email
+
+# Triggers the all-users refresh on the live web service. Replaces the (removed)
+# Railway cron service. The endpoint runs the refresh in the service's own env
+# (Playwright + DB + Resend already provisioned there).
+on:
+  schedule:
+    # 12:00 UTC = 7:00am EST. GitHub cron is UTC-only with no DST handling, so this
+    # lands at ~8:00am local during EDT (Mar–Nov). Adjust if year-round 7am matters.
+    - cron: "0 12 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  trigger-refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /api/cron/refresh
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl -fsS -X POST "$APP_URL/api/cron/refresh" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -w "\nHTTP %{http_code}\n"
