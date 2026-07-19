@@ -191,9 +191,14 @@ bottom of each section; check things off as they ship.
      real listings (incl. a price-dropped one).
   6. **ASOS** — big catalog; structured data + internal `/api/product/`. Some bot
      protection — may need rendered-fetch hardening.
-  7. **SSENSE** — luxury, super on-brand. **Regression, not a new add: used to work, now
-     broken for unknown reasons** (see README "Known broken"). Diagnose first (markup change
-     vs. new bot wall) before deciding effort. React SPA + likely Cloudflare.
+  7. [x] **SSENSE** — luxury, super on-brand. **Diagnosed + routed through unblocker tier.**
+     Regression cause: Cloudflare escalated to a managed challenge (`cf-mitigated: challenge`,
+     `403`, "Just a moment...", `_cf_chl_opt` Turnstile) — site-wide, every UA blocked, not a
+     markup change. Same class as The RealReal / Nordstrom, so added `ssense.com` to
+     `HARD_WALL_HOSTS` in `parser.ts`; it now goes through `fetchViaUnblocker` automatically.
+     **Open verification:** unblocker (ScrapingBee `render_js=true`) may need `stealth_proxy`/
+     premium proxy to clear a CF *managed* challenge — confirm against a live SSENSE URL once
+     `UNBLOCKER_API_*` env is set (unverified locally — no unblocker key here).
 
   _Note: Farfetch now works via the generic rendered path (headless render must wait for
   navigation `commit`; plain fetch 502s) — no dedicated parser needed. Recorded in README._
