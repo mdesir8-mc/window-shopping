@@ -15,7 +15,7 @@ export class ParserFetchError extends Error {}
 
 // Hosts whose bot walls (PerimeterX, Akamai JS challenge) block both the headless
 // render and the plain raw fetch — the unblocker tier is required to get past them.
-const HARD_WALL_HOSTS = new Set(["therealreal.com", "nordstrom.com"]);
+const HARD_WALL_HOSTS = new Set(["therealreal.com", "nordstrom.com", "ssense.com"]);
 
 function isHardWallHost(hostname: string): boolean {
   const lower = hostname.toLowerCase();

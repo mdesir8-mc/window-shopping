@@ -81,12 +81,7 @@ requires a real API key.
 |---------|---------|-------|
 | **The RealReal** | PerimeterX `403` `px-captcha` (`_pxAppId 'PXev56mY37'`) | Both headless render and plain browser-UA fetch blocked. Expects clean JSON-LD `Product` once cleared. |
 | **Nordstrom** | Akamai JS challenge (`istlWasHere`, 257 KB interstitial, empty `<title>`) | Same class as The RealReal. Plain fetch returns the interstitial with HTTP 200. |
-
-## Known broken
-
-| Service | Status |
-|---------|--------|
-| **SSENSE** | Previously worked, now fails for reasons unknown. Not yet diagnosed — likely a change to their markup or bot protection. Needs investigation. |
+| **SSENSE** | Cloudflare managed challenge (`cf-mitigated: challenge`, `403`, "Just a moment...", `_cf_chl_opt` Turnstile) | Regressed from working: Cloudflare escalated to an interactive challenge. Site-wide — every UA (incl. real Chrome and HeadlessChrome) `403`s. Routed through the unblocker tier. Expects clean JSON-LD `Product` once cleared. |
 
 ## Adding a new parser
 

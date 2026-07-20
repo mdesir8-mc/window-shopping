@@ -169,6 +169,20 @@ describe("parseProductPage — unblocker tier integration", () => {
     expect(new URL(calledUrl).searchParams.get("url")).toContain("nordstrom.com");
   });
 
+  it("(b) also routes ssense.com through the unblocker tier", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, text: async () => PRODUCT_HTML })
+    );
+
+    await parseProductPage("https://www.ssense.com/en-us/men/product/brand/item/12345");
+
+    expect(fetch as ReturnType<typeof vi.fn>).toHaveBeenCalled();
+    const [calledUrl] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string];
+    expect(new URL(calledUrl).searchParams.get("url")).toContain("ssense.com");
+    expect(fetchRenderedHtml).not.toHaveBeenCalled();
+  });
+
   it("(c) demoMode never triggers the unblocker tier", async () => {
     const mockGlobalFetch = vi.fn();
     vi.stubGlobal("fetch", mockGlobalFetch);
