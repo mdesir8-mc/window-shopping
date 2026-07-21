@@ -54,17 +54,26 @@ export function assertAllowedAddress(address: string, family: number): void {
   }
 }
 
-export interface SafeTarget {
-  url: URL;
+export interface VettedAddress {
   address: string;
   family: 4 | 6;
 }
 
-// Resolve a hostname and validate every address it maps to, returning a single vetted IP
-// to connect to. Callers should pin the connection to `address` so a second DNS resolution
-// can't swap in an internal address (DNS rebinding). Every resolved address must pass — not
-// just the first.
-export async function resolveSafeHost(hostname: string): Promise<{ address: string; family: 4 | 6 }> {
+export interface SafeTarget {
+  url: URL;
+  address: string;
+  family: 4 | 6;
+  addresses: VettedAddress[];
+}
+
+// Resolve a hostname and validate every address it maps to. Every resolved address must pass —
+// not just the first. Returns the full validated set (IPv4-first), plus `address`/`family` =
+// the first entry for callers that connect to a single IP. Callers pin the connection to a
+// member of this set so a second DNS resolution can't swap in an internal address (DNS
+// rebinding); the set is frozen here from ONE lookup — never re-resolve during connect.
+export async function resolveSafeHost(
+  hostname: string
+): Promise<{ address: string; family: 4 | 6; addresses: VettedAddress[] }> {
   let resolved: Array<{ address: string; family: number }>;
 
   try {
@@ -81,16 +90,20 @@ export async function resolveSafeHost(hostname: string): Promise<{ address: stri
     assertAllowedAddress(address, family);
   }
 
-  // Prefer an IPv4 address from the validated set. The proxy pins the connection to a
-  // single IP (no Happy-Eyeballs fallback), so if DNS returns AAAA first and the host
-  // container has no IPv6 egress, connecting to it hangs until the caller's timeout.
-  // Picking IPv4 when available matches undici's effective behavior; every address was
-  // already validated above, so this doesn't weaken the SSRF guard.
-  const target = resolved.find((entry) => entry.family === 4) ?? resolved[0];
-  return { address: target.address, family: target.family === 6 ? 6 : 4 };
+  // Build the vetted set from the already-validated `resolved` array — NO second lookup(),
+  // which would reopen the rebinding TOCTOU. IPv4 first: some host containers have no IPv6
+  // egress, so connecting to an AAAA hangs until timeout; trying IPv4 first matches undici's
+  // effective behavior. Stable sort keeps original order within each family. Every address
+  // was validated above, so ordering never weakens the SSRF guard.
+  const addresses: VettedAddress[] = resolved
+    .map((entry) => ({ address: entry.address, family: (entry.family === 6 ? 6 : 4) as 4 | 6 }))
+    .sort((a, b) => a.family - b.family);
+
+  const [first] = addresses;
+  return { address: first.address, family: first.family, addresses };
 }
 
-// Resolve and validate a user-supplied URL, returning the parsed URL plus a single vetted IP.
+// Resolve and validate a user-supplied URL, returning the parsed URL plus the vetted IP set.
 export async function resolveSafeUrl(rawUrl: string): Promise<SafeTarget> {
   let url: URL;
 
@@ -104,8 +117,8 @@ export async function resolveSafeUrl(rawUrl: string): Promise<SafeTarget> {
     throw new HttpError(400, "url must be a valid http or https URL.");
   }
 
-  const { address, family } = await resolveSafeHost(url.hostname);
-  return { url, address, family };
+  const { address, family, addresses } = await resolveSafeHost(url.hostname);
+  return { url, address, family, addresses };
 }
 
 // Back-compat wrapper for callers that only need validation (the route-level early
