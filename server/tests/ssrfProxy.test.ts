@@ -93,7 +93,11 @@ describe("ssrfProxy", () => {
     const connections: net.Socket[] = [];
     upstream.on("connection", (s) => connections.push(s));
 
-    mockedResolve.mockResolvedValue({ address: "127.0.0.1", family: 4 });
+    mockedResolve.mockResolvedValue({
+      address: "127.0.0.1",
+      family: 4,
+      addresses: [{ address: "127.0.0.1", family: 4 }]
+    });
 
     const { status, socket } = await connectVia(`example.com:${upstreamPort}`);
     expect(status).toBe(200);

@@ -64,6 +64,26 @@ describe("resolveSafeUrl", () => {
     await expect(resolveSafeUrl("https://example.com/")).rejects.toThrow(/disallowed/i);
   });
 
+  it("returns the full validated set in `addresses`, IPv4 first", async () => {
+    mockedLookup.mockResolvedValue([
+      { address: "2606:2800:220::1", family: 6 },
+      { address: "93.184.216.34", family: 4 },
+      { address: "93.184.216.35", family: 4 }
+    ] as never);
+    const target = await resolveSafeUrl("https://example.com/");
+    // IPv4 entries hoisted ahead of IPv6, original order preserved within each family.
+    expect(target.addresses).toEqual([
+      { address: "93.184.216.34", family: 4 },
+      { address: "93.184.216.35", family: 4 },
+      { address: "2606:2800:220::1", family: 6 }
+    ]);
+    // Single-IP fields stay = the first (IPv4) entry — unchanged for single-connect callers.
+    expect(target.address).toBe("93.184.216.34");
+    expect(target.family).toBe(4);
+    // The vetted set is built from ONE lookup — no re-resolution (rebinding TOCTOU guard).
+    expect(mockedLookup).toHaveBeenCalledTimes(1);
+  });
+
   it("validateSsrfSafeUrl returns a URL for allowed hosts", async () => {
     resolvesTo("93.184.216.34");
     const url = await validateSsrfSafeUrl("https://example.com/p");
