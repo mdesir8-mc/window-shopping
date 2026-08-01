@@ -9,6 +9,15 @@ import { useAuthStore } from "../store/auth";
 //  - 401 routes to /login via expo-router instead of window.location
 const baseURL = process.env.EXPO_PUBLIC_API_BASE_URL ?? "";
 
+// Fail loudly in release builds if EXPO_PUBLIC_API_BASE_URL isn't https:// —
+// prevents a misconfigured build from shipping the bearer token over cleartext.
+// __DEV__ builds keep http://localhost for the simulator.
+if (!__DEV__ && baseURL && !baseURL.startsWith("https://")) {
+  throw new Error(
+    `EXPO_PUBLIC_API_BASE_URL must be https:// in release builds (got: ${baseURL})`
+  );
+}
+
 export const apiClient = axios.create({
   baseURL,
   headers: {

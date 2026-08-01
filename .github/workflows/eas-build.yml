@@ -28,6 +28,11 @@ concurrency:
   group: eas-build
   cancel-in-progress: false
 
+# Least-privilege default; this job only checks out code and calls EAS with a
+# scoped EXPO_TOKEN secret, so it needs no write scopes.
+permissions:
+  contents: read
+
 jobs:
   build:
     name: EAS Build
@@ -52,5 +57,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Pass the choice-restricted input via env instead of inline `${{ }}` template
+      # into `run:` — GHA-hardening pattern (defense-in-depth against script-injection),
+      # even though workflow_dispatch enforces the enum server-side.
       - name: EAS build (iOS)
-        run: eas build --non-interactive --no-wait --platform ios --profile ${{ inputs.profile || 'development' }}
+        env:
+          PROFILE: ${{ inputs.profile || 'development' }}
+        run: eas build --non-interactive --no-wait --platform ios --profile "$PROFILE"
