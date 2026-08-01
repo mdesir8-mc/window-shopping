@@ -55,7 +55,7 @@ bottom of each section; check things off as they ship.
   npm/@semantic-release/npm then. Also tracking the related `esbuild` LOW (vite→esbuild,
   Windows dev-server only). Watch item, not urgent.
 
-- [ ] **`safeFetch` single-IP pinning is fragile against Cloudflare anycast** — surfaced
+- [x] **`safeFetch` single-IP pinning is fragile against Cloudflare anycast** — surfaced
   while testing the WooCommerce Store API locally. `safeFetch` (server/src/utils/safeFetch.ts)
   resolves one vetted IP and pins the undici connection to it (no Happy-Eyeballs), for SSRF
   safety. Against Cloudflare-fronted hosts (which return several anycast IPs) the single
@@ -66,6 +66,33 @@ bottom of each section; check things off as they ship.
   it also bites in prod (Railway may reach all anycast IPs). Investigate: does Railway see the
   failures? If so, consider trying all vetted IPs (validate every address, then Happy-Eyeballs
   across the vetted set) instead of pinning one.
+  - **Fixed** in `fix(safefetch): connect across all vetted IPs to survive anycast hosts`
+    (PR #78 vs `claude/mobile-infra`): resolve the full validated set once per hop (IPv4-first)
+    and try each pre-vetted IP in turn, capped at 4. SSRF/rebinding invariant preserved
+    (frozen single lookup, TLS/abort errors propagate). `/total-security` PASS.
+
+- [ ] **UNBLOCKER — enable the hard-wall retailer tier in prod** — the code path is merged
+  (`HARD_WALL_HOSTS` = The RealReal, Nordstrom, SSENSE → `fetchViaUnblocker`), but prod has
+  **no unblocker credentials**, so every hard-wall parse fails fast with
+  `ParserFetchError: "Unblocker not configured or daily cap reached"`. Verified live against
+  prod env (`railway run` + real `parseProductPage`): SSENSE threw in 0ms with
+  `unblocker configured: false`. Gates SSENSE, The RealReal, and Nordstrom simultaneously.
+  - [ ] **Sign up for an unblocker provider** (ScrapingBee or equiv) — human-only; paid
+    account + API key. _Claude can't create accounts or handle the key._
+  - [ ] **Set prod env vars** on the `window-shopping` service (rare-upliftment / production):
+    `UNBLOCKER_API_URL=https://app.scrapingbee.com/api/v1/` + `UNBLOCKER_API_KEY=<key>`
+    (optionally `UNBLOCKER_DAILY_CAP`, default 100). Set in Railway directly — don't paste the
+    key into chat.
+  - [ ] **Add `stealth_proxy` support to `unblocker.ts`** — current adapter sends only
+    `render_js=true`; SSENSE's Cloudflare **managed** challenge (`cf-mitigated: challenge`)
+    likely needs the provider's stealth/premium proxy (`stealth_proxy=true`) to clear. One-line
+    param add; Claude can do this now so it's ready.
+  - [ ] **Re-run the prod attempt to confirm** — after the key is set, re-run
+    `parseProductPage` against a live SSENSE URL (e.g.
+    `https://www.ssense.com/en-us/men/product/our-legacy/black-evening-coach-jacket/16240741`)
+    and confirm real brand/name/price come back, not the CF interstitial.
+  - [ ] **Verify The RealReal + Nordstrom** on the same key (same tier, previously
+    "addressed pending API key").
 
 ## Features
 
@@ -228,15 +255,20 @@ not start a phase until every prereq below it is checked.** Full plan: `docs/mob
   changes required #1–3, Authentication._
 - [x] **Phase 2 — Shared types** (PR #49) — domain types moved to `shared/types.ts` with
   a re-export shim. _Doc: § Domain types._
-- [ ] **Phase 3 — Scaffold `mobile/`** — Expo app (TS + `expo-router` + `expo-dev-client`)
-  sibling to `server/`; Metro `watchFolders` → `shared/`; `EXPO_PUBLIC_*` env. _Prereq to
-  scaffold: none (codeable now). Prereq to run/verify: Xcode._ _Doc: §§ Repository layout,
-  Library choices._
-- [ ] **Phase 4 — Data layer port** — port `src/api/*` + `src/hooks/*`; variants for
-  `client.ts` (env base URL + read `X-Refreshed-Token` + 401→router redirect), `store/auth.ts`
-  (`expo-secure-store` token persistence + `merge`/`migrate` fix + hydration gate),
-  `useMediaQuery`→`useWindowDimensions`. _Prereq: Phase 3._ _Doc: §§ What ports vs. what gets
-  rewritten, Session lifecycle, Mobile auth store._
+- [x] **Phase 3 — Scaffold `mobile/`** (PR #79) — Expo SDK 52 app (`expo-router` +
+  `expo-dev-client`) sibling to `server/`; Metro `watchFolders` → `shared/`; `EXPO_PUBLIC_*`
+  env; placeholder `app/index` + `app/login`. Also scoped release CI: `release.yml`
+  `paths-ignore: mobile/**` (mobile pushes don't deploy the server) + inert `eas-build.yml`
+  (gated on `EAS_ENABLED` + `EXPO_TOKEN`). _Runtime smoke-test still pending Xcode._
+  _Doc: §§ Repository layout, Library choices._
+- [x] **Phase 4 — Data layer port** (PR #79) — verbatim `api/{closets,items,tags,version,auth}`
+  + `hooks/{useAuth,useClosets,useItems,useTags,useVersion}`; `types` shim → `shared`.
+  Variants: `client.ts` (`EXPO_PUBLIC` base + `X-Refreshed-Token` + 401→router + https-only
+  guard in release), `public.ts` (env), `store/auth.ts` (`expo-secure-store` token+user
+  persistence + `hasHydrated` gate + `setToken`), `useMediaQuery`→`useWindowDimensions`;
+  `_layout` = QueryClientProvider + hydration splash. **Deferred `api/export.ts`** (DOM
+  download) → Phase 6 w/ `expo-file-system`. _Runtime verify pending Xcode._ _Doc: §§ What
+  ports vs. what gets rewritten, Session lifecycle, Mobile auth store._
 - [ ] **Phase 5 — Auth + "Sign out on all devices" (client)** — `logoutAll()` +
   `useAuth.logoutAllDevices()` + button in account settings (web modal **and** mobile);
   native Google sign-in (`@react-native-google-signin`) + email/password; verify token
