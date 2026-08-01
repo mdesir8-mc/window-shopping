@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+    # Mobile-only changes must not bump the server/web version or trigger a Railway
+    # deploy. paths-ignore skips the run only when *every* changed path matches, so a
+    # mixed server+mobile push still releases. Mobile ships via eas-build.yml instead.
+    paths-ignore:
+      - 'mobile/**'
 
 permissions:
   contents: write

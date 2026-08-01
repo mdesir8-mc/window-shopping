@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Window Shopping",
+    "slug": "window-shopping",
+    "scheme": "windowshopping",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.windowshopping.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

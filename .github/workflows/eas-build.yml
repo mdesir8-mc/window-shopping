@@ -1,0 +1,56 @@
+name: EAS Build (iOS)
+
+# Stub — fully wired in Phase 7. Builds the mobile/ app via EAS when triggered
+# manually, or on a push to main that changes mobile/**. Inert until the repo
+# variable EAS_ENABLED == 'true' and the EXPO_TOKEN secret is set (Expo account),
+# plus Apple Developer credentials configured in EAS. Until then the job is skipped,
+# so this file can't fail the repo. See docs/mobile-build.md §§ Build & release,
+# Prerequisites (human-only) and docs/todos.md Phase 7.
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'EAS build profile'
+        type: choice
+        options:
+          - development
+          - preview
+          - production
+        default: development
+  push:
+    branches:
+      - main
+    paths:
+      - 'mobile/**'
+
+concurrency:
+  group: eas-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: EAS Build
+    runs-on: ubuntu-latest
+    # Guard: no-op until you flip the EAS_ENABLED repo variable to 'true'.
+    if: ${{ vars.EAS_ENABLED == 'true' }}
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: EAS build (iOS)
+        run: eas build --non-interactive --no-wait --platform ios --profile ${{ inputs.profile || 'development' }}
