@@ -486,6 +486,53 @@ describeDb("API integration", () => {
     expect(patched.body.inStock).toBeNull();
   });
 
+  it("derives onSale from originalPrice on create and patch", async () => {
+    const token = await registerUser("derived-on-sale@example.com");
+    const closet = await createCloset(token);
+
+    const marked = await request
+      .post("/api/items")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        closetId: closet.id,
+        brand: "Toteme",
+        name: "Wool Overcoat",
+        season: "Winter",
+        price: "$220.00",
+        originalPrice: "$320.00",
+        tags: [],
+        colors: []
+      });
+
+    expect(marked.status).toBe(201);
+    expect(marked.body.onSale).toBe(true);
+
+    // Raising the price above the original clears the flag without touching originalPrice.
+    const raised = await request
+      .patch(`/api/items/${marked.body.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ price: "$340.00" });
+
+    expect(raised.status).toBe(200);
+    expect(raised.body.onSale).toBe(false);
+
+    // Clearing originalPrice also clears it.
+    const restored = await request
+      .patch(`/api/items/${marked.body.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ price: "$220.00" });
+
+    expect(restored.body.onSale).toBe(true);
+
+    const cleared = await request
+      .patch(`/api/items/${marked.body.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ originalPrice: null });
+
+    expect(cleared.status).toBe(200);
+    expect(cleared.body.onSale).toBe(false);
+  });
+
   it("stores, serializes, clears, and validates target prices", async () => {
     const token = await registerUser("target-price-api@example.com");
     const closet = await createCloset(token);
@@ -685,6 +732,77 @@ describeDb("API integration", () => {
     expect(refreshed.body.inStock).toBe(false);
     expect(refreshed.body.onSale).toBe(true);
     expect(refreshed.body.lastCheckedAt).toEqual(expect.any(String));
+  });
+
+  it("carries the previous price forward as originalPrice when a refresh finds a drop", async () => {
+    const token = await registerUser("refresh-carry-forward@example.com");
+    const closet = await createCloset(token);
+    const item = await request
+      .post("/api/items")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        closetId: closet.id,
+        brand: "Lemaire",
+        name: "Scarf",
+        season: "Fall",
+        price: "$100.00",
+        url: "https://shop.example.com/scarf",
+        inStock: true,
+        tags: [],
+        colors: []
+      });
+
+    expect(item.body.onSale).toBe(false);
+
+    // The retailer advertises no list price of its own, but the price fell.
+    mockedParseProductPage.mockResolvedValueOnce({
+      brand: "Lemaire",
+      name: "Scarf",
+      price: "$80.00",
+      originalPrice: null,
+      currency: "USD",
+      imageUrl: null,
+      description: null,
+      inStock: true,
+      colors: [],
+      suggestedTags: [],
+      suggestedSeason: null,
+      enrichmentSuccess: null,
+      source: "shop.example.com"
+    });
+
+    const dropped = await request
+      .post(`/api/items/${item.body.id}/refresh`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(dropped.status).toBe(200);
+    expect(dropped.body.originalPrice).toBe("$100.00");
+    expect(dropped.body.onSale).toBe(true);
+
+    // Recovering to the carried-forward original clears the flag on its own.
+    mockedParseProductPage.mockResolvedValueOnce({
+      brand: "Lemaire",
+      name: "Scarf",
+      price: "$100.00",
+      originalPrice: null,
+      currency: "USD",
+      imageUrl: null,
+      description: null,
+      inStock: true,
+      colors: [],
+      suggestedTags: [],
+      suggestedSeason: null,
+      enrichmentSuccess: null,
+      source: "shop.example.com"
+    });
+
+    const recovered = await request
+      .post(`/api/items/${item.body.id}/refresh`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(recovered.status).toBe(200);
+    expect(recovered.body.originalPrice).toBe("$100.00");
+    expect(recovered.body.onSale).toBe(false);
   });
 
   it("rejects refresh for items without usable URLs", async () => {
