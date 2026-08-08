@@ -94,7 +94,7 @@ bottom of each section; check things off as they ship.
   - [ ] **Verify The RealReal + Nordstrom** on the same key (same tier, previously
     "addressed pending API key").
 
-- [ ] **"On sale" is defined two conflicting ways** — the app decides "discounted" with
+- [x] **"On sale" is defined two conflicting ways** — the app decides "discounted" with
   two different predicates that disagree. **`originalPrice`-based:** the Home dashboard
   "marked-down" count (`src/pages/Home.tsx:182`, `items.filter(i => i.originalPrice)`) and
   the card/drawer **strikethrough** (`ItemDrawer.tsx:152`, `ItemCard.tsx`). **`onSale`
@@ -110,6 +110,28 @@ bottom of each section; check things off as they ship.
   on-sale from `originalPrice && price < originalPrice` for the badge/count/filter (aligns
   with the strikethrough), or set `onSale` at create/parse time. Then reconcile
   price-drops vs. marked-down semantics.
+  - **Fixed** in `fix: unify the on-sale predicate behind a server-derived onSale flag`
+    (PR #80 vs `claude/onsale-and-a11y`). Chose **both** halves of the fix: `onSale` is now
+    derived server-side from `price < originalPrice` via a new shared `isMarkedDown()`
+    (`shared/price.ts`, reusing `parsePriceToNumber` with `> 0` guards), written at create,
+    PATCH, **and** refresh — so the column is the single source of truth and every surface
+    (badge, ON SALE stat, server `?onSale=true` filter, strikethrough, Home count, Sidebar
+    "Price drops") now reads `item.onSale`. Price-drops and marked-down are thereby the same
+    predicate, which reconciles the two semantics.
+    - **Refresh keeps its drops:** when a refresh sees a price fall but the retailer
+      advertises no list price, the previous price is carried forward into `originalPrice`.
+      The flag self-clears if the price recovers. **This redefines `originalPrice` from
+      "retailer list price" to "highest known price"** — deliberate, worth remembering.
+    - Backfill migration `20260808120000_backfill_item_on_sale` recomputes both directions.
+      Uses `CASE` (not an `AND` chain) because Postgres doesn't guarantee left-to-right
+      `AND` evaluation — only `CASE` guarantees the regex guard runs before the `::numeric`
+      cast, so junk like `1.2.3`/`Sold out` can't abort the migration. Dry-run on a
+      throwaway DB with 7 edge-case rows matched the TS helper exactly. Note the `UPDATE`
+      has no `WHERE`, so it rewrites every `Item` row.
+    - Also fixed the hardcoded plurals on all three Home snapshot rows (the a11y bundle's
+      item 2, moved here because both changes hit the same JSX block).
+    - `/total-security` PASS. Caveat: no scanner supports `.sql`, so the migration's
+      clearance rests on two hand-traces plus the dry-run.
 
 - [ ] **Frontend a11y + copy polish (bundle)** — small, low-risk items found in an app
   walkthrough:

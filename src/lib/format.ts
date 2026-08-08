@@ -47,7 +47,7 @@ export function greetingForHour(date: Date = new Date()) {
 }
 
 // Re-exported from shared so web and server compute prices identically.
-export { parsePriceToNumber } from "../../shared/price";
+export { parsePriceToNumber, isMarkedDown } from "../../shared/price";
 
 export function formatCompactCurrency(value: number) {
   return new Intl.NumberFormat(undefined, {
