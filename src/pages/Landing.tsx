@@ -68,7 +68,7 @@ export default function Landing() {
         <section style={{ maxWidth: 680 }}>
           <Eyebrow>Save now, decide later</Eyebrow>
           <Display size={68} style={{ marginTop: 16, lineHeight: 0.98 }}>
-            Every link you meant
+            Every link you meant{" "}
             <br />
             to come back to.
           </Display>
