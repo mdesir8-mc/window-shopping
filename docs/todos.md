@@ -94,6 +94,39 @@ bottom of each section; check things off as they ship.
   - [ ] **Verify The RealReal + Nordstrom** on the same key (same tier, previously
     "addressed pending API key").
 
+- [ ] **"On sale" is defined two conflicting ways** — the app decides "discounted" with
+  two different predicates that disagree. **`originalPrice`-based:** the Home dashboard
+  "marked-down" count (`src/pages/Home.tsx:182`, `items.filter(i => i.originalPrice)`) and
+  the card/drawer **strikethrough** (`ItemDrawer.tsx:152`, `ItemCard.tsx`). **`onSale`
+  boolean-based:** the closet "ON SALE" stat + On-sale filter (`useClosetDetail.ts:17`,
+  `i.onSale`), the "ON SALE" badge, and price-drops. `onSale` is only ever set true by a
+  *refresh* detecting a ≥10% drop vs the item's **own prior price** (`refresh.ts:49`,
+  `newPrice <= prevPrice*0.9`) — it is **never** derived from `originalPrice < price`, and
+  item create/parse never sets it. Result: an item parsed with a retailer markdown
+  (`originalPrice` > `price`) shows a struck-through price everywhere but returns "No items
+  match" under the On-sale filter, counts 0 in "ON SALE", and the dashboard's "marked-down"
+  line links to `/?priceDrops=true` (the *other* predicate) → dead-ends to empty. Verified
+  live (Wool Overcoat, $220 from $320, `onSale=f`). **Fix:** pick one definition — derive
+  on-sale from `originalPrice && price < originalPrice` for the badge/count/filter (aligns
+  with the strikethrough), or set `onSale` at create/parse time. Then reconcile
+  price-drops vs. marked-down semantics.
+
+- [ ] **Frontend a11y + copy polish (bundle)** — small, low-risk items found in an app
+  walkthrough:
+  1. **Inputs use placeholder as the only label** — login (email/password) + the landing
+     parse demo have no associated `<label>`; the accessible name is the placeholder, which
+     disappears on typing (WCAG fail). Inconsistent — 5 other form files do use `<label>`.
+     Add `<label>` / `aria-label` to the placeholder-only inputs.
+  2. **Dashboard count grammar** — `src/pages/Home.tsx:182` hardcodes the plural
+     ("N items currently track a marked-down price"); reads wrong at count 1. Add a
+     singular case ("1 item … tracks").
+  3. **H1 accessible name reads "meantto"** — `src/pages/Landing.tsx:71`, `meant<br/>to`
+     collapses without a space. Add `{" "}` before the `<br/>`.
+  4. **Landing ignores dark mode** — stays light under `prefers-color-scheme: dark` while
+     the authed app has a dark toggle. Confirm intent (fixed-light marketing page) vs. bug.
+  5. **Login validation is native-tooltip only** — empty submit relies on the browser's
+     `required` bubble; no inline error copy.
+
 ## Features
 
 - [x] **Account menu / sign-out from the sidebar avatar** — clicking the
