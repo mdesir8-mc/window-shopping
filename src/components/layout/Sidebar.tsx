@@ -68,7 +68,7 @@ export default function Sidebar({
     },
     {
       label: "Price drops",
-      count: items.filter((item) => item.originalPrice).length,
+      count: items.filter((item) => item.onSale).length,
       to: "/?priceDrops=true",
       active: searchParams.get("priceDrops") === "true"
     }

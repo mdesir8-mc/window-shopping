@@ -40,10 +40,13 @@ export default function LandingParseDemo() {
         border: "1px solid var(--ws-hairline)"
       }}
     >
-      <Eyebrow>Try it — paste a product link</Eyebrow>
+      <label htmlFor="landing-parse-url">
+        <Eyebrow>Try it — paste a product link</Eyebrow>
+      </label>
 
       <form onSubmit={handleSubmit} style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
         <input
+          id="landing-parse-url"
           type="url"
           value={url}
           onChange={(event) => setUrl(event.target.value)}

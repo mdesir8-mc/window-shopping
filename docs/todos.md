@@ -94,7 +94,7 @@ bottom of each section; check things off as they ship.
   - [ ] **Verify The RealReal + Nordstrom** on the same key (same tier, previously
     "addressed pending API key").
 
-- [ ] **"On sale" is defined two conflicting ways** — the app decides "discounted" with
+- [x] **"On sale" is defined two conflicting ways** — the app decides "discounted" with
   two different predicates that disagree. **`originalPrice`-based:** the Home dashboard
   "marked-down" count (`src/pages/Home.tsx:182`, `items.filter(i => i.originalPrice)`) and
   the card/drawer **strikethrough** (`ItemDrawer.tsx:152`, `ItemCard.tsx`). **`onSale`
@@ -110,22 +110,57 @@ bottom of each section; check things off as they ship.
   on-sale from `originalPrice && price < originalPrice` for the badge/count/filter (aligns
   with the strikethrough), or set `onSale` at create/parse time. Then reconcile
   price-drops vs. marked-down semantics.
+  - **Fixed** in `fix: unify the on-sale predicate behind a server-derived onSale flag`
+    (PR #80 vs `claude/onsale-and-a11y`). Chose **both** halves of the fix: `onSale` is now
+    derived server-side from `price < originalPrice` via a new shared `isMarkedDown()`
+    (`shared/price.ts`, reusing `parsePriceToNumber` with `> 0` guards), written at create,
+    PATCH, **and** refresh — so the column is the single source of truth and every surface
+    (badge, ON SALE stat, server `?onSale=true` filter, strikethrough, Home count, Sidebar
+    "Price drops") now reads `item.onSale`. Price-drops and marked-down are thereby the same
+    predicate, which reconciles the two semantics.
+    - **Refresh keeps its drops:** when a refresh sees a price fall but the retailer
+      advertises no list price, the previous price is carried forward into `originalPrice`.
+      The flag self-clears if the price recovers. **This redefines `originalPrice` from
+      "retailer list price" to "highest known price"** — deliberate, worth remembering.
+    - Backfill migration `20260808120000_backfill_item_on_sale` recomputes both directions.
+      Uses `CASE` (not an `AND` chain) because Postgres doesn't guarantee left-to-right
+      `AND` evaluation — only `CASE` guarantees the regex guard runs before the `::numeric`
+      cast, so junk like `1.2.3`/`Sold out` can't abort the migration. Dry-run on a
+      throwaway DB with 7 edge-case rows matched the TS helper exactly. Note the `UPDATE`
+      has no `WHERE`, so it rewrites every `Item` row.
+    - Also fixed the hardcoded plurals on all three Home snapshot rows (the a11y bundle's
+      item 2, moved here because both changes hit the same JSX block).
+    - `/total-security` PASS. Caveat: no scanner supports `.sql`, so the migration's
+      clearance rests on two hand-traces plus the dry-run.
 
-- [ ] **Frontend a11y + copy polish (bundle)** — small, low-risk items found in an app
-  walkthrough:
-  1. **Inputs use placeholder as the only label** — login (email/password) + the landing
-     parse demo have no associated `<label>`; the accessible name is the placeholder, which
-     disappears on typing (WCAG fail). Inconsistent — 5 other form files do use `<label>`.
-     Add `<label>` / `aria-label` to the placeholder-only inputs.
-  2. **Dashboard count grammar** — `src/pages/Home.tsx:182` hardcodes the plural
-     ("N items currently track a marked-down price"); reads wrong at count 1. Add a
-     singular case ("1 item … tracks").
-  3. **H1 accessible name reads "meantto"** — `src/pages/Landing.tsx:71`, `meant<br/>to`
-     collapses without a space. Add `{" "}` before the `<br/>`.
-  4. **Landing ignores dark mode** — stays light under `prefers-color-scheme: dark` while
-     the authed app has a dark toggle. Confirm intent (fixed-light marketing page) vs. bug.
-  5. **Login validation is native-tooltip only** — empty submit relies on the browser's
-     `required` bubble; no inline error copy.
+- [x] **Frontend a11y + copy polish (bundle)** — shipped on `claude/a11y-copy-polish`
+  (PR into `claude/onsale-and-a11y`):
+  1. [x] **Inputs use placeholder as the only label** — the landing parse demo's existing
+     visible `<Eyebrow>` is now a real `<label htmlFor>` bound to the input (matching the
+     wrapping-label pattern in `ItemFormModal`); Login's email/password got `aria-label`
+     (the auth card has no visible field labels by design) plus the `autoComplete` and
+     `color: var(--ws-ink)` the labelled modal inputs already set.
+  2. [x] **Dashboard count grammar** — moved to the on-sale PR, which owns
+     `src/pages/Home.tsx` (both changes hit the same JSX block). Fixed for **all three**
+     snapshot rows, not just the marked-down one.
+  3. [x] **H1 accessible name reads "meantto"** — `{" "}` added before the `<br/>`;
+     covered by `src/pages/Landing.test.tsx` (verified failing without the fix).
+  4. [x] **Landing ignores dark mode** — **closed as intended, not a bug.** Landing and the
+     auth pages render outside `AppShell`, which is the only thing that sets
+     `body[data-dark]`, and they hardcode a light gradient (`#EFE8DA`/`#DDD4C2`). Treating
+     the marketing/auth surface as fixed-light. Making it theme-aware would mean reading
+     stored theme on public routes and tokenizing that gradient across five pages
+     (Landing, Login, Register, ForgotPassword, ResetPassword) — a real change, not polish.
+     Reopen as its own item if that's wanted.
+  5. [x] **Login validation is native-tooltip only** — the form is now `noValidate` with
+     inline `role="alert"` errors for empty and malformed input (matching the
+     `ResetPassword` client-validation pattern). Also fixed an unhandled promise rejection:
+     the bare `await mutateAsync` rejected on bad credentials.
+
+- [ ] **Label the remaining placeholder-only auth inputs** — same WCAG defect as the bundle
+  item above, left out to keep that diff scoped: `Register.tsx:50,62,75`,
+  `ForgotPassword.tsx:55`, `ResetPassword.tsx:87,99`. Apply the same `aria-label` treatment
+  Login got.
 
 ## Features
 
