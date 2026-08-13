@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Window Shopping</title>
     <link rel="icon" type="image/svg+xml" href="/wordmark.svg" />
+    <!-- Safari ignores SVG favicons, so keep a raster icon behind it. -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="apple-mobile-web-app-title" content="Window Shopping" />
-    <meta name="theme-color" content="#ede7dc" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#1a1613" media="(prefers-color-scheme: dark)" />
+    <!-- Default paper; AppShell rewrites this to the active theme's paper colour. -->
+    <meta name="theme-color" content="#ede7dc" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

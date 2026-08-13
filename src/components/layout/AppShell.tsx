@@ -57,6 +57,14 @@ export default function AppShell() {
     document.body.setAttribute("data-theme", theme);
     document.body.setAttribute("data-dark", dark ? "1" : "0");
     localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify({ theme, dark }));
+
+    // The theme is a user choice, not an OS setting, so keep the browser chrome
+    // tint on the paper colour the page actually renders.
+    const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+
+    if (themeColor) {
+      themeColor.content = getComputedStyle(document.body).getPropertyValue("--ws-paper").trim();
+    }
   }, [dark, theme]);
 
   const value = useMemo<AppShellContextValue>(
