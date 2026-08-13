@@ -5,6 +5,7 @@ import Eyebrow from "../components/ui/Eyebrow";
 import Hairline from "../components/ui/Hairline";
 import ProductTile from "../components/ui/ProductTile";
 import Tag from "../components/ui/Tag";
+import Wordmark from "../components/ui/Wordmark";
 import { usePublicCloset } from "../hooks/useClosets";
 import { hashTone } from "../lib/format";
 import type { PublicItem } from "../types";
@@ -39,9 +40,12 @@ function PageFrame({ children }: { children: React.ReactNode }) {
           padding: "24px clamp(24px, 6vw, 80px)"
         }}
       >
-        <Display size={20} weight={400}>
-          Window Shopping
-        </Display>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Wordmark size={22} />
+          <Display size={20} weight={400}>
+            Window Shopping
+          </Display>
+        </div>
         <Link
           to="/"
           style={{
