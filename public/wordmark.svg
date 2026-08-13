@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-labelledby="ws-title">
+  <title id="ws-title">Window Shopping</title>
+  <style>
+    .ws-paper { fill: #ede7dc; }
+    .ws-frame { stroke: rgba(17, 16, 16, 0.15); }
+    .ws-ink { fill: #111010; }
+    .ws-accent { fill: #9e3524; }
+    @media (prefers-color-scheme: dark) {
+      .ws-paper { fill: #1a1613; }
+      .ws-frame { stroke: rgba(240, 234, 224, 0.14); }
+      .ws-ink { fill: #f0eae0; }
+      .ws-accent { fill: #d9a878; }
+    }
+  </style>
+  <rect class="ws-paper" width="64" height="64" />
+  <rect class="ws-frame" x="5.5" y="5.5" width="53" height="53" fill="none" stroke-width="1" />
+  <text
+    class="ws-ink"
+    x="32"
+    y="38"
+    text-anchor="middle"
+    letter-spacing="0.5"
+    font-family="'Instrument Serif', 'Newsreader', Georgia, 'Times New Roman', serif"
+    font-size="26"
+  >WS</text>
+  <rect class="ws-accent" x="26" y="43.5" width="12" height="1.5" />
+</svg>
