@@ -4,6 +4,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY index.html vite.config.ts tsconfig.json tsconfig.node.json ./
+COPY public/ ./public/
 COPY src/ ./src/
 COPY shared/ ./shared/
 ARG VITE_GOOGLE_CLIENT_ID

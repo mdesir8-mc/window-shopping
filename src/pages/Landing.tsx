@@ -3,6 +3,7 @@ import Display from "../components/ui/Display";
 import Eyebrow from "../components/ui/Eyebrow";
 import Hairline from "../components/ui/Hairline";
 import VersionTag from "../components/ui/VersionTag";
+import Wordmark from "../components/ui/Wordmark";
 import LandingParseDemo from "../components/items/LandingParseDemo";
 
 const STEPS = [
@@ -41,9 +42,12 @@ export default function Landing() {
           padding: "24px clamp(24px, 6vw, 80px)"
         }}
       >
-        <Display size={20} weight={400}>
-          Window Shopping
-        </Display>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Wordmark size={22} />
+          <Display size={20} weight={400}>
+            Window Shopping
+          </Display>
+        </div>
         <Link
           to="/login"
           style={{
@@ -68,7 +72,7 @@ export default function Landing() {
         <section style={{ maxWidth: 680 }}>
           <Eyebrow>Save now, decide later</Eyebrow>
           <Display size={68} style={{ marginTop: 16, lineHeight: 0.98 }}>
-            Every link you meant
+            Every link you meant{" "}
             <br />
             to come back to.
           </Display>

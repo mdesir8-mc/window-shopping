@@ -13,7 +13,7 @@ import {
 import { recordEmailLog } from "./email-log";
 import { recordPriceSnapshot } from "./priceHistory";
 import { FRESHNESS_THRESHOLD_MS } from "../../../shared/staleness";
-import { parsePriceToNumber } from "../../../shared/price";
+import { isMarkedDown, parsePriceToNumber } from "../../../shared/price";
 
 const BULK_REFRESH_LIMIT = 25;
 
@@ -30,6 +30,7 @@ type RefreshableItem = {
   id: string;
   url: string | null;
   price: string | null;
+  originalPrice: string | null;
   targetPrice: string | null;
   targetPriceNumeric: number | null;
   onSale: boolean;
@@ -46,8 +47,15 @@ export async function refreshItemRecord(item: RefreshableItem) {
 
   const prevPrice = parsePriceToNumber(item.price);
   const newPrice = parsePriceToNumber(parsed.price);
-  const onSale =
-    prevPrice > 0 && newPrice > 0 ? newPrice <= prevPrice * 0.9 : item.onSale;
+
+  // `onSale` is derived, never heuristic: it is always `price < originalPrice`. To keep a
+  // refresh-detected drop visible under that single predicate, fall back to the highest
+  // price we've seen when the retailer isn't advertising a list price of its own. The flag
+  // then self-clears — if the price recovers to the carried-forward original, isMarkedDown
+  // goes false on its own.
+  const droppedVsPrev = prevPrice > 0 && newPrice > 0 && newPrice < prevPrice;
+  const originalPrice = parsed.originalPrice ?? (droppedVsPrev ? item.price : item.originalPrice);
+  const onSale = isMarkedDown(parsed.price, originalPrice);
 
   const updated = await prisma.item.update({
     where: {
@@ -55,7 +63,7 @@ export async function refreshItemRecord(item: RefreshableItem) {
     },
     data: {
       price: parsed.price,
-      originalPrice: parsed.originalPrice,
+      originalPrice,
       inStock: parsed.inStock,
       onSale,
       lastCheckedAt: new Date()
@@ -114,6 +122,7 @@ export async function refreshStaleItemsForUser(userId: string): Promise<RefreshS
       id: true,
       url: true,
       price: true,
+      originalPrice: true,
       targetPrice: true,
       targetPriceNumeric: true,
       onSale: true,

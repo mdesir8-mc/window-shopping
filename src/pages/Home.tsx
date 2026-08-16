@@ -39,7 +39,7 @@ export default function Home() {
 
   const items = (() => {
     let result = allItems;
-    if (priceDrops) result = result.filter((item) => item.originalPrice);
+    if (priceDrops) result = result.filter((item) => item.onSale);
     if (favoritedOnly) result = result.filter((item) => item.favorited);
     if (noSectionOnly) result = result.filter((item) => !item.sectionId);
     return result;
@@ -178,9 +178,21 @@ export default function Home() {
           <Eyebrow>Snapshot</Eyebrow>
           <div style={{ marginTop: 12, display: "grid", gap: 10, fontSize: 13 }}>
             {[
-              { count: allItems.filter((item) => item.favorited).length, label: "favorited pieces ready to revisit.", to: "/?favorited=true" },
-              { count: allItems.filter((item) => item.originalPrice).length, label: "items currently track a marked-down price.", to: "/?priceDrops=true" },
-              { count: allItems.filter((item) => !item.sectionId).length, label: "items still need a section home.", to: "/?noSection=true" }
+              {
+                count: allItems.filter((item) => item.favorited).length,
+                label: (n: number) => `favorited piece${n === 1 ? "" : "s"} ready to revisit.`,
+                to: "/?favorited=true"
+              },
+              {
+                count: allItems.filter((item) => item.onSale).length,
+                label: (n: number) => `item${n === 1 ? "" : "s"} currently track${n === 1 ? "s" : ""} a marked-down price.`,
+                to: "/?priceDrops=true"
+              },
+              {
+                count: allItems.filter((item) => !item.sectionId).length,
+                label: (n: number) => `item${n === 1 ? "" : "s"} still need${n === 1 ? "s" : ""} a section home.`,
+                to: "/?noSection=true"
+              }
             ].map(({ count, label, to }) => (
               <Link
                 key={to}
@@ -189,7 +201,7 @@ export default function Home() {
                 onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "var(--ws-ink)"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "var(--ws-muted)"; }}
               >
-                {count} {label}
+                {count} {label(count)}
               </Link>
             ))}
           </div>

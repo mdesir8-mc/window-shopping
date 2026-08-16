@@ -1,0 +1,14 @@
+{
+  "name": "Window Shopping",
+  "short_name": "WS",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ede7dc",
+  "theme_color": "#ede7dc",
+  "icons": [
+    { "src": "/wordmark.svg", "type": "image/svg+xml", "sizes": "any" },
+    { "src": "/icon-192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512" }
+  ]
+}

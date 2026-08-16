@@ -16,7 +16,7 @@ import { getAppBaseUrl } from "../services/email";
 import { parseProductPage, ParserFetchError } from "../services/parser";
 import { refreshItemRecord } from "../services/refresh";
 import { listPriceSnapshots, recordPriceSnapshot } from "../services/priceHistory";
-import { parsePriceToNumber } from "../../../shared/price";
+import { isMarkedDown, parsePriceToNumber } from "../../../shared/price";
 import { SCOPE_CLOSETS_READ, SCOPE_CLOSETS_WRITE, SCOPE_PROFILE } from "../oauth/config";
 
 export interface ToolContext {
@@ -538,6 +538,11 @@ export function registerTools(server: McpServer, context: ToolContext): void {
           season: rest.season,
           price: rest.price ?? null,
           originalPrice: rest.originalPrice ?? null,
+          // onSale is server-derived and is the single predicate every surface
+          // reads (badge, ON SALE stat, ?onSale filter, Home count). Items added
+          // through MCP have to derive it exactly as POST /api/items does, or
+          // they'd be invisible to the on-sale filter.
+          onSale: isMarkedDown(rest.price, rest.originalPrice),
           currency: rest.currency ?? null,
           url: rest.url ?? null,
           imageUrl: rest.imageUrl ?? null,
@@ -597,6 +602,7 @@ export function registerTools(server: McpServer, context: ToolContext): void {
           season: season ?? parsed.suggestedSeason ?? "All Season",
           price: parsed.price ?? null,
           originalPrice: parsed.originalPrice ?? null,
+          onSale: isMarkedDown(parsed.price, parsed.originalPrice),
           currency: parsed.currency ?? null,
           url,
           imageUrl: parsed.imageUrl ?? null,
@@ -641,13 +647,23 @@ export function registerTools(server: McpServer, context: ToolContext): void {
       }
     },
     guard(async ({ itemId, targetPrice, ...changes }) => {
-      await requireOwnedItem(userId, itemId);
+      const existing = await requireOwnedItem(userId, itemId);
 
       const data: Record<string, unknown> = { ...targetPriceFields(targetPrice) };
       for (const [key, value] of Object.entries(changes)) {
         if (value !== undefined) {
           data[key] = value;
         }
+      }
+
+      // Re-derive onSale whenever either price moves, matching PATCH /api/items/:id.
+      // Unedited fields fall back to what's already stored, so editing one price
+      // doesn't compare against a missing counterpart.
+      if (changes.price !== undefined || changes.originalPrice !== undefined) {
+        const nextPrice = changes.price !== undefined ? changes.price : existing.price;
+        const nextOriginalPrice =
+          changes.originalPrice !== undefined ? changes.originalPrice : existing.originalPrice;
+        data.onSale = isMarkedDown(nextPrice, nextOriginalPrice);
       }
 
       const item = await prisma.item.update({ where: { id: itemId }, data, include: ITEM_INCLUDE });

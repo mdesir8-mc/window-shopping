@@ -8,7 +8,7 @@ import { parseExportFormat, sendItemsExport } from "../utils/itemExport";
 import { serializeItem, serializePriceSnapshot } from "../utils/serializers";
 import { validateSsrfSafeUrl } from "../utils/ssrf";
 import { ensureClosetAndSection, findOwnedItem } from "../utils/ownership";
-import { parsePriceToNumber } from "../../../shared/price";
+import { isMarkedDown, parsePriceToNumber } from "../../../shared/price";
 import { listPriceSnapshots, recordPriceSnapshot } from "../services/priceHistory";
 import { refreshItemRecord, refreshStaleItemsForUser } from "../services/refresh";
 import {
@@ -192,6 +192,9 @@ router.post(
       req.body?.sectionId === undefined ? undefined : optionalString(req.body.sectionId);
     const targetPrice = optionalTargetPrice(req.body?.targetPrice);
 
+    const price = optionalString(req.body?.price);
+    const originalPrice = optionalString(req.body?.originalPrice);
+
     await ensureClosetAndSection(request.user.id, closetId, sectionId ?? null);
 
     const item = await prisma.item.create({
@@ -200,9 +203,10 @@ router.post(
         sectionId: sectionId ?? null,
         brand,
         name,
-        price: optionalString(req.body?.price),
+        price,
         ...(targetPrice ?? {}),
-        originalPrice: optionalString(req.body?.originalPrice),
+        originalPrice,
+        onSale: isMarkedDown(price, originalPrice),
         currency: optionalString(req.body?.currency),
         source: optionalString(req.body?.source),
         url: optionalString(req.body?.url),
@@ -324,6 +328,12 @@ router.patch(
       req.body?.sectionId !== undefined ? optionalString(req.body.sectionId) : existing.sectionId;
     const targetPrice = optionalTargetPrice(req.body?.targetPrice);
 
+    // onSale is derived, so any edit that moves either price has to recompute it.
+    const priceEdited = req.body?.price !== undefined || req.body?.originalPrice !== undefined;
+    const nextPrice = req.body?.price !== undefined ? optionalString(req.body.price) : existing.price;
+    const nextOriginalPrice =
+      req.body?.originalPrice !== undefined ? optionalString(req.body.originalPrice) : existing.originalPrice;
+
     if (req.body?.closetId !== undefined || req.body?.sectionId !== undefined) {
       await ensureClosetAndSection(request.user.id, nextClosetId, nextSectionId);
     }
@@ -337,9 +347,10 @@ router.patch(
         ...(req.body?.sectionId !== undefined ? { sectionId: nextSectionId } : {}),
         ...(req.body?.brand !== undefined ? { brand: requireString(req.body.brand, "brand") } : {}),
         ...(req.body?.name !== undefined ? { name: requireString(req.body.name, "name") } : {}),
-        ...(req.body?.price !== undefined ? { price: optionalString(req.body.price) } : {}),
+        ...(req.body?.price !== undefined ? { price: nextPrice } : {}),
         ...(targetPrice ?? {}),
-        ...(req.body?.originalPrice !== undefined ? { originalPrice: optionalString(req.body.originalPrice) } : {}),
+        ...(req.body?.originalPrice !== undefined ? { originalPrice: nextOriginalPrice } : {}),
+        ...(priceEdited ? { onSale: isMarkedDown(nextPrice, nextOriginalPrice) } : {}),
         ...(req.body?.currency !== undefined ? { currency: optionalString(req.body.currency) } : {}),
         ...(req.body?.source !== undefined ? { source: optionalString(req.body.source) } : {}),
         ...(req.body?.url !== undefined ? { url: optionalString(req.body.url) } : {}),

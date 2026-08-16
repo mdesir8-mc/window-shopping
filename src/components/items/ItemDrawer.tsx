@@ -149,7 +149,7 @@ export default function ItemDrawer({
               <span style={{ fontFamily: "var(--ws-display)", fontSize: 28, fontWeight: 300 }}>
                 {item.price ?? "TBD"}
               </span>
-              {item.originalPrice ? (
+              {item.onSale && item.originalPrice ? (
                 <span
                   style={{
                     fontFamily: "var(--ws-mono)",

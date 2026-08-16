@@ -13,11 +13,31 @@ export default function Login() {
   const { loginMutation } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [clientError, setClientError] = useState<string | null>(null);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await loginMutation.mutateAsync({ email, password });
-    goToPostLoginTarget(location.search, location.state?.from?.pathname ?? "/", navigate);
+    setClientError(null);
+
+    if (!email.trim()) {
+      setClientError("Enter your email address.");
+      return;
+    }
+    if (!/\S+@\S+\.\S+/.test(email.trim())) {
+      setClientError("Enter a valid email address.");
+      return;
+    }
+    if (!password) {
+      setClientError("Enter your password.");
+      return;
+    }
+
+    // mutateAsync rejects on bad credentials; the error is rendered below, so swallow the
+    // rejection rather than leaving it unhandled (and skip the navigate on failure).
+    await loginMutation
+      .mutateAsync({ email, password })
+      .then(() => goToPostLoginTarget(location.search, location.state?.from?.pathname ?? "/", navigate))
+      .catch(() => {});
   }
 
   return (
@@ -32,6 +52,10 @@ export default function Login() {
     >
       <form
         onSubmit={handleSubmit}
+        // Suppress the native validation bubble so the inline, screen-reader-announced
+        // errors below are what the user actually gets. The required/type attributes stay
+        // for semantics; handleSubmit now covers empty and malformed input itself.
+        noValidate
         style={{
           width: "min(460px, 100%)",
           background: "var(--ws-paper)",
@@ -45,35 +69,43 @@ export default function Login() {
         </Display>
 
         <div style={{ display: "grid", gap: 14, marginTop: 24 }}>
+          {/* The card has no visible field labels by design, so the accessible name comes
+              from aria-label — a placeholder alone disappears on typing. */}
           <input
             type="email"
             required
+            aria-label="Email"
+            autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             placeholder="Email"
             style={{
               border: "1px solid var(--ws-hairline)",
               background: "var(--ws-surface)",
+              color: "var(--ws-ink)",
               padding: "14px 16px"
             }}
           />
           <input
             type="password"
             required
+            aria-label="Password"
+            autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Password"
             style={{
               border: "1px solid var(--ws-hairline)",
               background: "var(--ws-surface)",
+              color: "var(--ws-ink)",
               padding: "14px 16px"
             }}
           />
         </div>
 
-        {loginMutation.isError ? (
-          <div style={{ marginTop: 14, color: "var(--ws-accent)", fontSize: 13 }}>
-            Invalid email or password.
+        {clientError || loginMutation.isError ? (
+          <div role="alert" style={{ marginTop: 14, color: "var(--ws-accent)", fontSize: 13 }}>
+            {clientError ?? "Invalid email or password."}
           </div>
         ) : null}
 

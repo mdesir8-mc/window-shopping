@@ -568,6 +568,49 @@ describeDb("MCP OAuth authorization server", () => {
     expect(stillThere.name).toBe("Alice only");
   });
 
+  it("derives onSale on create and re-derives it on edit, like the HTTP routes", async () => {
+    const { accessToken } = await connect();
+    const closet = toolResult((await callTool(accessToken, "create_closet", { name: "Fall" })).body);
+
+    const marked = toolResult(
+      (
+        await callTool(accessToken, "create_item", {
+          closetId: closet.id,
+          brand: "Acme",
+          name: "Marked down",
+          season: "Fall",
+          price: "$80",
+          originalPrice: "$120"
+        })
+      ).body
+    );
+    expect(marked.onSale).toBe(true);
+
+    const full = toolResult(
+      (
+        await callTool(accessToken, "create_item", {
+          closetId: closet.id,
+          brand: "Acme",
+          name: "Full price",
+          season: "Fall",
+          price: "$120"
+        })
+      ).body
+    );
+    expect(full.onSale).toBe(false);
+
+    // The server-side filter reads the column, so a marked-down item added through
+    // MCP has to show up here.
+    const onSaleOnly = toolResult((await callTool(accessToken, "list_items", { onSale: true })).body);
+    expect(onSaleOnly.map((item: { name: string }) => item.name)).toEqual(["Marked down"]);
+
+    // Editing only the current price re-derives against the stored originalPrice.
+    const recovered = toolResult(
+      (await callTool(accessToken, "update_item", { itemId: marked.id, price: "$130" })).body
+    );
+    expect(recovered.onSale).toBe(false);
+  });
+
   it("rejects a target price that is not a positive number", async () => {
     const { accessToken } = await connect();
     const closet = toolResult((await callTool(accessToken, "create_closet", { name: "Fall" })).body);
