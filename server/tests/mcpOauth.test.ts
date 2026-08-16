@@ -612,6 +612,58 @@ describeDb("MCP OAuth authorization server", () => {
   });
 
   // -------------------------------------------------------------------------
+  // Connected apps (account settings)
+  // -------------------------------------------------------------------------
+
+  it("lists a connected app and disconnects it from account settings", async () => {
+    const { accessToken, refreshToken, sessionToken, clientId } = await connect();
+
+    const listed = await request.get("/api/user/connections").set("Authorization", `Bearer ${sessionToken}`);
+    expect(listed.status).toBe(200);
+    expect(listed.body).toHaveLength(1);
+    expect(listed.body[0].clientId).toBe(clientId);
+    expect(listed.body[0].clientName).toBe("Test MCP Client");
+    expect(listed.body[0].scopes).toContain("closets:write");
+
+    const revoked = await request
+      .delete(`/api/user/connections/${encodeURIComponent(clientId)}`)
+      .set("Authorization", `Bearer ${sessionToken}`);
+    expect(revoked.status).toBe(204);
+
+    // The access token has not expired, but the transport re-checks the grant.
+    expect((await callTool(accessToken, "list_closets")).status).toBe(401);
+
+    // ...and the refresh token is gone, so it cannot mint a new one.
+    const refresh = await request
+      .post("/oauth/token")
+      .type("form")
+      .send({ grant_type: "refresh_token", refresh_token: refreshToken, client_id: clientId });
+    expect(refresh.status).toBe(400);
+    expect(refresh.body.error).toBe("invalid_grant");
+
+    const after = await request.get("/api/user/connections").set("Authorization", `Bearer ${sessionToken}`);
+    expect(after.body).toHaveLength(0);
+  });
+
+  it("does not let one user disconnect another user's app", async () => {
+    const alice = await connect();
+    const bob = await connect();
+
+    const response = await request
+      .delete(`/api/user/connections/${encodeURIComponent(alice.clientId)}`)
+      .set("Authorization", `Bearer ${bob.sessionToken}`);
+
+    expect(response.status).toBe(404);
+
+    // Alice's connection is untouched.
+    expect((await callTool(alice.accessToken, "list_closets")).status).toBe(200);
+  });
+
+  it("requires authentication to list connections", async () => {
+    expect((await request.get("/api/user/connections")).status).toBe(401);
+  });
+
+  // -------------------------------------------------------------------------
   // Client registration
   // -------------------------------------------------------------------------
 

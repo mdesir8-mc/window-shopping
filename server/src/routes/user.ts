@@ -92,4 +92,52 @@ router.patch(
   })
 );
 
+// Connected apps — one row per (user, OAuth client) consent, created when the
+// user approves the MCP consent screen. Deleting a grant disconnects that one
+// client without touching the user's own web and mobile sessions, which is what
+// POST /api/auth/logout-all would do.
+
+router.get(
+  "/connections",
+  asyncHandler(async (req, res) => {
+    const request = req as AuthenticatedRequest;
+
+    const grants = await prisma.oAuthGrant.findMany({
+      where: { userId: request.user.id },
+      orderBy: { createdAt: "asc" },
+      select: { clientId: true, clientName: true, scopes: true, createdAt: true, lastUsedAt: true }
+    });
+
+    res.json(grants);
+  })
+);
+
+router.delete(
+  "/connections/:clientId",
+  asyncHandler(async (req, res) => {
+    const request = req as AuthenticatedRequest;
+    const clientId = requireString(req.params.clientId, "clientId");
+
+    const grant = await prisma.oAuthGrant.findUnique({
+      where: { userId_clientId: { userId: request.user.id, clientId } }
+    });
+
+    if (!grant) {
+      throw new HttpError(404, "Connection not found.");
+    }
+
+    // Drop the grant and every refresh token issued under it. Access tokens are
+    // self-contained and live up to an hour, so the MCP transport re-checks the
+    // grant on every request — a revoked client stops working immediately rather
+    // than when its current token expires.
+    await prisma.$transaction([
+      prisma.oAuthRefreshToken.deleteMany({ where: { userId: request.user.id, clientId } }),
+      prisma.oAuthAuthorizationCode.deleteMany({ where: { userId: request.user.id, clientId } }),
+      prisma.oAuthGrant.delete({ where: { id: grant.id } })
+    ]);
+
+    res.status(204).end();
+  })
+);
+
 export default router;

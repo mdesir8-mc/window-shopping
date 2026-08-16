@@ -352,8 +352,12 @@ Open:
   connecting the production connector at `https://app.window-shopping.app/mcp`._
 - [ ] **Connect it in Claude end-to-end** — add the custom connector, approve consent, then
   exercise a read, a write, and a delete in conversation.
-- [ ] **Revoke-access UI** — `OAuthGrant` rows already model per-client consent; surface them
-  in account settings so a user can disconnect Claude without `logout-all`.
+- [x] **Revoke-access UI** — "Connected apps" section in the account settings General tab,
+  backed by `GET /api/user/connections` and `DELETE /api/user/connections/:clientId`.
+  Disconnecting drops the `OAuthGrant` plus every refresh token and pending code for that
+  client; because the MCP transport re-checks the grant on each request, a live access token
+  stops working immediately rather than at its one-hour expiry. Two-step inline confirm, and
+  it never touches the user's own web/mobile sessions (which is what `logout-all` would do).
 - [ ] **Prune stale DCR clients** — `OAuthClient` rows accumulate one per fresh non-CIMD
   connection. Add a sweep for clients with no grant and no use in N days.
 - [ ] **Expire old OAuth rows** — authorization codes and revoked/expired refresh tokens are

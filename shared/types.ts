@@ -215,3 +215,16 @@ export interface ItemPayload {
   favorited?: boolean;
   inStock?: boolean | null;
 }
+
+/**
+ * A third-party OAuth client the user has connected to their account, via the
+ * MCP consent screen. `clientName` is self-asserted by the client at
+ * registration, so treat it as a label rather than an identity.
+ */
+export interface Connection {
+  clientId: string;
+  clientName: string;
+  scopes: string[];
+  createdAt: string;
+  lastUsedAt: string;
+}
