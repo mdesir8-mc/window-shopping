@@ -234,4 +234,37 @@ describe("safeFetch", () => {
     // 8 vetted IPs available, but only the first 4 are dialed.
     expect(undiciFetch).toHaveBeenCalledTimes(4);
   });
+  it("(j) returns the dns.lookup array form when undici asks with all:true", async () => {
+    // undici calls connect.lookup with { all: true }. Per the dns.lookup contract that
+    // requires an ARRAY of {address, family}; handing back the bare (address, family)
+    // form makes undici reject the connection with ERR_INVALID_IP_ADDRESS, which broke
+    // every safeFetch call until it was fixed. The other tests here call lookup with
+    // {}, so only this one exercises the shape undici actually uses.
+    resolveSafeUrl.mockResolvedValueOnce({
+      url: new URL("https://public.test/x"),
+      addresses: [{ address: "93.184.215.14", family: 4 }]
+    });
+    undiciFetch.mockResolvedValueOnce(fakeResponse(200, {}, "ok"));
+
+    await safeFetch("https://public.test/x");
+
+    const dispatcher = (undiciFetch.mock.calls[0][1] as { dispatcher?: MockAgent }).dispatcher;
+
+    let allResult: unknown;
+    (dispatcher?.lookup as unknown as (h: string, o: unknown, cb: (e: unknown, a: unknown) => void) => void)?.(
+      "public.test",
+      { all: true },
+      (_e, a) => {
+        allResult = a;
+      }
+    );
+    expect(allResult).toEqual([{ address: "93.184.215.14", family: 4 }]);
+
+    // The legacy single-address form still works for callers that don't pass all.
+    let single = "";
+    dispatcher?.lookup?.("public.test", {}, (_e, a) => {
+      single = a;
+    });
+    expect(single).toBe("93.184.215.14");
+  });
 });
