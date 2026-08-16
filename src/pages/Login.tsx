@@ -5,6 +5,7 @@ import Eyebrow from "../components/ui/Eyebrow";
 import VersionTag from "../components/ui/VersionTag";
 import GoogleSignInButton from "../components/auth/GoogleSignInButton";
 import { useAuth } from "../hooks/useAuth";
+import { goToPostLoginTarget } from "../lib/nextParam";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ export default function Login() {
     // rejection rather than leaving it unhandled (and skip the navigate on failure).
     await loginMutation
       .mutateAsync({ email, password })
-      .then(() => navigate(location.state?.from?.pathname ?? "/"))
+      .then(() => goToPostLoginTarget(location.search, location.state?.from?.pathname ?? "/", navigate))
       .catch(() => {});
   }
 

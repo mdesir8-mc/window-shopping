@@ -6,8 +6,27 @@ import Modal from "../ui/Modal";
 import Eyebrow from "../ui/Eyebrow";
 import { useIsMobile } from "../../hooks/useMediaQuery";
 import { downloadWishlistExport, type ExportFormat } from "../../api/export";
+import { useConnections, useRevokeConnection } from "../../hooks/useConnections";
 
 type Tab = "general" | "profile";
+
+const SCOPE_LABELS: Record<string, string> = {
+  profile: "your profile",
+  "closets:read": "read your closets",
+  "closets:write": "edit your closets"
+};
+
+function describeScopes(scopes: string[]): string {
+  const described = scopes.filter((scope) => scope in SCOPE_LABELS).map((scope) => SCOPE_LABELS[scope]);
+  return described.length > 0 ? described.join(" · ") : "no permissions";
+}
+
+function formatDate(value: string): string {
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime())
+    ? "—"
+    : parsed.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
 
 interface AccountSettingsModalProps {
   open: boolean;
@@ -35,7 +54,11 @@ export default function AccountSettingsModal({
   const [name, setName] = useState(user?.name ?? "");
   const [exportingFormat, setExportingFormat] = useState<ExportFormat | null>(null);
   const [exportError, setExportError] = useState("");
+  const [confirmingDisconnect, setConfirmingDisconnect] = useState<string | null>(null);
   const { updateProfileMutation } = useAuth();
+  // Only fetched while the modal is open — no reason to poll this on every page.
+  const connectionsQuery = useConnections(open);
+  const revokeConnectionMutation = useRevokeConnection();
 
   // Reset the modal to a clean state each time it opens. Keyed on `open` only so a
   // successful save (which updates user.name) doesn't bounce the user off the tab.
@@ -45,7 +68,9 @@ export default function AccountSettingsModal({
       setName(user?.name ?? "");
       setExportError("");
       setExportingFormat(null);
+      setConfirmingDisconnect(null);
       updateProfileMutation.reset();
+      revokeConnectionMutation.reset();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -190,6 +215,122 @@ export default function AccountSettingsModal({
               {exportError ? (
                 <div style={{ marginTop: 8, fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-accent)", lineHeight: 1.5 }}>
                   {exportError}
+                </div>
+              ) : null}
+            </div>
+
+            <div style={{ marginTop: 22 }}>
+              <Eyebrow style={{ marginBottom: 8 }}>Connected apps</Eyebrow>
+              <div style={{ marginBottom: 10, fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-muted)", lineHeight: 1.5 }}>
+                Apps you've allowed to reach your closets, like Claude. Disconnecting revokes their
+                access without signing you out anywhere.
+              </div>
+
+              {connectionsQuery.isPending ? (
+                <div style={{ fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-muted)" }}>Loading…</div>
+              ) : connectionsQuery.isError ? (
+                <div style={{ fontSize: 11, color: "var(--ws-accent)" }}>Couldn't load connected apps.</div>
+              ) : connectionsQuery.data && connectionsQuery.data.length > 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {connectionsQuery.data.map((connection) => {
+                    const confirming = confirmingDisconnect === connection.clientId;
+                    const pending =
+                      revokeConnectionMutation.isPending && revokeConnectionMutation.variables === connection.clientId;
+
+                    return (
+                      <div
+                        key={connection.clientId}
+                        style={{
+                          padding: "10px 12px",
+                          border: "1px solid var(--ws-hairline)",
+                          background: "var(--ws-hover-bg, transparent)"
+                        }}
+                      >
+                        <div style={{ fontFamily: "var(--ws-ui)", fontSize: 13, color: "var(--ws-ink)" }}>
+                          {connection.clientName}
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 4,
+                            fontFamily: "var(--ws-mono)",
+                            fontSize: 10,
+                            color: "var(--ws-muted)",
+                            lineHeight: 1.5
+                          }}
+                        >
+                          Can {describeScopes(connection.scopes)} · last used {formatDate(connection.lastUsedAt)}
+                        </div>
+
+                        {confirming ? (
+                          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                            <button
+                              type="button"
+                              disabled={pending}
+                              onClick={() =>
+                                revokeConnectionMutation.mutate(connection.clientId, {
+                                  onSuccess: () => setConfirmingDisconnect(null)
+                                })
+                              }
+                              style={{
+                                flex: 1,
+                                padding: "8px 10px",
+                                border: "1px solid var(--ws-accent)",
+                                background: "var(--ws-accent)",
+                                color: "var(--ws-paper)",
+                                cursor: pending ? "default" : "pointer",
+                                fontSize: 11,
+                                opacity: pending ? 0.7 : 1
+                              }}
+                            >
+                              {pending ? "Disconnecting…" : "Yes, disconnect"}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={pending}
+                              onClick={() => setConfirmingDisconnect(null)}
+                              style={{
+                                flex: 1,
+                                padding: "8px 10px",
+                                border: "1px solid var(--ws-hairline)",
+                                background: "transparent",
+                                color: "var(--ws-ink)",
+                                cursor: pending ? "default" : "pointer",
+                                fontSize: 11
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setConfirmingDisconnect(connection.clientId)}
+                            style={{
+                              marginTop: 10,
+                              padding: "6px 10px",
+                              border: "1px solid var(--ws-hairline)",
+                              background: "transparent",
+                              color: "var(--ws-accent)",
+                              cursor: "pointer",
+                              fontSize: 11
+                            }}
+                          >
+                            Disconnect
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div style={{ fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-muted)", lineHeight: 1.5 }}>
+                  No apps connected yet.
+                </div>
+              )}
+
+              {revokeConnectionMutation.isError ? (
+                <div style={{ marginTop: 8, fontSize: 11, color: "var(--ws-accent)" }}>
+                  Couldn't disconnect that app. Try again shortly.
                 </div>
               ) : null}
             </div>
