@@ -235,6 +235,34 @@ describeDb("MCP OAuth authorization server", () => {
     expect(toolResult(listed.body)).toEqual([]);
   });
 
+  it("widens form-action CSP to the validated redirect_uri origin, not just 'self'", async () => {
+    // The consent page's <form> posts to our own origin, which the default
+    // form-action 'self' allows — but approving consent always ends in a 302 to
+    // the OAuth client's redirect_uri, almost never our own origin. Chrome
+    // enforces form-action against that post-submission redirect too, so
+    // 'self' alone makes Allow silently do nothing. REDIRECT_URI here
+    // (claude.ai) is cross-origin from the test server, so this is a real
+    // regression check, not a same-origin coincidence.
+    const { token: sessionToken } = await registerUser("csp@example.com");
+    const clientId = await registerClient();
+    const { challenge } = pkce();
+
+    const authorize = await request
+      .get("/oauth/authorize")
+      .query({
+        response_type: "code",
+        client_id: clientId,
+        redirect_uri: REDIRECT_URI,
+        code_challenge: challenge,
+        code_challenge_method: "S256"
+      })
+      .set("Cookie", [`auth_token=${sessionToken}`]);
+
+    expect(authorize.status).toBe(200);
+    const csp = authorize.headers["content-security-policy"];
+    expect(csp).toContain("form-action 'self' https://claude.ai");
+  });
+
   it("redirects an unauthenticated authorize request to the login page with a next param", async () => {
     const clientId = await registerClient();
     const { challenge } = pkce();

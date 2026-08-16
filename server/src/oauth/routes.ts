@@ -268,6 +268,38 @@ router.get(
       resource: resourceUrl()
     };
 
+    // The global CSP's form-action is 'self', which Chrome enforces not just on
+    // the <form>'s own POST target but on any cross-origin redirect that
+    // submission triggers. Approving consent always ends in exactly that: a 302
+    // to the client's redirect_uri, which is almost never our own origin. Without
+    // this override, the browser silently drops the redirect and "Allow" does
+    // nothing. redirect_uri was already checked against the client's registered
+    // list above, so widening the policy to that one already-validated origin
+    // doesn't weaken anything — it makes the policy match what this response is
+    // actually going to do.
+    let redirectOrigin: string | null;
+    try {
+      redirectOrigin = new URL(redirectUri).origin;
+    } catch {
+      // redirectUriAllowed only guarantees this when it matched via URL parsing,
+      // not the literal-string branch. Fall back to 'self' only rather than
+      // letting a malformed value break the whole page.
+      redirectOrigin = null;
+    }
+
+    res.setHeader(
+      "Content-Security-Policy",
+      [
+        "default-src 'self'",
+        "base-uri 'self'",
+        "object-src 'none'",
+        "frame-ancestors 'self'",
+        "script-src 'self'",
+        "style-src 'self' 'unsafe-inline'",
+        `form-action 'self'${redirectOrigin ? ` ${redirectOrigin}` : ""}`
+      ].join("; ")
+    );
+
     res
       .type("html")
       .send(
