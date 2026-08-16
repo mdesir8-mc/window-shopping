@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@prisma/client": "^6.7.0",
     "bcrypt": "^6.0.0",
     "cheerio": "^1.0.0",
@@ -27,7 +28,8 @@
     "playwright": "^1.54.2",
     "prisma": "^6.7.0",
     "resend": "^6.12.4",
-    "undici": "^7.19.0"
+    "undici": "^7.19.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

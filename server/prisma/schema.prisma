@@ -23,6 +23,80 @@ model User {
   tags      Tag[]
   passwordResetTokens PasswordResetToken[]
   emailLogs EmailLog[]
+  oauthCodes OAuthAuthorizationCode[]
+  oauthRefreshTokens OAuthRefreshToken[]
+  oauthGrants OAuthGrant[]
+}
+
+// OAuth 2.1 authorization server, used by the MCP endpoint at /mcp. Only clients
+// registered via Dynamic Client Registration are persisted; Client ID Metadata
+// Document clients identify themselves with a URL that is fetched per request.
+model OAuthClient {
+  id               String   @id @default(cuid())
+  clientId         String   @unique
+  clientSecretHash String?
+  clientName       String
+  clientUri        String?
+  redirectUris     String[]
+  grantTypes       String[]
+  scopes           String[]
+  isPublic         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  lastUsedAt       DateTime @default(now())
+}
+
+model OAuthAuthorizationCode {
+  id                  String    @id @default(cuid())
+  codeHash            String    @unique
+  clientId            String
+  userId              String
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  redirectUri         String
+  scopes              String[]
+  codeChallenge       String
+  codeChallengeMethod String
+  resource            String
+  expiresAt           DateTime
+  usedAt              DateTime?
+  createdAt           DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model OAuthRefreshToken {
+  id           String    @id @default(cuid())
+  tokenHash    String    @unique
+  clientId     String
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scopes       String[]
+  resource     String
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  // Set when this token is rotated out. A presented token that already has a
+  // successor is a replay: the whole chain is revoked rather than honored.
+  replacedById String?
+  createdAt    DateTime  @default(now())
+
+  @@index([userId, clientId])
+  @@index([expiresAt])
+}
+
+// One row per (user, client) consent. Deleting it revokes the grant without
+// touching the user's own web/mobile sessions.
+model OAuthGrant {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId   String
+  clientName String
+  scopes     String[]
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+
+  @@unique([userId, clientId])
+  @@index([userId])
 }
 
 model EmailLog {

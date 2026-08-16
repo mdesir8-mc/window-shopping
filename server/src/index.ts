@@ -12,6 +12,9 @@ import itemRoutes from "./routes/items";
 import tagRoutes from "./routes/tags";
 import publicRoutes from "./routes/public";
 import cronRoutes from "./routes/cron";
+import wellKnownRoutes from "./oauth/metadata";
+import oauthRoutes from "./oauth/routes";
+import mcpRoutes from "./mcp/transport";
 import { closeBrowser, launchBrowser } from "./services/browser";
 import { errorHandler, HttpError } from "./utils/http";
 import { requireAuth } from "./middleware/auth";
@@ -55,7 +58,7 @@ export function createApp() {
     cors({
       origin: isProduction ? process.env.FRONTEND_ORIGIN ?? false : true,
       credentials: true,
-      exposedHeaders: ["X-Refreshed-Token"]
+      exposedHeaders: ["X-Refreshed-Token", "WWW-Authenticate", "Mcp-Session-Id", "MCP-Protocol-Version"]
     })
   );
   app.use(cookieParser());
@@ -68,6 +71,17 @@ export function createApp() {
       released_at: process.env.RELEASE_DATE ?? null
     });
   });
+
+  // OAuth 2.1 authorization server + the MCP endpoint it protects. These must be
+  // mounted above the SPA catch-all below, which would otherwise answer
+  // /.well-known/* and /mcp with index.html.
+  app.use("/.well-known", wellKnownRoutes);
+  // RFC 6749 requires the token endpoint to accept form-urlencoded bodies, and
+  // Claude sends both the initial exchange and refreshes that way. The consent
+  // form posts the same way. /oauth/register is JSON and is covered by the
+  // global express.json() above.
+  app.use("/oauth", express.urlencoded({ extended: false }), oauthRoutes);
+  app.use("/mcp", mcpRoutes);
 
   app.use("/api/auth", authRoutes);
   app.use("/api/user", requireAuth, userRoutes);

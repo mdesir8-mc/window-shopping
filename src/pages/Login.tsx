@@ -5,6 +5,7 @@ import Eyebrow from "../components/ui/Eyebrow";
 import VersionTag from "../components/ui/VersionTag";
 import GoogleSignInButton from "../components/auth/GoogleSignInButton";
 import { useAuth } from "../hooks/useAuth";
+import { goToPostLoginTarget } from "../lib/nextParam";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export default function Login() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await loginMutation.mutateAsync({ email, password });
-    navigate(location.state?.from?.pathname ?? "/");
+    goToPostLoginTarget(location.search, location.state?.from?.pathname ?? "/", navigate);
   }
 
   return (

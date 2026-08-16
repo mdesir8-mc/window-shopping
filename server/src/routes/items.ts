@@ -7,6 +7,7 @@ import { asyncHandler, HttpError } from "../utils/http";
 import { parseExportFormat, sendItemsExport } from "../utils/itemExport";
 import { serializeItem, serializePriceSnapshot } from "../utils/serializers";
 import { validateSsrfSafeUrl } from "../utils/ssrf";
+import { ensureClosetAndSection, findOwnedItem } from "../utils/ownership";
 import { parsePriceToNumber } from "../../../shared/price";
 import { listPriceSnapshots, recordPriceSnapshot } from "../services/priceHistory";
 import { refreshItemRecord, refreshStaleItemsForUser } from "../services/refresh";
@@ -77,61 +78,6 @@ function optionalTargetPrice(value: unknown) {
   }
 
   return { targetPrice, targetPriceNumeric };
-}
-
-async function findOwnedItem(userId: string, itemId: string) {
-  return prisma.item.findFirst({
-    where: {
-      id: itemId,
-      closet: {
-        userId
-      }
-    },
-    include: {
-      closet: {
-        select: {
-          id: true,
-          name: true
-        }
-      },
-      section: {
-        select: {
-          id: true,
-          name: true
-        }
-      }
-    }
-  });
-}
-
-async function ensureClosetAndSection(userId: string, closetId: string, sectionId?: string | null) {
-  const closet = await prisma.closet.findFirst({
-    where: {
-      id: closetId,
-      userId
-    }
-  });
-
-  if (!closet) {
-    throw new HttpError(404, "Closet not found.");
-  }
-
-  if (!sectionId) {
-    return { closet, section: null };
-  }
-
-  const section = await prisma.section.findFirst({
-    where: {
-      id: sectionId,
-      closetId: closet.id
-    }
-  });
-
-  if (!section) {
-    throw new HttpError(400, "sectionId must belong to the target closet.");
-  }
-
-  return { closet, section };
 }
 
 router.get(

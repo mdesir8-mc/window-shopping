@@ -7,6 +7,7 @@ import { getAppBaseUrl } from "../services/email";
 import { parseExportFormat, sendItemsExport } from "../utils/itemExport";
 import { serializeCloset, serializeSection } from "../utils/serializers";
 import { generateShareToken } from "../utils/shareToken";
+import { findOwnedCloset } from "../utils/ownership";
 import { optionalInteger, optionalString, optionalStringArray, requireString } from "../utils/validation";
 
 function shareUrl(token: string): string {
@@ -34,34 +35,6 @@ const shareLimiter = rateLimit({
   message: { error: "Too many share changes. Try again in a few minutes." },
   skip: () => process.env.NODE_ENV === "test"
 });
-
-async function findOwnedCloset(userId: string, closetId: string) {
-  return prisma.closet.findFirst({
-    where: {
-      id: closetId,
-      userId
-    },
-    include: {
-      sections: {
-        orderBy: {
-          order: "asc"
-        },
-        include: {
-          _count: {
-            select: {
-              items: true
-            }
-          }
-        }
-      },
-      _count: {
-        select: {
-          items: true
-        }
-      }
-    }
-  });
-}
 
 router.get(
   "/",

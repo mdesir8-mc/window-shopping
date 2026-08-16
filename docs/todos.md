@@ -323,6 +323,42 @@ not start a phase until every prereq below it is checked.** Full plan: `docs/mob
 - [ ] **Face ID gate** — `expo-local-authentication` biometric unlock on cold open
   (optional UX; not a submission blocker). _Doc: § Face ID gate._
 
+## MCP server (Claude connector)
+
+Lets a user pick Window Shopping from Claude's connector list, authenticate, and then
+manage their closets in conversation. Served from the existing Express app.
+
+- [x] **OAuth 2.1 authorization server** — `/oauth/authorize`, `/token` (form-urlencoded),
+  `/register` (RFC 7591 DCR), `/revoke` (RFC 7009), plus Client ID Metadata Document
+  support so Claude can connect without registering a client per connection. PKCE S256
+  required; refresh tokens rotate and a replay revokes the chain.
+- [x] **Discovery documents** — RFC 9728 protected resource metadata at both
+  `/.well-known/oauth-protected-resource` and `…/mcp`, RFC 8414 authorization server
+  metadata. `resource` is `${APP_BASE_URL}/mcp` and must match the URL users type into
+  Claude exactly.
+- [x] **Remote MCP endpoint** — stateless Streamable HTTP at `POST /mcp`, 24 tools across
+  `profile` / `closets:read` / `closets:write`. Unauthenticated calls get a `401` with a
+  `WWW-Authenticate` challenge, which is what makes Claude show the Connect card.
+- [x] **Credential separation** — MCP access tokens are signed with `MCP_JWT_SECRET` and
+  carry `aud=${APP_BASE_URL}/mcp`; `verifyAuthToken` rejects any token with an audience, so
+  the two credential families can never be swapped.
+- [x] **Consent screen** — server-rendered, script-free. Shows the *verified* redirect host
+  as the relying party and marks the client's self-asserted name as unverified.
+
+Open:
+
+- [ ] **Set `MCP_JWT_SECRET` on Railway** (human-only) — generate a long random value that
+  differs from `JWT_SECRET`, and confirm `APP_BASE_URL` is the public HTTPS origin. _Gates:
+  connecting the production connector at `https://app.window-shopping.app/mcp`._
+- [ ] **Connect it in Claude end-to-end** — add the custom connector, approve consent, then
+  exercise a read, a write, and a delete in conversation.
+- [ ] **Revoke-access UI** — `OAuthGrant` rows already model per-client consent; surface them
+  in account settings so a user can disconnect Claude without `logout-all`.
+- [ ] **Prune stale DCR clients** — `OAuthClient` rows accumulate one per fresh non-CIMD
+  connection. Add a sweep for clients with no grant and no use in N days.
+- [ ] **Expire old OAuth rows** — authorization codes and revoked/expired refresh tokens are
+  never deleted; add a cleanup pass (the cron job is the natural home).
+
 ## Ideas / Maybe
 
 - [ ] _Nothing yet — capture rough ideas here before they're scoped._

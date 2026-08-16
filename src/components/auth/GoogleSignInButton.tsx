@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import type { GoogleCredentialResponse } from "../../types/google";
+import { goToPostLoginTarget } from "../../lib/nextParam";
 
 const GIS_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
 const GIS_SCRIPT_ID = "google-gsi-client";
@@ -48,7 +49,7 @@ export default function GoogleSignInButton() {
     async function handleCredentialResponse(response: GoogleCredentialResponse) {
       try {
         await googleLoginMutation.mutateAsync(response.credential);
-        navigate(location.state?.from?.pathname ?? "/");
+        goToPostLoginTarget(location.search, location.state?.from?.pathname ?? "/", navigate);
       } catch {
         // Surfaced via googleLoginMutation.isError below.
       }
