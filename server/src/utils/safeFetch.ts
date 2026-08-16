@@ -55,11 +55,25 @@ export async function safeFetch(rawUrl: string, init: SafeFetchInit = {}): Promi
 
   const dispatcher = new Agent({
     connect: {
+      // undici calls this with `{ all: true }`, which per the dns.lookup contract
+      // means the callback must hand back an ARRAY of {address, family} — passing
+      // the bare (address, family) form makes undici reject it with
+      // ERR_INVALID_IP_ADDRESS and every request fails at connect. Both shapes are
+      // honoured here so the pin works whichever way the caller asks.
       lookup: (
         _hostname: string,
-        _options: LookupOptions,
-        callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void
+        options: LookupOptions,
+        callback: (
+          err: NodeJS.ErrnoException | null,
+          address: string | Array<{ address: string; family: number }>,
+          family?: number
+        ) => void
       ) => {
+        if (options?.all) {
+          callback(null, [{ address: pinnedAddress, family: pinnedFamily }]);
+          return;
+        }
+
         callback(null, pinnedAddress, pinnedFamily);
       }
     }
